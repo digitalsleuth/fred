@@ -23,6 +23,7 @@
 #include <QStringList>
 #include <QDesktopWidget>
 #include <QDir>
+#include <QSplitter>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -42,9 +43,6 @@ MainWindow::MainWindow(QWidget *parent) :
   this->p_reg_node_tree_model=NULL;
   this->p_reg_key_table_model=NULL;
 
-  // Set window title
-  this->UpdateWindowTitle();
-
   // Set main window size
   int cur_screen=QApplication::desktop()->screenNumber(this);
   int window_width=
@@ -61,6 +59,71 @@ MainWindow::MainWindow(QWidget *parent) :
                     window_y,
                     window_width,
                     window_height);
+
+  // Create widgets
+  this->p_node_tree=new QTreeView();
+  this->p_node_tree->setHeaderHidden(true);
+  this->p_key_table=new QTableView();
+  this->p_key_table->setSelectionBehavior(QAbstractItemView::SelectRows);
+  this->p_horizontal_splitter=new QSplitter();
+  this->p_horizontal_splitter->setOrientation(Qt::Horizontal);
+  this->p_vertical_splitter=new QSplitter();
+  this->p_vertical_splitter->setOrientation(Qt::Vertical);
+  this->p_hex_edit=new QHexEdit();
+  this->p_hex_edit->setReadOnly(true);
+
+  // Make sure hex viewer font is monospaced.
+  QFont mono_font("Monospace");
+  mono_font.setStyleHint(QFont::TypeWriter);
+  this->p_hex_edit->setFont(mono_font);
+
+  // Lay out widgets
+  this->p_vertical_splitter->addWidget(this->p_key_table);
+  this->p_vertical_splitter->addWidget(this->p_hex_edit);
+  this->p_horizontal_splitter->addWidget(this->p_node_tree);
+  this->p_horizontal_splitter->addWidget(this->p_vertical_splitter);
+
+  // Set stretch factors
+  QSizePolicy node_tree_policy=this->p_node_tree->sizePolicy();
+  node_tree_policy.setHorizontalStretch(1);
+  node_tree_policy.setVerticalStretch(100);
+  this->p_node_tree->setSizePolicy(node_tree_policy);
+  QSizePolicy vertical_splitter_policy=this->p_vertical_splitter->sizePolicy();
+  vertical_splitter_policy.setHorizontalStretch(4);
+  vertical_splitter_policy.setVerticalStretch(100);
+  this->p_vertical_splitter->setSizePolicy(vertical_splitter_policy);
+  QSizePolicy key_table_policy=this->p_key_table->sizePolicy();
+  key_table_policy.setVerticalStretch(5);
+  key_table_policy.setHorizontalStretch(100);
+  this->p_key_table->setSizePolicy(key_table_policy);
+  QSizePolicy hex_edit_policy=this->p_hex_edit->sizePolicy();
+  hex_edit_policy.setVerticalStretch(2);
+  hex_edit_policy.setHorizontalStretch(100);
+  this->p_hex_edit->setSizePolicy(hex_edit_policy);
+
+  // Connect signals
+  this->connect(this->p_node_tree,
+                SIGNAL(clicked(QModelIndex)),
+                this,
+                SLOT(SlotNodeTreeClicked(QModelIndex)));
+  this->connect(this->p_node_tree,
+                SIGNAL(activated(QModelIndex)),
+                this,
+                SLOT(SlotNodeTreeClicked(QModelIndex)));
+  this->connect(this->p_key_table,
+                SIGNAL(clicked(QModelIndex)),
+                this,
+                SLOT(SlotKeyTableClicked(QModelIndex)));
+  this->connect(this->p_key_table,
+                SIGNAL(doubleClicked(QModelIndex)),
+                this,
+                SLOT(SlotKeyTableDoubleClicked(QModelIndex)));
+
+  // Add central widget
+  this->setCentralWidget(this->p_horizontal_splitter);
+
+  // Set window title
+  this->UpdateWindowTitle();
 
   // Set last open location to home dir
   this->last_open_location=QDir::homePath();
@@ -113,9 +176,8 @@ void MainWindow::on_action_Open_hive_triggered() {
   }
   this->p_reg_node_tree_model=
     new RegistryNodeTreeModel(this->hhive,
-                              root_node,
-                              this->ui->RegNodeTree);
-  this->ui->RegNodeTree->setModel(this->p_reg_node_tree_model);
+                              root_node);
+  this->p_node_tree->setModel(this->p_reg_node_tree_model);
 
   this->is_hive_open=true;
   this->ui->action_Close_hive->setEnabled(true);
@@ -147,7 +209,12 @@ void MainWindow::on_actionAbout_Qt_triggered() {
   QMessageBox::aboutQt(this,tr("About Qt"));
 }
 
-void MainWindow::on_RegNodeTree_clicked(QModelIndex index) {
+void MainWindow::on_actionAbout_fred_triggered() {
+  DlgAbout dlg_about(this);
+  dlg_about.exec();
+}
+
+void MainWindow::SlotNodeTreeClicked(QModelIndex index) {
   QStringList nodes;
 
   //Built node path
@@ -174,13 +241,12 @@ void MainWindow::on_RegNodeTree_clicked(QModelIndex index) {
   // Create table model and attach it to the table view
   if(this->p_reg_key_table_model!=NULL) delete this->p_reg_key_table_model;
   this->p_reg_key_table_model=new RegistryKeyTableModel(this->hhive,
-                                                        hive_node,
-                                                        this->ui->RegKeyTable);
-  this->ui->RegKeyTable->setModel(this->p_reg_key_table_model);
+                                                        hive_node);
+  this->p_key_table->setModel(this->p_reg_key_table_model);
 
   // Resize table rows / columns to fit data
-  this->ui->RegKeyTable->resizeColumnsToContents();
-  this->ui->RegKeyTable->horizontalHeader()->stretchLastSection();
+  this->p_key_table->resizeColumnsToContents();
+  this->p_key_table->horizontalHeader()->stretchLastSection();
 }
 
 void MainWindow::UpdateWindowTitle(QString filename) {
@@ -194,17 +260,7 @@ void MainWindow::UpdateWindowTitle(QString filename) {
   }
 }
 
-void MainWindow::on_actionAbout_fred_triggered() {
-  DlgAbout dlg_about(this);
-  dlg_about.exec();
-}
-
-void MainWindow::on_RegNodeTree_activated(QModelIndex index) {
-  // Also update when pressing ENTER
-  this->on_RegNodeTree_clicked(index);
-}
-
-void MainWindow::on_RegKeyTable_doubleClicked(QModelIndex index) {
+void MainWindow::SlotKeyTableDoubleClicked(QModelIndex index) {
   QModelIndex key_index;
   QModelIndex node_index;
   QStringList nodes;
@@ -229,7 +285,7 @@ void MainWindow::on_RegKeyTable_doubleClicked(QModelIndex index) {
     .toByteArray();
 
   // Get current node
-  node_index=this->ui->RegNodeTree->currentIndex();
+  node_index=this->p_node_tree->currentIndex();
 
   //Built node path
   nodes.clear();
@@ -245,4 +301,16 @@ void MainWindow::on_RegKeyTable_doubleClicked(QModelIndex index) {
   DlgKeyDetails dlg_key_details(this);
   dlg_key_details.SetValues(nodes,key_name,key_type,key_value);
   dlg_key_details.exec();
+}
+
+void MainWindow::SlotKeyTableClicked(QModelIndex index) {
+  if(!index.isValid()) return;
+
+  this->selected_key_value=
+    this->p_reg_key_table_model->data(this->p_reg_key_table_model->
+                                        index(index.row(),2),
+                                      RegistryKeyTableModel::
+                                        AdditionalRoles_GetRawData)
+                                          .toByteArray();
+  this->p_hex_edit->setData(this->selected_key_value);
 }

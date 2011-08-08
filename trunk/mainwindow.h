@@ -23,10 +23,11 @@
 
 #include <QMainWindow>
 
+#include <hivex.h>
+
 #include "registrynodetreemodel.h"
 #include "registrykeytablemodel.h"
-
-#include <hivex.h>
+#include "qhexedit/qhexedit.h"
 
 namespace Ui {
   class MainWindow;
@@ -44,10 +45,11 @@ class MainWindow : public QMainWindow {
     void on_action_Open_hive_triggered();
     void on_action_Close_hive_triggered();
     void on_actionAbout_Qt_triggered();
-    void on_RegNodeTree_clicked(QModelIndex index);
     void on_actionAbout_fred_triggered();
-    void on_RegNodeTree_activated(QModelIndex index);
-    void on_RegKeyTable_doubleClicked(QModelIndex index);
+
+    void SlotNodeTreeClicked(QModelIndex index);
+    void SlotKeyTableClicked(QModelIndex index);
+    void SlotKeyTableDoubleClicked(QModelIndex index);
 
 private:
     Ui::MainWindow *ui;
@@ -56,6 +58,14 @@ private:
     bool is_hive_open;
     RegistryNodeTreeModel *p_reg_node_tree_model;
     RegistryKeyTableModel *p_reg_key_table_model;
+    QByteArray selected_key_value;
+
+    // Widgets
+    QTreeView *p_node_tree;
+    QTableView *p_key_table;
+    QHexEdit *p_hex_edit;
+    QSplitter *p_horizontal_splitter;
+    QSplitter *p_vertical_splitter;
 
     void UpdateWindowTitle(QString filename="");
 };
