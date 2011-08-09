@@ -37,7 +37,8 @@ SOURCES  += main.cpp\
     dlgabout.cpp \
     dlgkeydetails.cpp \
     qhexedit/qhexedit_p.cpp \
-    qhexedit/qhexedit.cpp
+    qhexedit/qhexedit.cpp \
+    datainterpreter.cpp
 
 HEADERS  += mainwindow.h \
             registrynode.h \
@@ -47,7 +48,8 @@ HEADERS  += mainwindow.h \
     dlgabout.h \
     dlgkeydetails.h \
     qhexedit/qhexedit_p.h \
-    qhexedit/qhexedit.h
+    qhexedit/qhexedit.h \
+    datainterpreter.h
 
 FORMS    += mainwindow.ui \
     dlgabout.ui \

@@ -61,19 +61,29 @@ MainWindow::MainWindow(QWidget *parent) :
                     window_height);
 
   // Create widgets
-  this->p_node_tree=new QTreeView();
-  this->p_node_tree->setHeaderHidden(true);
-  this->p_key_table=new QTableView();
-  this->p_key_table->setSelectionBehavior(QAbstractItemView::SelectRows);
   this->p_horizontal_splitter=new QSplitter();
   this->p_horizontal_splitter->setOrientation(Qt::Horizontal);
-  this->p_horizontal_splitter2=new QSplitter();
-  this->p_horizontal_splitter2->setOrientation(Qt::Horizontal);
-  this->p_vertical_splitter=new QSplitter();
+
+  this->p_node_tree=new QTreeView(this->p_horizontal_splitter);
+  this->p_node_tree->setHeaderHidden(true);
+
+  this->p_vertical_splitter=new QSplitter(this->p_horizontal_splitter);
   this->p_vertical_splitter->setOrientation(Qt::Vertical);
+
+  this->p_key_table=new QTableView(this->p_vertical_splitter);
+  this->p_key_table->setSelectionBehavior(QAbstractItemView::SelectRows);
+
+  this->p_horizontal_splitter2=new QSplitter(this->p_vertical_splitter);
+  this->p_horizontal_splitter2->setOrientation(Qt::Horizontal);
+
+  this->p_hex_edit_widget=new QWidget(this->p_horizontal_splitter2);
+  this->p_hex_edit_layout=new QVBoxLayout(this->p_hex_edit_widget);
+  this->p_hex_edit_layout->setContentsMargins(0,0,0,0);
   this->p_hex_edit=new QHexEdit();
   this->p_hex_edit->setReadOnly(true);
-  this->p_data_interpreter=new QLabel();
+  this->p_hex_edit_status_bar=new QLabel();
+
+  this->p_data_interpreter=new DataInterpreter(this->p_horizontal_splitter2);
 
   // Make sure hex viewer font is monospaced.
   QFont mono_font("Monospace");
@@ -81,10 +91,15 @@ MainWindow::MainWindow(QWidget *parent) :
   this->p_hex_edit->setFont(mono_font);
 
   // Lay out widgets
-  this->p_horizontal_splitter2->addWidget(this->p_hex_edit);
+  this->p_hex_edit_layout->addWidget(this->p_hex_edit);
+  this->p_hex_edit_layout->addWidget(this->p_hex_edit_status_bar);
+
+  this->p_horizontal_splitter2->addWidget(this->p_hex_edit_widget);
   this->p_horizontal_splitter2->addWidget(this->p_data_interpreter);
+
   this->p_vertical_splitter->addWidget(this->p_key_table);
   this->p_vertical_splitter->addWidget(this->p_horizontal_splitter2);
+
   this->p_horizontal_splitter->addWidget(this->p_node_tree);
   this->p_horizontal_splitter->addWidget(this->p_vertical_splitter);
 
@@ -93,23 +108,25 @@ MainWindow::MainWindow(QWidget *parent) :
   node_tree_policy.setHorizontalStretch(1);
   node_tree_policy.setVerticalStretch(100);
   this->p_node_tree->setSizePolicy(node_tree_policy);
+
   QSizePolicy vertical_splitter_policy=this->p_vertical_splitter->sizePolicy();
   vertical_splitter_policy.setHorizontalStretch(4);
   vertical_splitter_policy.setVerticalStretch(100);
   this->p_vertical_splitter->setSizePolicy(vertical_splitter_policy);
+
   QSizePolicy key_table_policy=this->p_key_table->sizePolicy();
   key_table_policy.setVerticalStretch(5);
   key_table_policy.setHorizontalStretch(100);
   this->p_key_table->setSizePolicy(key_table_policy);
 
+  QSizePolicy hex_edit_widget_policy=this->p_hex_edit_widget->sizePolicy();
+  hex_edit_widget_policy.setVerticalStretch(2);
+  hex_edit_widget_policy.setHorizontalStretch(200);
+  this->p_hex_edit_widget->setSizePolicy(hex_edit_widget_policy);
 
-  QSizePolicy hex_edit_policy=this->p_hex_edit->sizePolicy();
-  hex_edit_policy.setVerticalStretch(2);
-  hex_edit_policy.setHorizontalStretch(20);
-  this->p_hex_edit->setSizePolicy(hex_edit_policy);
   QSizePolicy data_interpreter_policy=this->p_data_interpreter->sizePolicy();
   data_interpreter_policy.setVerticalStretch(2);
-  data_interpreter_policy.setHorizontalStretch(1);
+  data_interpreter_policy.setHorizontalStretch(0);
   this->p_data_interpreter->setSizePolicy(data_interpreter_policy);
 
   // Connect signals
@@ -132,9 +149,10 @@ MainWindow::MainWindow(QWidget *parent) :
   this->connect(this->p_hex_edit,
                 SIGNAL(currentAddressChanged(int)),
                 this,
-                SLOT(SlotUpdateDataInterpreter(int)));
+                SLOT(SlotHexEditAddressChanged(int)));
 
   // Add central widget
+  this->setContentsMargins(4,4,4,0);
   this->setCentralWidget(this->p_horizontal_splitter);
 
   // Set window title
@@ -211,6 +229,11 @@ void MainWindow::on_action_Close_hive_triggered() {
       this->p_reg_key_table_model=NULL;
     }
 
+    // Remove any data from hex edit and data interpreter
+    this->p_hex_edit->setData(QByteArray());
+    this->p_hex_edit_status_bar->setText("");
+    this->p_data_interpreter->ClearValues();
+
     // Close hive
     hivex_close(this->hhive);
 
@@ -262,17 +285,6 @@ void MainWindow::SlotNodeTreeClicked(QModelIndex index) {
   // Resize table rows / columns to fit data
   this->p_key_table->resizeColumnsToContents();
   this->p_key_table->horizontalHeader()->stretchLastSection();
-}
-
-void MainWindow::UpdateWindowTitle(QString filename) {
-  if(filename=="") {
-    this->setWindowTitle(QString().sprintf("%s v%s",APP_TITLE,APP_VERSION));
-  } else {
-    this->setWindowTitle(QString().sprintf("%s v%s - %s",
-                                           APP_TITLE,
-                                           APP_VERSION,
-                                           filename.toLocal8Bit().constData()));
-  }
 }
 
 void MainWindow::SlotKeyTableDoubleClicked(QModelIndex index) {
@@ -330,44 +342,90 @@ void MainWindow::SlotKeyTableClicked(QModelIndex index) {
   this->p_hex_edit->setData(this->selected_key_value);
 }
 
-void MainWindow::SlotUpdateDataInterpreter(int hex_offset) {
+void MainWindow::SlotHexEditAddressChanged(int hex_offset) {
+  // Update hex edit status bar
+  this->p_hex_edit_status_bar->
+    setText(QString().sprintf("Byte offset: 0x%04X (%u)",hex_offset,hex_offset));
+  // Update data interpreter
+  this->UpdateDataInterpreter(hex_offset);
+}
+
+void MainWindow::UpdateWindowTitle(QString filename) {
+  if(filename=="") {
+    this->setWindowTitle(QString().sprintf("%s v%s",APP_TITLE,APP_VERSION));
+  } else {
+    this->setWindowTitle(QString().sprintf("%s v%s - %s",
+                                           APP_TITLE,
+                                           APP_VERSION,
+                                           filename.toLocal8Bit().constData()));
+  }
+}
+
+void MainWindow::UpdateDataInterpreter(int hex_offset) {
+  QDateTime date_time;
+  const char *p_data;
+  int remaining_data_len;
+
+  // Remove all old values from data interpreter
+  this->p_data_interpreter->ClearValues();
+
+  // Calculate how many bytes are remainig after current offset
+  remaining_data_len=this->selected_key_value.size()-hex_offset;
+  if(!remaining_data_len>0) {
+    // Nothing to show
+    return;
+  }
+
+  // Get pointer to data at current offset
+  p_data=this->selected_key_value.constData();
+  p_data+=hex_offset;
+
   #define rotl32(x,n)   (((x) << n) | ((x) >> (32 - n)))
   //#define rotr32(x,n)   (((x) >> n) | ((x) << (32 - n)))
   #define rotl64(x,n)   (((x) << n) | ((x) >> (64 - n)))
   //#define rotr64(x,n)   (((x) >> n) | ((x) << (64 - n)))
 
-  QString ret="";
-  QDateTime date_time;
-  const char *p_data=this->selected_key_value.constData();
-  int remaining_data_len=this->selected_key_value.size()-hex_offset;
-
-  if(!remaining_data_len>0) {
-    this->p_data_interpreter->setText("");
-    return;
+  if(remaining_data_len>=1) {
+    this->p_data_interpreter->AddValue("int8:",
+                                       QString().sprintf("%d",
+                                                         *(int8_t*)p_data));
+    this->p_data_interpreter->AddValue("uint8:",
+                                       QString().sprintf("%u",
+                                                         *(uint8_t*)p_data));
   }
-  p_data+=hex_offset;
-
   if(remaining_data_len>=2) {
-    ret.append(QString().sprintf("int16: %d\n",*(int16_t*)p_data));
-    ret.append(QString().sprintf("uint16: %u\n",*(uint16_t*)p_data));
+    this->p_data_interpreter->AddValue("int16:",
+                                       QString().sprintf("%d",
+                                                         *(int16_t*)p_data));
+    this->p_data_interpreter->AddValue("uint16:",
+                                       QString().sprintf("%u",
+                                                         *(uint16_t*)p_data));
   }
   if(remaining_data_len>=4) {
-    ret.append(QString().sprintf("int32: %d\n",*(int32_t*)p_data));
-    ret.append(QString().sprintf("uint32: %u\n",*(uint32_t*)p_data));
+    this->p_data_interpreter->AddValue("int32:",
+                                       QString().sprintf("%d",
+                                                         *(int32_t*)p_data));
+    this->p_data_interpreter->AddValue("uint32:",
+                                       QString().sprintf("%d",
+                                                         *(uint32_t*)p_data));
     date_time.setTime_t(*(uint32_t*)p_data);
-    ret.append(QString("Unixtime: %1\n").arg(date_time.toString("yyyy/MM/dd hh:mm:ss UTC")));
-    //uint32_t value_be=rotl32(value,16);
-    //ret.append(QString().sprintf("uint32 (be): %u\n",value_be));
+    this->p_data_interpreter->AddValue("Unixtime:",
+                                       date_time.
+                                         toString("yyyy/MM/dd hh:mm:ss"));
   }
   if(remaining_data_len>=8) {
-    ret.append(QString().sprintf("int64: %d\n",*(int64_t*)p_data));
-    ret.append(QString().sprintf("uint64: %u\n",*(uint64_t*)p_data));
+    this->p_data_interpreter->AddValue("int64:",
+                                       QString().sprintf("%d",
+                                                         *(int64_t*)p_data));
+    this->p_data_interpreter->AddValue("uint64:",
+                                       QString().sprintf("%d",
+                                                         *(uint64_t*)p_data));
     date_time.setTime_t((*(uint64_t*)p_data-116444736000000000)/10000000);
-    ret.append(QString("Win64time: %1\n").arg(date_time.toString("yyyy/MM/dd hh:mm:ss UTC")));
+    this->p_data_interpreter->AddValue("Win64time:",
+                                       date_time.
+                                         toString("yyyy/MM/dd hh:mm:ss"));
   }
 
   #undef rotl32
   #undef rotl64
-
-  this->p_data_interpreter->setText(ret);
 }

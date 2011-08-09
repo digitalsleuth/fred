@@ -28,6 +28,7 @@
 #include "registrynodetreemodel.h"
 #include "registrykeytablemodel.h"
 #include "qhexedit/qhexedit.h"
+#include "datainterpreter.h"
 
 namespace Ui {
   class MainWindow;
@@ -50,7 +51,7 @@ class MainWindow : public QMainWindow {
     void SlotNodeTreeClicked(QModelIndex index);
     void SlotKeyTableClicked(QModelIndex index);
     void SlotKeyTableDoubleClicked(QModelIndex index);
-    void SlotUpdateDataInterpreter(int hex_offset);
+    void SlotHexEditAddressChanged(int hex_offset);
 
 private:
     Ui::MainWindow *ui;
@@ -61,16 +62,30 @@ private:
     RegistryKeyTableModel *p_reg_key_table_model;
     QByteArray selected_key_value;
 
-    // Widgets
+    // Widgets etc...
     QTreeView *p_node_tree;
     QTableView *p_key_table;
+    QWidget *p_hex_edit_widget;
     QHexEdit *p_hex_edit;
-    QLabel *p_data_interpreter;
+    QLabel *p_hex_edit_status_bar;
+    DataInterpreter *p_data_interpreter;
+    QVBoxLayout *p_hex_edit_layout;
     QSplitter *p_horizontal_splitter;
     QSplitter *p_horizontal_splitter2;
     QSplitter *p_vertical_splitter;
 
+    /*
+     * UpdateWindowTitle
+     *
+     * Updates the window title
+     */
     void UpdateWindowTitle(QString filename="");
+    /*
+     * UpdateDataInterpreter
+     *
+     * Update data interpreter
+     */
+    void UpdateDataInterpreter(int hex_offset);
 };
 
 #endif // MAINWINDOW_H
