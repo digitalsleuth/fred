@@ -1,8 +1,8 @@
 /*******************************************************************************
 * fred Copyright (c) 2011 by Gillen Daniel <gillen.dan@pinguin.lu>             *
 *                                                                              *
-* Forensic Registry EDitor (fred) is a M$ registry hive editor for Linux with  *
-* special feautures useful during forensic analysis.                           *
+* Forensic Registry EDitor (fred) is a cross-platform M$ registry hive editor  *
+* with special feautures useful during forensic analysis.                      *
 *                                                                              *
 * This program is free software: you can redistribute it and/or modify it      *
 * under the terms of the GNU General Public License as published by the Free   *
@@ -17,7 +17,6 @@
 * You should have received a copy of the GNU General Public License along with *
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
-
 #include "registrynodetreemodel.h"
 
 #include <stdlib.h>

@@ -11,7 +11,7 @@ echo '#define APP_NAME "fred"'
 echo '#define APP_TITLE "Forensic Registry EDitor (fred)"'
 echo '#define APP_COPYRIGHT "Copyright (c) 2011 by Gillen Daniel"'
 echo '#define APP_DEVELOPPER_EMAIL "gillen.dan@pinguin.lu"'
-echo '#define APP_DESCRIPTION "Forensic Registry EDitor (fred) is a M$ registry hive editor for Linux with special feautures useful during forensic analysis."'
+echo '#define APP_DESCRIPTION "Forensic Registry EDitor (fred) is a cross-platform M$ registry hive editor with special feautures useful during forensic analysis."'
 date '+#define APP_COMPILETIME "%Y/%m/%d %H:%M:%S"'
 
 GOT_VERSION=0
