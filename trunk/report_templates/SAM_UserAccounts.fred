@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<report category="SAM" name="User accounts">
+  <for path="SAM/Domains/Account/Users/Names/*" vars="fred::node;(default),type">
+    <paragraph title="[0]" type="string">
+      <value name="Last login" key="SAM/Domains/Account/Users/[1]/F" type="win64time" offset="8">
+    </paragraph>
+  </for>
+</report>
+
