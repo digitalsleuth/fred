@@ -50,6 +50,7 @@ class MainWindow : public QMainWindow {
     void SlotNodeTreeClicked(QModelIndex index);
     void SlotKeyTableClicked(QModelIndex index);
     void SlotKeyTableDoubleClicked(QModelIndex index);
+    void SlotUpdateDataInterpreter(int hex_offset);
 
 private:
     Ui::MainWindow *ui;
@@ -64,7 +65,9 @@ private:
     QTreeView *p_node_tree;
     QTableView *p_key_table;
     QHexEdit *p_hex_edit;
+    QLabel *p_data_interpreter;
     QSplitter *p_horizontal_splitter;
+    QSplitter *p_horizontal_splitter2;
     QSplitter *p_vertical_splitter;
 
     void UpdateWindowTitle(QString filename="");

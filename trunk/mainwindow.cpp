@@ -67,10 +67,13 @@ MainWindow::MainWindow(QWidget *parent) :
   this->p_key_table->setSelectionBehavior(QAbstractItemView::SelectRows);
   this->p_horizontal_splitter=new QSplitter();
   this->p_horizontal_splitter->setOrientation(Qt::Horizontal);
+  this->p_horizontal_splitter2=new QSplitter();
+  this->p_horizontal_splitter2->setOrientation(Qt::Horizontal);
   this->p_vertical_splitter=new QSplitter();
   this->p_vertical_splitter->setOrientation(Qt::Vertical);
   this->p_hex_edit=new QHexEdit();
   this->p_hex_edit->setReadOnly(true);
+  this->p_data_interpreter=new QLabel();
 
   // Make sure hex viewer font is monospaced.
   QFont mono_font("Monospace");
@@ -78,8 +81,10 @@ MainWindow::MainWindow(QWidget *parent) :
   this->p_hex_edit->setFont(mono_font);
 
   // Lay out widgets
+  this->p_horizontal_splitter2->addWidget(this->p_hex_edit);
+  this->p_horizontal_splitter2->addWidget(this->p_data_interpreter);
   this->p_vertical_splitter->addWidget(this->p_key_table);
-  this->p_vertical_splitter->addWidget(this->p_hex_edit);
+  this->p_vertical_splitter->addWidget(this->p_horizontal_splitter2);
   this->p_horizontal_splitter->addWidget(this->p_node_tree);
   this->p_horizontal_splitter->addWidget(this->p_vertical_splitter);
 
@@ -96,10 +101,16 @@ MainWindow::MainWindow(QWidget *parent) :
   key_table_policy.setVerticalStretch(5);
   key_table_policy.setHorizontalStretch(100);
   this->p_key_table->setSizePolicy(key_table_policy);
+
+
   QSizePolicy hex_edit_policy=this->p_hex_edit->sizePolicy();
   hex_edit_policy.setVerticalStretch(2);
-  hex_edit_policy.setHorizontalStretch(100);
+  hex_edit_policy.setHorizontalStretch(20);
   this->p_hex_edit->setSizePolicy(hex_edit_policy);
+  QSizePolicy data_interpreter_policy=this->p_data_interpreter->sizePolicy();
+  data_interpreter_policy.setVerticalStretch(2);
+  data_interpreter_policy.setHorizontalStretch(1);
+  this->p_data_interpreter->setSizePolicy(data_interpreter_policy);
 
   // Connect signals
   this->connect(this->p_node_tree,
@@ -118,6 +129,10 @@ MainWindow::MainWindow(QWidget *parent) :
                 SIGNAL(doubleClicked(QModelIndex)),
                 this,
                 SLOT(SlotKeyTableDoubleClicked(QModelIndex)));
+  this->connect(this->p_hex_edit,
+                SIGNAL(currentAddressChanged(int)),
+                this,
+                SLOT(SlotUpdateDataInterpreter(int)));
 
   // Add central widget
   this->setCentralWidget(this->p_horizontal_splitter);
@@ -313,4 +328,46 @@ void MainWindow::SlotKeyTableClicked(QModelIndex index) {
                                         AdditionalRoles_GetRawData)
                                           .toByteArray();
   this->p_hex_edit->setData(this->selected_key_value);
+}
+
+void MainWindow::SlotUpdateDataInterpreter(int hex_offset) {
+  #define rotl32(x,n)   (((x) << n) | ((x) >> (32 - n)))
+  //#define rotr32(x,n)   (((x) >> n) | ((x) << (32 - n)))
+  #define rotl64(x,n)   (((x) << n) | ((x) >> (64 - n)))
+  //#define rotr64(x,n)   (((x) >> n) | ((x) << (64 - n)))
+
+  QString ret="";
+  QDateTime date_time;
+  const char *p_data=this->selected_key_value.constData();
+  int remaining_data_len=this->selected_key_value.size()-hex_offset;
+
+  if(!remaining_data_len>0) {
+    this->p_data_interpreter->setText("");
+    return;
+  }
+  p_data+=hex_offset;
+
+  if(remaining_data_len>=2) {
+    ret.append(QString().sprintf("int16: %d\n",*(int16_t*)p_data));
+    ret.append(QString().sprintf("uint16: %u\n",*(uint16_t*)p_data));
+  }
+  if(remaining_data_len>=4) {
+    ret.append(QString().sprintf("int32: %d\n",*(int32_t*)p_data));
+    ret.append(QString().sprintf("uint32: %u\n",*(uint32_t*)p_data));
+    date_time.setTime_t(*(uint32_t*)p_data);
+    ret.append(QString("Unixtime: %1\n").arg(date_time.toString("yyyy/MM/dd hh:mm:ss UTC")));
+    //uint32_t value_be=rotl32(value,16);
+    //ret.append(QString().sprintf("uint32 (be): %u\n",value_be));
+  }
+  if(remaining_data_len>=8) {
+    ret.append(QString().sprintf("int64: %d\n",*(int64_t*)p_data));
+    ret.append(QString().sprintf("uint64: %u\n",*(uint64_t*)p_data));
+    date_time.setTime_t((*(uint64_t*)p_data-116444736000000000)/10000000);
+    ret.append(QString("Win64time: %1\n").arg(date_time.toString("yyyy/MM/dd hh:mm:ss UTC")));
+  }
+
+  #undef rotl32
+  #undef rotl64
+
+  this->p_data_interpreter->setText(ret);
 }

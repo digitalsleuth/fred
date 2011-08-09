@@ -257,6 +257,8 @@ QString RegistryKeyTableModel::ValueToString(QByteArray &value,
       ToHexStr();
   }
 
+  #undef ToHexStr
+
   return ret;
 }
 
