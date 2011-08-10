@@ -1,0 +1,13 @@
+Package: fred
+Version: 0.1.0alpha1
+Architecture: amd64
+Maintainer: Gillen Daniel <gillen.dan@pinguin.lu>
+Installed-Size: 428
+Depends: libc6 (>= 2.2.5), libgcc1 (>= 1:4.1.1), libhivex0, libqtcore4 (>= 4:4.7.0~beta1), libqtgui4 (>= 4:4.5.3), libstdc++6 (>= 4.1.1)
+Section: x11
+Priority: optional
+Homepage: https://www.pinguin.lu
+Description: Forensic Registry EDitor
+ Forensic Registry EDitor (fred) is a M$ registry hive editor
+ for Linux with special feautures useful during forensic
+ analysis.
