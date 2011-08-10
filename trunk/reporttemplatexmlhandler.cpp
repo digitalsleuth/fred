@@ -20,15 +20,18 @@
 
 #include "reporttemplatexmlhandler.h"
 
-ReportTemplateXmlHandler::ReportTemplateXmlHandler(bool only_get_info)
+ReportTemplateXmlHandler::ReportTemplateXmlHandler(hive_h *hive_handle,
+                                                   bool only_get_info)
   : QXmlDefaultHandler()
 {
+  this->hhive=hive_handle;
   this->get_info=only_get_info;
 }
 
 bool ReportTemplateXmlHandler::startDocument() {
   this->report_category="";
   this->report_name="";
+  this->report_content="";
 }
 
 bool ReportTemplateXmlHandler::startElement(const QString &namespaceURI,
@@ -37,6 +40,7 @@ bool ReportTemplateXmlHandler::startElement(const QString &namespaceURI,
                                             const QXmlAttributes &atts)
 {
   int i=0;
+  bool ok;
 
   // If we should only extract report info...
   if(this->get_info) {
@@ -47,10 +51,24 @@ bool ReportTemplateXmlHandler::startElement(const QString &namespaceURI,
     return true;
   }
 
+  // Check element
+  if(qName=="foreach") {
+    ok=this->ProcessForEach(atts.value(QString("path")),
+                            atts.value(QString("vars")),
+                            hivex_root(this->hhive));
+    if(!ok) return false;
+  } else if (qName=="paragraph") {
+
+  } else if (qName=="value") {
+
+  }
+
+  /*
   qDebug("%s",QString("--> %3").arg(qName).toAscii().constData());
   for(i=0;i<atts.count();i++) {
     qDebug("%s",QString("----> Name: '%1'', Value: '%2'").arg(atts.qName(i),atts.value(i)).toAscii().constData());
   }
+  */
 
   return true;
 }
@@ -59,14 +77,26 @@ bool ReportTemplateXmlHandler::endElement(const QString &namespaceURI,
                                           const QString &localName,
                                           const QString &qName)
 {
+  if(this->get_info) return true;
+
+  if(qName=="foreach") {
+
+  } else if (qName=="paragraph") {
+
+  } else if (qName=="value") {
+
+  }
+
   return true;
 }
 
 bool ReportTemplateXmlHandler::error(const QXmlParseException &exception) {
+  qDebug("error: %u: %s",exception.lineNumber(),exception.message().toAscii().constData());
   return false;
 }
 
 bool ReportTemplateXmlHandler::fatalError(const QXmlParseException &exception) {
+  qDebug("fatalerror: %u: %s",exception.lineNumber(),exception.message().toAscii().constData());
   return false;
 }
 
@@ -76,4 +106,56 @@ QString ReportTemplateXmlHandler::GetReportCategory() {
 
 QString ReportTemplateXmlHandler::GetReportName() {
   return this->report_name;
+}
+
+QString ReportTemplateXmlHandler::ReportData() {
+
+}
+
+bool ReportTemplateXmlHandler::ProcessForEach(QString path,
+                                              QString vars,
+                                              hive_node_h cur_hive_node,
+                                              bool iterate) {
+  int i=0,ii=0;
+
+  if(!iterate) {
+    QStringList nodes=path.split('/');
+    if(cur_hive_node==0) return false;
+
+    for(i=0;i<nodes.count();i++) {
+      if(nodes.value(i)!="*") {
+        cur_hive_node=hivex_node_get_child(this->hhive,
+                                           cur_hive_node,
+                                           nodes.value(i).toAscii().
+                                             constData());
+        if(cur_hive_node==0) return false;
+      } else {
+        QString new_path="";
+        for(ii=i+1;ii<nodes.count();ii++) {
+          new_path.append(nodes.value(ii)).append("/");
+        }
+        new_path.chop(1);
+        ok=this->ProcessForEach(new_path,vars,cur_hive_node,true);
+        if(!ok) return false;
+      }
+    }
+  } else {
+    hive_node_h *p_child_nodes=hivex_node_children(this->hhive,cur_hive_node);
+    i=0;
+    while(p_child_nodes[i]) {
+
+      i++;
+    }
+    free(p_child_nodes);
+  }
+
+  return true;
+}
+
+bool ReportTemplateXmlHandler::ProcessParagraph() {
+
+}
+
+bool ReportTemplateXmlHandler::ProcessValue() {
+
 }

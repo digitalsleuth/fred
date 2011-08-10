@@ -161,8 +161,10 @@ MainWindow::MainWindow(QWidget *parent) :
   // Set last open location to home dir
   this->last_open_location=QDir::homePath();
 
-  // Load report templates
-  this->data_reporter().LoadReportTemplates();
+  // Load report templates and update menu
+  this->p_data_reporter=new DataReporter();
+  this->p_data_reporter->LoadReportTemplates();
+  this->UpdateDataReporterMenu();
 }
 
 MainWindow::~MainWindow() {
@@ -217,6 +219,7 @@ void MainWindow::on_action_Open_hive_triggered() {
 
   this->is_hive_open=true;
   this->ui->action_Close_hive->setEnabled(true);
+  this->ui->MenuReports->setEnabled(true);
   this->UpdateWindowTitle(hive_file);
 }
 
@@ -242,6 +245,7 @@ void MainWindow::on_action_Close_hive_triggered() {
 
     this->is_hive_open=false;
     this->ui->action_Close_hive->setEnabled(false);
+    this->ui->MenuReports->setEnabled(false);
     this->UpdateWindowTitle();
   }
 }
@@ -353,6 +357,17 @@ void MainWindow::SlotHexEditAddressChanged(int hex_offset) {
   this->UpdateDataInterpreter(hex_offset);
 }
 
+void MainWindow::SlotReportClicked() {
+  // Get report category and name from sender and it's parent
+  QString category=((QMenu*)((QAction*)QObject::sender())->parent())->title();
+  QString report=((QAction*)QObject::sender())->text();
+
+  QString report_content=this->p_data_reporter->GenerateReport(this->hhive,
+                                                               category,
+                                                               report);
+  QMessageBox::information(this,report,report_content);
+}
+
 void MainWindow::UpdateWindowTitle(QString filename) {
   if(filename=="") {
     this->setWindowTitle(QString().sprintf("%s v%s",APP_TITLE,APP_VERSION));
@@ -431,6 +446,30 @@ void MainWindow::UpdateDataInterpreter(int hex_offset) {
 
   #undef rotl32
   #undef rotl64
+}
+
+void MainWindow::UpdateDataReporterMenu() {
+  int i=0,ii=0;
+  QMenu *p_category_entry;
+  QAction *p_report_entry;
+
+  QStringList categories=this->p_data_reporter->GetAvailableReportCategories();
+  QStringList reports;
+
+  for(i=0;i<categories.count();i++) {
+    // First create category submenu
+    p_category_entry=this->ui->MenuReports->addMenu(categories.value(i));
+    // Now add category reports
+    reports=this->p_data_reporter->GetAvailableReports(categories.value(i));
+    for(ii=0;ii<reports.count();ii++) {
+      p_report_entry=new QAction(reports.value(ii),p_category_entry);
+      p_category_entry->addAction(p_report_entry);
+      this->connect(p_report_entry,
+                    SIGNAL(triggered()),
+                    this,
+                    SLOT(SlotReportClicked()));
+    }
+  }
 }
 
 /*

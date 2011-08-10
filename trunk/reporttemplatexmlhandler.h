@@ -23,10 +23,13 @@
 
 #include <QtXml/QXmlDefaultHandler>
 
+#include <hivex.h>
+
 class ReportTemplateXmlHandler : public QXmlDefaultHandler {
 
   public:
-    explicit ReportTemplateXmlHandler(bool only_get_info=true);
+    explicit ReportTemplateXmlHandler(hive_h *hive_handle=NULL,
+                                      bool only_get_info=true);
 
     bool startDocument();
     bool startElement(const QString &namespaceURI,
@@ -41,12 +44,18 @@ class ReportTemplateXmlHandler : public QXmlDefaultHandler {
 
     QString GetReportCategory();
     QString GetReportName();
+    QString ReportData();
 
   private:
+    hive_h *hhive;
     bool get_info;
     QString report_category;
     QString report_name;
+    QString report_content;
 
+    bool ProcessForEach(QString path, QString vars);
+    bool ProcessParagraph();
+    bool ProcessValue();
 };
 
 #endif // REPORTTEMPLATEXMLHANDLER_H

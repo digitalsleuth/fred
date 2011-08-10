@@ -53,6 +53,7 @@ class MainWindow : public QMainWindow {
     void SlotKeyTableClicked(QModelIndex index);
     void SlotKeyTableDoubleClicked(QModelIndex index);
     void SlotHexEditAddressChanged(int hex_offset);
+    void SlotReportClicked();
 
 private:
     Ui::MainWindow *ui;
@@ -75,7 +76,7 @@ private:
     QSplitter *p_horizontal_splitter2;
     QSplitter *p_vertical_splitter;
 
-    DataReporter data_reporter();
+    DataReporter *p_data_reporter;
 
     /*
      * UpdateWindowTitle
@@ -90,10 +91,10 @@ private:
      */
     void UpdateDataInterpreter(int hex_offset);
     /*
-     *
+     * UpdateDataReporterMenu
      *
      */
-    void LoadReportTemplates();
+    void UpdateDataReporterMenu();
 };
 
 #endif // MAINWINDOW_H
