@@ -24,7 +24,6 @@
 #include <QDesktopWidget>
 #include <QDir>
 #include <QSplitter>
-#include <QtXml/QXmlSimpleReader>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -161,6 +160,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
   // Set last open location to home dir
   this->last_open_location=QDir::homePath();
+
+  // Load report templates
+  this->data_reporter().LoadReportTemplates();
 }
 
 MainWindow::~MainWindow() {
@@ -431,15 +433,36 @@ void MainWindow::UpdateDataInterpreter(int hex_offset) {
   #undef rotl64
 }
 
+/*
 void MainWindow::LoadReportTemplates() {
-  QXmlSimpleReader xmlReader;
+  //#include <QtXml/QXmlSimpleReader>
 
-  QDir report_dir("./report_templates/");
-  QStringList report_templates=report_dir.entryList("*.fred");
+  QString report_template="";
+  QXmlSimpleReader xml_parser;
+
+  qDebug("Loading report templates...");
+
+  QDir report_dir("../trunk/report_templates/");
+  QStringList report_templates=report_dir.entryList(QStringList()<<"*.fred");
   int i=0;
 
   for(i=0;i<report_templates.count();i++) {
-    //QXmlInputSource *p_xml_file=new QXmlInputSource(QFile(report_templates.value(i)));
+    report_template=report_dir.path();
+    report_template.append(QDir::separator());
+    report_template.append(report_templates.value(i));
 
+    qDebug("%s",report_template.toAscii().constData());
+
+    QFile *p_report_template_file=new QFile(report_template);
+    QXmlInputSource *p_xml_file=new QXmlInputSource(p_report_template_file);
+    ReportTemplateXmlHandler *p_report_handler=new ReportTemplateXmlHandler();
+
+    xml_parser.setContentHandler(p_report_handler);
+    xml_parser.parse(p_xml_file);
+
+    delete p_report_handler;
+    delete p_xml_file;
+    delete p_report_template_file;
   }
 }
+*/

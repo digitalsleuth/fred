@@ -20,42 +20,48 @@
 
 system(bash compileinfo.sh > compileinfo.h)
 
-QT       += core \
-            gui
+QT        += core \
+             gui \
+             xml
 
-TARGET    = fred
+TARGET     = fred
 
-TEMPLATE  = app
+TEMPLATE   = app
 
 
-SOURCES  += main.cpp\
-            mainwindow.cpp \
-            registrynode.cpp \
-            registrynodetreemodel.cpp \
-            registrykey.cpp \
-            registrykeytablemodel.cpp \
-    dlgabout.cpp \
-    dlgkeydetails.cpp \
-    qhexedit/qhexedit_p.cpp \
-    qhexedit/qhexedit.cpp \
-    datainterpreter.cpp
+SOURCES   += main.cpp\
+             mainwindow.cpp \
+             registrynode.cpp \
+             registrynodetreemodel.cpp \
+             registrykey.cpp \
+             registrykeytablemodel.cpp \
+             dlgabout.cpp \
+             dlgkeydetails.cpp \
+             qhexedit/qhexedit_p.cpp \
+             qhexedit/qhexedit.cpp \
+             datainterpreter.cpp \
+             reporttemplatexmlhandler.cpp \
+             reporttemplate.cpp \
+             datareporter.cpp
 
-HEADERS  += mainwindow.h \
-            registrynode.h \
-            registrynodetreemodel.h \
-            registrykey.h \
-            registrykeytablemodel.h \
-    dlgabout.h \
-    dlgkeydetails.h \
-    qhexedit/qhexedit_p.h \
-    qhexedit/qhexedit.h \
-    datainterpreter.h
+HEADERS   += mainwindow.h \
+             registrynode.h \
+             registrynodetreemodel.h \
+             registrykey.h \
+             registrykeytablemodel.h \
+             dlgabout.h \
+             dlgkeydetails.h \
+             qhexedit/qhexedit_p.h \
+             qhexedit/qhexedit.h \
+             datainterpreter.h \
+             reporttemplatexmlhandler.h \
+             reporttemplate.h \
+             datareporter.h
 
-FORMS    += mainwindow.ui \
-    dlgabout.ui \
-    dlgkeydetails.ui
+FORMS     += mainwindow.ui \
+             dlgabout.ui \
+             dlgkeydetails.ui
 
-LIBS     += -lhivex
+LIBS      += -lhivex
 
-RESOURCES += \
-    fred.qrc
+RESOURCES += fred.qrc

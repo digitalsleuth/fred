@@ -29,6 +29,7 @@
 #include "registrykeytablemodel.h"
 #include "qhexedit/qhexedit.h"
 #include "datainterpreter.h"
+#include "datareporter.h"
 
 namespace Ui {
   class MainWindow;
@@ -73,6 +74,8 @@ private:
     QSplitter *p_horizontal_splitter;
     QSplitter *p_horizontal_splitter2;
     QSplitter *p_vertical_splitter;
+
+    DataReporter data_reporter();
 
     /*
      * UpdateWindowTitle
