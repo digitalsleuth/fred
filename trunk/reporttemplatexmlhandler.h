@@ -30,6 +30,7 @@ class ReportTemplateXmlHandler : public QXmlDefaultHandler {
   public:
     explicit ReportTemplateXmlHandler(hive_h *hive_handle=NULL,
                                       bool only_get_info=true);
+    ~ReportTemplateXmlHandler();
 
     bool startDocument();
     bool startElement(const QString &namespaceURI,
@@ -52,10 +53,28 @@ class ReportTemplateXmlHandler : public QXmlDefaultHandler {
     QString report_category;
     QString report_name;
     QString report_content;
+    QList<ReportTemplateData*> report_data;
 
-    bool ProcessForEach(QString path, QString vars);
+    bool ProcessForEach(QString path,
+                        QString vars,
+                        hive_node_h cur_hive_node,
+                        bool iterate);
     bool ProcessParagraph();
     bool ProcessValue();
+};
+
+class ReportTemplateData {
+  public:
+    ReportTemplateData() {
+      this->vars.clear();
+      this->data.clear();
+    }
+    ~ReportTemplateData() {
+      qDeleteAll(this->data);
+    }
+
+    QList<QVariant> vars;
+    QList<ReportTemplateData*> data;
 };
 
 #endif // REPORTTEMPLATEXMLHANDLER_H

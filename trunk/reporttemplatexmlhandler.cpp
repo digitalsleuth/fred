@@ -28,10 +28,15 @@ ReportTemplateXmlHandler::ReportTemplateXmlHandler(hive_h *hive_handle,
   this->get_info=only_get_info;
 }
 
+ReportTemplateXmlHandler::~ReportTemplateXmlHandler() {
+  qDeleteAll(this->report_data);
+}
+
 bool ReportTemplateXmlHandler::startDocument() {
   this->report_category="";
   this->report_name="";
   this->report_content="";
+  this->report_data.clear();
 }
 
 bool ReportTemplateXmlHandler::startElement(const QString &namespaceURI,
@@ -143,7 +148,11 @@ bool ReportTemplateXmlHandler::ProcessForEach(QString path,
     hive_node_h *p_child_nodes=hivex_node_children(this->hhive,cur_hive_node);
     i=0;
     while(p_child_nodes[i]) {
-
+      // Save iterator node
+      ReportTemplateData *p_data;
+      p_data->vars.append(QVariant(hivex_node_name(this->hhive,p_child_nodes[i])));
+      // TODO: Add custom vars
+      this->report_data.append(p_data);
       i++;
     }
     free(p_child_nodes);
