@@ -24,6 +24,7 @@
 #include <QDesktopWidget>
 #include <QDir>
 #include <QSplitter>
+#include <QtXml/QXmlSimpleReader>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -430,14 +431,15 @@ void MainWindow::UpdateDataInterpreter(int hex_offset) {
   #undef rotl64
 }
 
-/*
 void MainWindow::LoadReportTemplates() {
+  QXmlSimpleReader xmlReader;
+
   QDir report_dir("./report_templates/");
   QStringList report_templates=report_dir.entryList("*.fred");
   int i=0;
 
   for(i=0;i<report_templates.count();i++) {
-    QXml
+    //QXmlInputSource *p_xml_file=new QXmlInputSource(QFile(report_templates.value(i)));
+
   }
 }
-*/

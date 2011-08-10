@@ -90,7 +90,7 @@ private:
      *
      *
      */
-    //void LoadReportTemplates();
+    void LoadReportTemplates();
 };
 
 #endif // MAINWINDOW_H
