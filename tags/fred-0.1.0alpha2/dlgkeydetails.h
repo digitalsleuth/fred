@@ -18,79 +18,43 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef DLGKEYDETAILS_H
+#define DLGKEYDETAILS_H
 
-#include <QMainWindow>
+#include <QDialog>
+#include <QByteArray>
 
-#include <hivex.h>
-
-#include "registrynodetreemodel.h"
-#include "registrykeytablemodel.h"
 #include "qhexedit/qhexedit.h"
-#include "datainterpreter.h"
 
 namespace Ui {
-  class MainWindow;
+  class DlgKeyDetails;
 }
 
-class MainWindow : public QMainWindow {
+class DlgKeyDetails : public QDialog {
   Q_OBJECT
 
   public:
-    explicit MainWindow(QWidget *parent = 0);
-    ~MainWindow();
+    explicit DlgKeyDetails(QWidget *p_parent=0);
+    ~DlgKeyDetails();
+
+    void SetValues(QStringList &r_parent_nodes,
+                   QString &r_key_name,
+                   QString &r_key_type,
+                   QByteArray &r_key_value);
+
+  protected:
+    void changeEvent(QEvent *e);
 
   private slots:
-    void on_action_Quit_triggered();
-    void on_action_Open_hive_triggered();
-    void on_action_Close_hive_triggered();
-    void on_actionAbout_Qt_triggered();
-    void on_actionAbout_fred_triggered();
+    void on_BtnClose_clicked();
 
-    void SlotNodeTreeClicked(QModelIndex index);
-    void SlotKeyTableClicked(QModelIndex index);
-    void SlotKeyTableDoubleClicked(QModelIndex index);
-    void SlotHexEditAddressChanged(int hex_offset);
-
-private:
-    Ui::MainWindow *ui;
-    QString last_open_location;
-    hive_h *hhive;
-    bool is_hive_open;
-    RegistryNodeTreeModel *p_reg_node_tree_model;
-    RegistryKeyTableModel *p_reg_key_table_model;
-    QByteArray selected_key_value;
-
-    // Widgets etc...
-    QTreeView *p_node_tree;
-    QTableView *p_key_table;
-    QWidget *p_hex_edit_widget;
+  private:
+    Ui::DlgKeyDetails *ui;
+    QStringList parent_nodes;
+    QString key_name;
+    QString key_type;
+    QByteArray key_value;
     QHexEdit *p_hex_edit;
-    QLabel *p_hex_edit_status_bar;
-    DataInterpreter *p_data_interpreter;
-    QVBoxLayout *p_hex_edit_layout;
-    QSplitter *p_horizontal_splitter;
-    QSplitter *p_horizontal_splitter2;
-    QSplitter *p_vertical_splitter;
-
-    /*
-     * UpdateWindowTitle
-     *
-     * Updates the window title
-     */
-    void UpdateWindowTitle(QString filename="");
-    /*
-     * UpdateDataInterpreter
-     *
-     * Update data interpreter
-     */
-    void UpdateDataInterpreter(int hex_offset);
-    /*
-     *
-     *
-     */
-    //void LoadReportTemplates();
 };
 
-#endif // MAINWINDOW_H
+#endif // DLGKEYDETAILS_H

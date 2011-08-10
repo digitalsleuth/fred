@@ -1,0 +1,12 @@
+fred (0.1.0alpha2) unstable; urgency=low
+
+  * Integrated hexeditor into main windows.
+  * Added data interpreter
+
+ -- Daniel Gillen <gillen.dan@pinguin.lu>  Wed, 10 Aug 2011 12:00:00 +0200
+
+fred (0.1.0alpha1) unstable; urgency=low
+
+  * First public release
+
+ -- Daniel Gillen <gillen.dan@pinguin.lu>  Sat, 06 Aug 2011 22:00:00 +0200
