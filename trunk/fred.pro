@@ -22,7 +22,8 @@ system(bash compileinfo.sh > compileinfo.h)
 
 QT        += core \
              gui \
-             xml
+             xml \
+             script
 
 TARGET     = fred
 
@@ -42,7 +43,9 @@ SOURCES   += main.cpp\
              datainterpreter.cpp \
              reporttemplatexmlhandler.cpp \
              reporttemplate.cpp \
-             datareporter.cpp
+             datareporter.cpp \
+    datareporterengine.cpp \
+    registryhive.cpp
 
 HEADERS   += mainwindow.h \
              registrynode.h \
@@ -56,7 +59,9 @@ HEADERS   += mainwindow.h \
              datainterpreter.h \
              reporttemplatexmlhandler.h \
              reporttemplate.h \
-             datareporter.h
+             datareporter.h \
+    datareporterengine.h \
+    registryhive.h
 
 FORMS     += mainwindow.ui \
              dlgabout.ui \

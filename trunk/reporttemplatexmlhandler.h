@@ -22,8 +22,23 @@
 #define REPORTTEMPLATEXMLHANDLER_H
 
 #include <QtXml/QXmlDefaultHandler>
+#include <QVariant>
 
 #include <hivex.h>
+
+class ReportTemplateData {
+  public:
+    ReportTemplateData() {
+      this->vars.clear();
+      this->data.clear();
+    }
+    ~ReportTemplateData() {
+      qDeleteAll(this->data);
+    }
+
+    QList<QVariant> vars;
+    QList<ReportTemplateData*> data;
+};
 
 class ReportTemplateXmlHandler : public QXmlDefaultHandler {
 
@@ -58,23 +73,9 @@ class ReportTemplateXmlHandler : public QXmlDefaultHandler {
     bool ProcessForEach(QString path,
                         QString vars,
                         hive_node_h cur_hive_node,
-                        bool iterate);
+                        bool iterate=false);
     bool ProcessParagraph();
     bool ProcessValue();
-};
-
-class ReportTemplateData {
-  public:
-    ReportTemplateData() {
-      this->vars.clear();
-      this->data.clear();
-    }
-    ~ReportTemplateData() {
-      qDeleteAll(this->data);
-    }
-
-    QList<QVariant> vars;
-    QList<ReportTemplateData*> data;
 };
 
 #endif // REPORTTEMPLATEXMLHANDLER_H

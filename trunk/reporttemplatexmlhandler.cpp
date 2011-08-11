@@ -18,6 +18,8 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
+#include <stdlib.h>
+
 #include "reporttemplatexmlhandler.h"
 
 ReportTemplateXmlHandler::ReportTemplateXmlHandler(hive_h *hive_handle,
@@ -37,6 +39,7 @@ bool ReportTemplateXmlHandler::startDocument() {
   this->report_name="";
   this->report_content="";
   this->report_data.clear();
+  return true;
 }
 
 bool ReportTemplateXmlHandler::startElement(const QString &namespaceURI,
@@ -44,6 +47,8 @@ bool ReportTemplateXmlHandler::startElement(const QString &namespaceURI,
                                             const QString &qName,
                                             const QXmlAttributes &atts)
 {
+  Q_UNUSED(namespaceURI);
+  Q_UNUSED(localName);
   int i=0;
   bool ok;
 
@@ -82,6 +87,8 @@ bool ReportTemplateXmlHandler::endElement(const QString &namespaceURI,
                                           const QString &localName,
                                           const QString &qName)
 {
+  Q_UNUSED(namespaceURI);
+  Q_UNUSED(localName);
   if(this->get_info) return true;
 
   if(qName=="foreach") {
@@ -114,7 +121,7 @@ QString ReportTemplateXmlHandler::GetReportName() {
 }
 
 QString ReportTemplateXmlHandler::ReportData() {
-
+  return QString();
 }
 
 bool ReportTemplateXmlHandler::ProcessForEach(QString path,
@@ -122,6 +129,7 @@ bool ReportTemplateXmlHandler::ProcessForEach(QString path,
                                               hive_node_h cur_hive_node,
                                               bool iterate) {
   int i=0,ii=0;
+  bool ok;
 
   if(!iterate) {
     QStringList nodes=path.split('/');
@@ -150,8 +158,39 @@ bool ReportTemplateXmlHandler::ProcessForEach(QString path,
     while(p_child_nodes[i]) {
       // Save iterator node
       ReportTemplateData *p_data;
-      p_data->vars.append(QVariant(hivex_node_name(this->hhive,p_child_nodes[i])));
+      char *p_node_name=hivex_node_name(this->hhive,p_child_nodes[i]);
+      // TODO: Check for NULL value
+      p_data->vars.append(p_node_name);
       // TODO: Add custom vars
+      QStringList var_pairs=vars.split(';');
+      for(ii=0;ii<var_pairs.count();ii++) {
+        QString var_name=var_pairs.value(ii).split(',').value(0);
+        QString var_type=var_pairs.value(ii).split(',').value(1);
+        QVariant var_content="";
+
+        if(var_name=="(default)") var_name="";
+
+        int type=0;
+        size_t len=0;
+
+        hive_value_h hive_key=hivex_node_get_value(this->hhive,
+                                                   cur_hive_node,
+                                                   var_name.toAscii().constData());
+
+        if(var_type=="type") {
+          char *data=hivex_value_value(this->hhive,hive_key,(hive_type*)&type,&len);
+          var_content=QString().sprintf("%08u",type);
+
+          qDebug("Save var '%s' with content '%08u'",var_name.toAscii().constData(),type);
+
+          free(data);
+        } else if(var_type=="value") {
+          char *data=hivex_value_value(this->hhive,hive_key,(hive_type*)&type,&len);
+          var_content=QByteArray(data);
+        }
+      }
+
+
       this->report_data.append(p_data);
       i++;
     }
@@ -162,9 +201,9 @@ bool ReportTemplateXmlHandler::ProcessForEach(QString path,
 }
 
 bool ReportTemplateXmlHandler::ProcessParagraph() {
-
+  return true;
 }
 
 bool ReportTemplateXmlHandler::ProcessValue() {
-
+  return true;
 }

@@ -365,7 +365,9 @@ void MainWindow::SlotReportClicked() {
   QString report_content=this->p_data_reporter->GenerateReport(this->hhive,
                                                                category,
                                                                report);
+
   QMessageBox::information(this,report,report_content);
+
 }
 
 void MainWindow::UpdateWindowTitle(QString filename) {
