@@ -1,8 +1,11 @@
 /*******************************************************************************
-* fred Copyright (c) 2011 by Gillen Daniel <gillen.dan@pinguin.lu>             *
+* Copyright (c) 2011 by Gillen Daniel <gillen.dan@pinguin.lu>                  *
 *                                                                              *
-* Forensic Registry EDitor (fred) is a cross-platform M$ registry hive editor  *
-* with special feautures useful during forensic analysis.                      *
+* Derived from code by Nokia Corporation and/or its subsidiary(-ies) under a   *
+* compatible license:                                                          *
+*                                                                              *
+* Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).            *
+* All rights reserved.                                                         *
 *                                                                              *
 * This program is free software: you can redistribute it and/or modify it      *
 * under the terms of the GNU General Public License as published by the Free   *
@@ -18,31 +21,31 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#ifndef DATAREPORTER_H
-#define DATAREPORTER_H
+#ifndef BYTEARRAYITERATOR_H
+#define BYTEARRAYITERATOR_H
 
-#include <QList>
+#include <QtScript/QScriptClassPropertyIterator>
 
-#include "reporttemplate.h"
-#include "datareporterengine.h"
-#include "registryhive.h"
-
-class DataReporter {
+class ByteArrayIterator : public QScriptClassPropertyIterator {
   public:
-    DataReporter();
-    ~DataReporter();
+    ByteArrayIterator(const QScriptValue &object);
+    ~ByteArrayIterator();
 
-    void LoadReportTemplates();
-    QStringList GetAvailableReportCategories();
-    QStringList GetAvailableReports(QString category);
+    bool hasNext() const;
+    void next();
 
-    QString GenerateReport(RegistryHive *p_hive,
-                           QString report_category,
-                           QString report_name);
+    bool hasPrevious() const;
+    void previous();
+
+    void toFront();
+    void toBack();
+
+    QScriptString name() const;
+    uint id() const;
 
   private:
-    QList<ReportTemplate*> report_templates;
-    //DataReporterEngine *p_report_engine;
+    int m_index;
+    int m_last;
 };
 
-#endif // DATAREPORTER_H
+#endif // BYTEARRAYITERATOR_H

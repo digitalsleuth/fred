@@ -18,31 +18,33 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#ifndef DATAREPORTER_H
-#define DATAREPORTER_H
+#include "dlgreportviewer.h"
+#include "ui_dlgreportviewer.h"
 
-#include <QList>
+#include <QUrl>
 
-#include "reporttemplate.h"
-#include "datareporterengine.h"
-#include "registryhive.h"
+DlgReportViewer::DlgReportViewer(QString &report_data, QWidget *p_parent)
+  : QDialog(p_parent), ui(new Ui::DlgReportViewer)
+{
+  ui->setupUi(this);
+  this->ui->WebView->setHtml(report_data);
+}
 
-class DataReporter {
-  public:
-    DataReporter();
-    ~DataReporter();
+DlgReportViewer::~DlgReportViewer() {
+  delete ui;
+}
 
-    void LoadReportTemplates();
-    QStringList GetAvailableReportCategories();
-    QStringList GetAvailableReports(QString category);
+void DlgReportViewer::changeEvent(QEvent *e) {
+  QDialog::changeEvent(e);
+  switch(e->type()) {
+    case QEvent::LanguageChange:
+      ui->retranslateUi(this);
+      break;
+    default:
+      break;
+  }
+}
 
-    QString GenerateReport(RegistryHive *p_hive,
-                           QString report_category,
-                           QString report_name);
-
-  private:
-    QList<ReportTemplate*> report_templates;
-    //DataReporterEngine *p_report_engine;
-};
-
-#endif // DATAREPORTER_H
+void DlgReportViewer::on_BtnClose_clicked() {
+  this->accept();
+}

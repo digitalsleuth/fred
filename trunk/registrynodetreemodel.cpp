@@ -21,16 +21,14 @@
 
 #include <stdlib.h>
 
-RegistryNodeTreeModel::RegistryNodeTreeModel(hive_h *hhive,
-                                             hive_node_h hive_root_node,
+RegistryNodeTreeModel::RegistryNodeTreeModel(RegistryHive *p_hive,
                                              QObject *p_parent)
   : QAbstractItemModel(p_parent)
 {
-  Q_UNUSED(p_parent);
+  // Create root node
   this->p_root_node=new RegistryNode("ROOT");
-  this->SetupModelData(hhive,
-                       hive_root_node,
-                       this->p_root_node);
+  // Build node list
+  this->SetupModelData(p_hive,this->p_root_node);
 }
 
 RegistryNodeTreeModel::~RegistryNodeTreeModel() {
@@ -117,24 +115,24 @@ int RegistryNodeTreeModel::columnCount(const QModelIndex &parent) const {
   return 1;
 }
 
-void RegistryNodeTreeModel::SetupModelData(hive_h *hhive,
-                                           hive_node_h hive_node,
-                                           RegistryNode *p_parent)
+void RegistryNodeTreeModel::SetupModelData(RegistryHive *p_hive,
+                                           RegistryNode *p_parent,
+                                           int hive_node)
 {
-  int i=0;
+  QMap<QString,int> hive_children;
   RegistryNode *p_node;
 
   // Get all sub nodes of current hive node
-  hive_node_h *p_hive_children=hivex_node_children(hhive,hive_node);
-  if(p_hive_children==NULL) return;
+  if(hive_node) hive_children=p_hive->GetNodes(hive_node);
+  else hive_children=p_hive->GetNodes("\\");
+  if(hive_children.isEmpty()) return;
 
   // Recursivly iterate over all sub nodes
-  while(p_hive_children[i]) {
-    p_node=new RegistryNode(QString(hivex_node_name(hhive,p_hive_children[i])),
-                            p_parent);
+  QMapIterator<QString, int> i(hive_children);
+  while(i.hasNext()) {
+    i.next();
+    p_node=new RegistryNode(i.key(),p_parent);
     p_parent->AppendChild(p_node);
-    this->SetupModelData(hhive,p_hive_children[i],p_node);
-    i++;
+    this->SetupModelData(p_hive,p_node,i.value());
   }
-  free(p_hive_children);
 }

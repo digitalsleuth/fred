@@ -29,6 +29,7 @@
 #include "ui_mainwindow.h"
 #include "dlgabout.h"
 #include "dlgkeydetails.h"
+#include "dlgreportviewer.h"
 
 #include "compileinfo.h"
 
@@ -38,7 +39,7 @@ MainWindow::MainWindow(QWidget *parent) :
   ui->setupUi(this);
 
   // Initialize private vars
-  this->hhive=NULL;
+  this->p_hive=new RegistryHive(this);
   this->is_hive_open=false;
   this->p_reg_node_tree_model=NULL;
   this->p_reg_key_table_model=NULL;
@@ -138,7 +139,8 @@ MainWindow::MainWindow(QWidget *parent) :
                 SIGNAL(activated(QModelIndex)),
                 this,
                 SLOT(SlotNodeTreeClicked(QModelIndex)));
-  this->connect(this->p_key_table,
+  this->connect(this->p_key_table /*->selectionModel()*/,
+                /* SIGNAL(selectionChanged(QItemSelection,QItemSelection)) */
                 SIGNAL(clicked(QModelIndex)),
                 this,
                 SLOT(SlotKeyTableClicked(QModelIndex)));
@@ -169,7 +171,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow() {
   if(this->is_hive_open) {
-    hivex_close(this->hhive);
+    this->p_hive->Close();
   }
   delete ui;
 }
@@ -195,8 +197,7 @@ void MainWindow::on_action_Open_hive_triggered() {
   if(this->is_hive_open) this->on_action_Close_hive_triggered();
 
   // Try to open hive
-  this->hhive=hivex_open(hive_file.toAscii().constData(),0);
-  if(this->hhive==NULL) {
+  if(!this->p_hive->Open(hive_file)) {
     QMessageBox::critical(this,
                           tr("Error opening hive file"),
                           tr("Unable to open file '%1'").arg(hive_file));
@@ -204,17 +205,8 @@ void MainWindow::on_action_Open_hive_triggered() {
   }
 
   // Create tree model
-  hive_node_h root_node=hivex_root(hhive);
-  if(root_node==0) {
-    QMessageBox::critical(this,
-                          tr("Error opening hive file"),
-                          tr("This hive seems to have no root node!")
-                            .arg(hive_file));
-    return;
-  }
   this->p_reg_node_tree_model=
-    new RegistryNodeTreeModel(this->hhive,
-                              root_node);
+    new RegistryNodeTreeModel(this->p_hive);
   this->p_node_tree->setModel(this->p_reg_node_tree_model);
 
   this->is_hive_open=true;
@@ -241,7 +233,7 @@ void MainWindow::on_action_Close_hive_triggered() {
     this->p_data_interpreter->ClearValues();
 
     // Close hive
-    hivex_close(this->hhive);
+    this->p_hive->Close();
 
     this->is_hive_open=false;
     this->ui->action_Close_hive->setEnabled(false);
@@ -260,33 +252,22 @@ void MainWindow::on_actionAbout_fred_triggered() {
 }
 
 void MainWindow::SlotNodeTreeClicked(QModelIndex index) {
-  QStringList nodes;
+  QString node_path;
 
   //Built node path
-  nodes.clear();
-  nodes.append(this->p_reg_node_tree_model->
-                 data(index,Qt::DisplayRole).toString());
+  node_path.clear();
+  node_path=this->p_reg_node_tree_model->data(index,Qt::DisplayRole)
+    .toString().prepend("\\");
   while(this->p_reg_node_tree_model->parent(index)!=QModelIndex()) {
     // Prepend all parent nodes
     index=this->p_reg_node_tree_model->parent(index);
-    nodes.prepend(this->p_reg_node_tree_model->
-                  data(index,Qt::DisplayRole).toString());
-  }
-
-  // Get hive_node handle for current node
-  hive_node_h hive_node=hivex_root(this->hhive);
-  QString cur_node;
-  for(QStringList::iterator it=nodes.begin();it!=nodes.end();++it) {
-    cur_node=*it;
-    hive_node=hivex_node_get_child(this->hhive,
-                                   hive_node,
-                                   cur_node.toAscii().constData());
+    node_path.prepend(this->p_reg_node_tree_model->data(index,Qt::DisplayRole)
+                        .toString().prepend("\\"));
   }
 
   // Create table model and attach it to the table view
   if(this->p_reg_key_table_model!=NULL) delete this->p_reg_key_table_model;
-  this->p_reg_key_table_model=new RegistryKeyTableModel(this->hhive,
-                                                        hive_node);
+  this->p_reg_key_table_model=new RegistryKeyTableModel(this->p_hive,node_path);
   this->p_key_table->setModel(this->p_reg_key_table_model);
 
   // Resize table rows / columns to fit data
@@ -295,6 +276,7 @@ void MainWindow::SlotNodeTreeClicked(QModelIndex index) {
 }
 
 void MainWindow::SlotKeyTableDoubleClicked(QModelIndex index) {
+  /*
   QModelIndex key_index;
   QModelIndex node_index;
   QStringList nodes;
@@ -335,6 +317,7 @@ void MainWindow::SlotKeyTableDoubleClicked(QModelIndex index) {
   DlgKeyDetails dlg_key_details(this);
   dlg_key_details.SetValues(nodes,key_name,key_type,key_value);
   dlg_key_details.exec();
+  */
 }
 
 void MainWindow::SlotKeyTableClicked(QModelIndex index) {
@@ -362,12 +345,12 @@ void MainWindow::SlotReportClicked() {
   QString category=((QMenu*)((QAction*)QObject::sender())->parent())->title();
   QString report=((QAction*)QObject::sender())->text();
 
-  QString report_content=this->p_data_reporter->GenerateReport(this->hhive,
+  QString report_content=this->p_data_reporter->GenerateReport(this->p_hive,
                                                                category,
                                                                report);
 
-  QMessageBox::information(this,report,report_content);
-
+  DlgReportViewer dlg_report_view(report_content,this);
+  dlg_report_view.exec();
 }
 
 void MainWindow::UpdateWindowTitle(QString filename) {
@@ -473,37 +456,3 @@ void MainWindow::UpdateDataReporterMenu() {
     }
   }
 }
-
-/*
-void MainWindow::LoadReportTemplates() {
-  //#include <QtXml/QXmlSimpleReader>
-
-  QString report_template="";
-  QXmlSimpleReader xml_parser;
-
-  qDebug("Loading report templates...");
-
-  QDir report_dir("../trunk/report_templates/");
-  QStringList report_templates=report_dir.entryList(QStringList()<<"*.fred");
-  int i=0;
-
-  for(i=0;i<report_templates.count();i++) {
-    report_template=report_dir.path();
-    report_template.append(QDir::separator());
-    report_template.append(report_templates.value(i));
-
-    qDebug("%s",report_template.toAscii().constData());
-
-    QFile *p_report_template_file=new QFile(report_template);
-    QXmlInputSource *p_xml_file=new QXmlInputSource(p_report_template_file);
-    ReportTemplateXmlHandler *p_report_handler=new ReportTemplateXmlHandler();
-
-    xml_parser.setContentHandler(p_report_handler);
-    xml_parser.parse(p_xml_file);
-
-    delete p_report_handler;
-    delete p_xml_file;
-    delete p_report_template_file;
-  }
-}
-*/

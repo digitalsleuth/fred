@@ -24,16 +24,13 @@
 #include <QAbstractItemModel>
 
 #include "registrynode.h"
-
-#include <hivex.h>
+#include "registryhive.h"
 
 class RegistryNodeTreeModel : public QAbstractItemModel {
   Q_OBJECT
 
   public:
-    RegistryNodeTreeModel(hive_h *hhive,
-                          hive_node_h hive_root_node,
-                          QObject *p_parent=0);
+    RegistryNodeTreeModel(RegistryHive *p_hive, QObject *p_parent=0);
     ~RegistryNodeTreeModel();
 
     QVariant data(const QModelIndex &index, int role) const;
@@ -49,10 +46,11 @@ class RegistryNodeTreeModel : public QAbstractItemModel {
     int columnCount(const QModelIndex &parent=QModelIndex()) const;
 
   private:
-    void SetupModelData(hive_h *hhive,
-                        hive_node_h hive_node,
-                        RegistryNode *p_parent);
     RegistryNode *p_root_node;
+
+    void SetupModelData(RegistryHive *p_hive,
+                        RegistryNode *p_parent,
+                        int hive_node=0);
 };
 
 #endif // REGISTRYNODETREEMODEL_H

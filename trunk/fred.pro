@@ -23,7 +23,8 @@ system(bash compileinfo.sh > compileinfo.h)
 QT        += core \
              gui \
              xml \
-             script
+             script \
+             webkit
 
 TARGET     = fred
 
@@ -41,11 +42,14 @@ SOURCES   += main.cpp\
              qhexedit/qhexedit_p.cpp \
              qhexedit/qhexedit.cpp \
              datainterpreter.cpp \
-             reporttemplatexmlhandler.cpp \
              reporttemplate.cpp \
              datareporter.cpp \
     datareporterengine.cpp \
-    registryhive.cpp
+    registryhive.cpp \
+    qtscript_types/bytearray.cpp \
+    qtscript_types/bytearrayprototype.cpp \
+    qtscript_types/bytearrayiterator.cpp \
+    dlgreportviewer.cpp
 
 HEADERS   += mainwindow.h \
              registrynode.h \
@@ -57,15 +61,19 @@ HEADERS   += mainwindow.h \
              qhexedit/qhexedit_p.h \
              qhexedit/qhexedit.h \
              datainterpreter.h \
-             reporttemplatexmlhandler.h \
              reporttemplate.h \
              datareporter.h \
     datareporterengine.h \
-    registryhive.h
+    registryhive.h \
+    qtscript_types/bytearray.h \
+    qtscript_types/bytearrayprototype.h \
+    qtscript_types/bytearrayiterator.h \
+    dlgreportviewer.h
 
 FORMS     += mainwindow.ui \
              dlgabout.ui \
-             dlgkeydetails.ui
+             dlgkeydetails.ui \
+    dlgreportviewer.ui
 
 LIBS      += -lhivex
 

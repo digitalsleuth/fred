@@ -24,8 +24,7 @@
 #include <QAbstractTableModel>
 
 #include "registrykey.h"
-
-#include <hivex.h>
+#include "registryhive.h"
 
 class RegistryKeyTableModel : public QAbstractTableModel {
   Q_OBJECT
@@ -35,8 +34,8 @@ class RegistryKeyTableModel : public QAbstractTableModel {
       AdditionalRoles_GetRawData=Qt::UserRole
     };
 
-    RegistryKeyTableModel(hive_h *hhive,
-                          hive_node_h hive_node,
+    RegistryKeyTableModel(RegistryHive *p_hive,
+                          QString node_path,
                           QObject *p_parent=0);
     ~RegistryKeyTableModel();
 
@@ -60,7 +59,7 @@ class RegistryKeyTableModel : public QAbstractTableModel {
 
     RegistryKey *p_keys;
 
-    void SetupModelData(hive_h *hhive, hive_node_h hive_node);
+    void SetupModelData(RegistryHive *p_hive, QString &node_path);
     QString ValueToString(QByteArray &value, int value_type) const;
     QString TypeToString(int value_type) const;
 };

@@ -25,6 +25,7 @@
 
 #include <hivex.h>
 
+#include "registryhive.h"
 #include "registrynodetreemodel.h"
 #include "registrykeytablemodel.h"
 #include "qhexedit/qhexedit.h"
@@ -58,7 +59,7 @@ class MainWindow : public QMainWindow {
 private:
     Ui::MainWindow *ui;
     QString last_open_location;
-    hive_h *hhive;
+    RegistryHive *p_hive;
     bool is_hive_open;
     RegistryNodeTreeModel *p_reg_node_tree_model;
     RegistryKeyTableModel *p_reg_key_table_model;

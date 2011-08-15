@@ -46,7 +46,6 @@ QHexEditPrivate::QHexEditPrivate(QScrollArea *parent) : QWidget(parent)
     connect(&_cursorTimer, SIGNAL(timeout()), this, SLOT(updateCursor()));
 
     _cursorTimer.setInterval(500);
-    _cursorTimer.start();
 
     setFocusPolicy(Qt::StrongFocus);
     _size = -1;
@@ -65,11 +64,13 @@ int QHexEditPrivate::addressOffset()
 
 void QHexEditPrivate::setData(const QByteArray &data)
 {
-    _data = data;
-    _originalData = data;
-    adjust();
-    setCursorPos(0);
-    setFocus();
+  if(!data.isNull() && !data.isEmpty()) this->_cursorTimer.start();
+  else this->_cursorTimer.stop();
+  this->_data = data;
+  this->_originalData = data;
+  this->adjust();
+  this->setCursorPos(0);
+  this->setFocus();
 }
 
 QByteArray QHexEditPrivate::data()
@@ -359,7 +360,7 @@ void QHexEditPrivate::paintEvent(QPaintEvent *event)
     }
 
     // paint cursor
-    if (_blink)
+    if (_blink && !this->_data.isNull() && !this->_data.isEmpty())
     {
         if (_overwriteMode)
             painter.fillRect(_cursorX, _cursorY + _charHeight - 2, _charWidth, 2, this->palette().color(QPalette::WindowText));

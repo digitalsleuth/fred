@@ -18,51 +18,53 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#include <QDir>
-
 #include "datareporter.h"
-#include "reporttemplatexmlhandler.h"
+
+#include <QDir>
+#include <QTextStream>
+#include <QtScript/QScriptEngine>
+#include <QMessageBox>
 
 DataReporter::DataReporter() {
   this->report_templates.clear();
+  //this->p_report_engine=new DataReporterEngine();
 }
 
 DataReporter::~DataReporter() {
+  //delete this->p_report_engine;
   qDeleteAll(this->report_templates);
 }
 
 void DataReporter::LoadReportTemplates() {
   QString report_template="";
-  QXmlSimpleReader xml_parser;
   int i=0;
+  QString report_category="";
+  QString report_name="";
   ReportTemplate *p_report;
 
+  // Get all template files in report_templates directory
   QDir report_dir("../trunk/report_templates/");
-  QStringList found_report_templates=report_dir.entryList(QStringList()<<"*.fred");
+  QStringList found_report_templates=report_dir.
+    entryList(QStringList()<<"*.js");
 
   for(i=0;i<found_report_templates.count();i++) {
+    // Build complete path to template file
     report_template=report_dir.path();
     report_template.append(QDir::separator());
     report_template.append(found_report_templates.value(i));
 
-    QFile *p_report_template_file=new QFile(report_template);
-    QXmlInputSource *p_xml_file=new QXmlInputSource(p_report_template_file);
-    ReportTemplateXmlHandler *p_report_handler=new ReportTemplateXmlHandler();
+    // Extract report category and name from file name (<category>_<name>.js)
+    report_category=found_report_templates.value(i).left(
+      found_report_templates.value(i).indexOf("_"));
+    report_name=found_report_templates.value(i).mid(
+      found_report_templates.value(i).indexOf("_")+1);
+    report_name=report_name.left(report_name.lastIndexOf(".")-1);
 
-    xml_parser.setContentHandler(p_report_handler);
-    xml_parser.setErrorHandler(p_report_handler);
-    if(xml_parser.parse(p_xml_file)) {
-      p_report=new ReportTemplate(p_report_handler->GetReportCategory(),
-                                  p_report_handler->GetReportName(),
-                                  report_template);
-      this->report_templates.append(p_report);
-    } else {
-      qDebug("Error loading template");
-    }
-
-    delete p_report_handler;
-    delete p_xml_file;
-    delete p_report_template_file;
+    // Add report to list
+    p_report=new ReportTemplate(report_category,
+                                report_name,
+                                report_template);
+    this->report_templates.append(p_report);
   }
 }
 
@@ -76,7 +78,6 @@ QStringList DataReporter::GetAvailableReportCategories() {
     cat=this->report_templates.value(i)->Category();
     if(!ret.contains(cat)) ret.append(cat);
   }
-
   ret.sort();
 
   return ret;
@@ -92,20 +93,20 @@ QStringList DataReporter::GetAvailableReports(QString category) {
     cat=this->report_templates.value(i)->Category();
     if(cat==category) ret.append(this->report_templates.value(i)->Name());
   }
-
   ret.sort();
 
   return ret;
 }
 
-QString DataReporter::GenerateReport(hive_h *hhive,
+QString DataReporter::GenerateReport(RegistryHive *p_hive,
                                      QString report_category,
                                      QString report_name)
 {
-  QString ret=QString();
   int i=0;
-  QXmlSimpleReader xml_parser;
   ReportTemplate *p_report;
+  DataReporterEngine engine(p_hive);
+  QString report_code;
+  //ReportData report_data;
 
   for(i=0;i<this->report_templates.count();i++) {
     p_report=this->report_templates.value(i);
@@ -113,25 +114,42 @@ QString DataReporter::GenerateReport(hive_h *hhive,
       continue;
     }
 
-    QFile *p_template_file=new QFile(p_report->File());
-    QXmlInputSource *p_xml_input=new QXmlInputSource(p_template_file);
-    ReportTemplateXmlHandler *p_report_handler=
-      new ReportTemplateXmlHandler(hhive,false);
+    QScriptValue hive_value=engine.newQObject(p_hive);
+    engine.globalObject().setProperty("RegistryHive",hive_value);
+    //QScriptValue return_value=engine.newQObject(&report_data);
+    //engine.globalObject().setProperty("ReportData",return_value);
 
-    xml_parser.setContentHandler(p_report_handler);
-    xml_parser.setErrorHandler(p_report_handler);
-    if(xml_parser.parse(p_xml_input)) {
-      ret=p_report_handler->ReportData();
-    } else {
-      qDebug("Error loading template");
+    // Open report template
+    QFile template_file(p_report->File());
+    if(!template_file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+      qDebug("Couldn't open file '%s'",p_report->File().toAscii().constData());
+      break;
+    }
+    // Read template file
+    QTextStream in(&template_file);
+    while(!in.atEnd()) {
+      report_code.append(in.readLine());
+    }
+    // Close report template file
+    template_file.close();
+
+    QScriptValue report_result=engine.evaluate(report_code,p_report->File());
+
+    if (report_result.isError()) {
+      QMessageBox::critical(0,
+                            "Hello Script",
+                            QString::fromLatin1("%0:%1: %2")
+                                   .arg(p_report->File())
+                                   .arg(report_result.property("lineNumber").toInt32())
+                                   .arg(report_result.toString()));
+      break;
     }
 
-    delete p_report_handler;
-    delete p_xml_input;
-    delete p_template_file;
+
+    if(engine.hasUncaughtException()) qDebug("Exception in processing!");
 
     break;
   }
 
-  return ret;
+  return engine.report_content;
 }

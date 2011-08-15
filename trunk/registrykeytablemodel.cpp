@@ -22,8 +22,8 @@
 
 #include <stdlib.h>
 
-RegistryKeyTableModel::RegistryKeyTableModel(hive_h *hhive,
-                                             hive_node_h hive_node,
+RegistryKeyTableModel::RegistryKeyTableModel(RegistryHive *p_hive,
+                                             QString node_path,
                                              QObject *p_parent)
   : QAbstractTableModel(p_parent)
 {
@@ -31,7 +31,7 @@ RegistryKeyTableModel::RegistryKeyTableModel(hive_h *hhive,
   this->p_keys=new RegistryKey(QList<QVariant>()<<
                                  tr("Key")<<tr("Type")<<tr("Value"));
   // Build key list
-  this->SetupModelData(hhive,hive_node);
+  this->SetupModelData(p_hive,node_path);
 }
 
 RegistryKeyTableModel::~RegistryKeyTableModel() {
@@ -85,14 +85,6 @@ QVariant RegistryKeyTableModel::data(const QModelIndex &index, int role) const {
     default:
       return QVariant();
   }
-
-  /*
-  if(role!=Qt::DisplayRole) return QVariant();
-
-  RegistryKey *p_key=static_cast<RegistryKey*>(index.internalPointer());
-
-  return p_key->Data(index.column());
-  */
 }
 
 Qt::ItemFlags RegistryKeyTableModel::flags(const QModelIndex &index) const {
@@ -148,42 +140,33 @@ int RegistryKeyTableModel::columnCount(const QModelIndex &parent) const {
   return 3;
 }
 
-void RegistryKeyTableModel::SetupModelData(hive_h *hhive,
-                                           hive_node_h hive_node)
+void RegistryKeyTableModel::SetupModelData(RegistryHive *p_hive,
+                                           QString &node_path)
 {
-  int i=0;
+  QMap<QString,int> node_keys;
   RegistryKey *p_key;
-  char *p_key_name;
-  char *key_value;
+  QByteArray key_value;
   int key_value_type;
   size_t key_value_len;
 
-  // Get all (key,value) pairs for current node
-  hive_value_h *node_keys=hivex_node_values(hhive,hive_node);
-  if(node_keys==NULL) return;
+  // Get all keys for current node
+  node_keys=p_hive->GetKeys(node_path);
+  if(node_keys.isEmpty()) return;
 
-  // Add all (key,value) pairs to the key list
-  while(node_keys[i]) {
-    // Get key name
-    p_key_name=hivex_value_key(hhive,node_keys[i]);
-    if(p_key_name==NULL) continue;
-    // Get key value and type
-    key_value=hivex_value_value(hhive,
-                                node_keys[i],
-                                (hive_type*)&key_value_type,
-                                &key_value_len);
-    if(key_value==NULL) continue;
-
-    // Add infos to key list
+  // Add all keys to list
+  QMapIterator<QString,int> i(node_keys);
+  while(i.hasNext()) {
+    i.next();
+    key_value=p_hive->GetKeyValue(i.value(),
+                                  &key_value_type,
+                                  &key_value_len);
+    if(p_hive->GetErrorMsg()!="") continue;
     p_key=new RegistryKey(QList<QVariant>()<<
-                            QString(strlen(p_key_name) ?
-                                      p_key_name : "(default)")<<
+                            QString(i.key().length() ? i.key() : "(default)")<<
                             QVariant(key_value_type)<<
-                            QByteArray(key_value,key_value_len));
+                            key_value);
     this->p_keys->Append(p_key);
-    i++;
   }
-  free(node_keys);
 }
 
 QString RegistryKeyTableModel::ValueToString(QByteArray &value,
