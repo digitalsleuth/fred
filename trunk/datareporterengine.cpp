@@ -46,6 +46,8 @@ DataReporterEngine::DataReporterEngine(RegistryHive *p_hive) : QScriptEngine() {
   QScriptValue func_get_key_value=this->newFunction(this->GetRegistryKeyValue);
   func_get_key_value.setData(this->newQObject(this->p_registry_hive));
   this->globalObject().setProperty("GetRegistryKeyValue",func_get_key_value);
+
+  /*
   // RegistryKeyValueToString
   QScriptValue func_value_to_string=
     this->newFunction(this->RegistryKeyValueToString);
@@ -56,6 +58,11 @@ DataReporterEngine::DataReporterEngine(RegistryHive *p_hive) : QScriptEngine() {
     this->newFunction(this->RegistryKeyTypeToString);
   this->globalObject().setProperty("RegistryKeyTypeToString",
                                    func_type_to_string);
+  */
+
+  // Add RegistryHive object
+  QScriptValue obj_registry_hive=this->newQObject(this->p_registry_hive);
+  this->globalObject().setProperty("RegistryHive",obj_registry_hive);
 }
 
 DataReporterEngine::~DataReporterEngine() {
@@ -175,8 +182,8 @@ QScriptValue DataReporterEngine::RegistryKeyValueToString(
   if(context->argumentCount()!=2) return engine->undefinedValue();
 
   // TODO: Does not work!!
-  //key_value=qscriptvalue_cast<QByteArray>(context->argument(0));
-  key_value=context->argument(0).toVariant().toByteArray();
+  key_value=qscriptvalue_cast<QByteArray>(context->argument(0));
+  //key_value=context->argument(0).toVariant().toByteArray();
   ret=RegistryHive::KeyValueToString(key_value,
                                      hive_t_REG_SZ /*context->argument(1).toInteger()*/);
 

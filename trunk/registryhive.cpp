@@ -199,7 +199,7 @@ QByteArray RegistryHive::GetKeyValue(int hive_key,
 /*
  * KeyValueToString
  */
-QString RegistryHive::KeyValueToString(QByteArray &value, int value_type) {
+QString RegistryHive::KeyValueToString(QByteArray value, int value_type) {
   QString ret="";
   int i=0;
 

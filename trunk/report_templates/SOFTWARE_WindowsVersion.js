@@ -7,8 +7,7 @@ println("  <p>");
 var val=GetRegistryKeyValue("\\Microsoft\\Windows NT\\CurrentVersion","ProductName");
 
 print("ProductVersion: ");
-var str_value=RegistryKeyValueToString(val.value,val.type);
-println(str_value);
+println(RegistryHive.KeyValueToString(val.value,1));
 
 println("  </p>");
 println("</html>");
