@@ -349,8 +349,12 @@ void MainWindow::SlotReportClicked() {
                                                                category,
                                                                report);
 
-  DlgReportViewer dlg_report_view(report_content,this);
-  dlg_report_view.exec();
+  if(report_content!=QString()) {
+    DlgReportViewer dlg_report_view(report_content,this);
+    dlg_report_view.exec();
+  } else {
+    // TODO: Something went wrong!
+  }
 }
 
 void MainWindow::UpdateWindowTitle(QString filename) {

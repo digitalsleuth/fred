@@ -66,7 +66,7 @@ void ByteArrayIterator::toBack() {
 }
 
 QScriptString ByteArrayIterator::name() const {
-  return QScriptString();
+  return this->object().engine()->toStringHandle(QString::number(this->m_last));
 }
 
 uint ByteArrayIterator::id() const {

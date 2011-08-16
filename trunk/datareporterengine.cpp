@@ -21,6 +21,10 @@
 #include "datareporterengine.h"
 
 #include <QString>
+#include <QMap>
+#include <QMapIterator>
+#include <QStringList>
+#include <QDateTime>
 
 DataReporterEngine::DataReporterEngine(RegistryHive *p_hive) : QScriptEngine() {
   // Init vars
@@ -42,27 +46,40 @@ DataReporterEngine::DataReporterEngine(RegistryHive *p_hive) : QScriptEngine() {
   // println
   QScriptValue func_println=this->newFunction(this->PrintLn);
   this->globalObject().setProperty("println",func_println);
+  // GetRegistryNodes
+  QScriptValue func_get_nodes=this->newFunction(this->GetRegistryNodes,1);
+  func_get_nodes.setData(this->newQObject(this->p_registry_hive));
+  this->globalObject().setProperty("GetRegistryNodes",func_get_nodes);
+  // GetRegistryKeys
+  QScriptValue func_get_keys=this->newFunction(this->GetRegistryKeys,1);
+  func_get_keys.setData(this->newQObject(this->p_registry_hive));
+  this->globalObject().setProperty("GetRegistryKeys",func_get_keys);
   // GetRegistryKeyValue
-  QScriptValue func_get_key_value=this->newFunction(this->GetRegistryKeyValue);
+  QScriptValue func_get_key_value=this->newFunction(this->GetRegistryKeyValue,
+                                                    2);
   func_get_key_value.setData(this->newQObject(this->p_registry_hive));
   this->globalObject().setProperty("GetRegistryKeyValue",func_get_key_value);
-
-  /*
   // RegistryKeyValueToString
   QScriptValue func_value_to_string=
-    this->newFunction(this->RegistryKeyValueToString);
+    this->newFunction(this->RegistryKeyValueToString,2);
   this->globalObject().setProperty("RegistryKeyValueToString",
                                    func_value_to_string);
+  // RegistryKeyValueToVariant
+  QScriptValue func_value_to_variant=
+    this->newFunction(this->RegistryKeyValueToVariant);
+  this->globalObject().setProperty("RegistryKeyValueToVariant",
+                                   func_value_to_variant);
   // RegistryKeyTypeToString
   QScriptValue func_type_to_string=
-    this->newFunction(this->RegistryKeyTypeToString);
+    this->newFunction(this->RegistryKeyTypeToString,1);
   this->globalObject().setProperty("RegistryKeyTypeToString",
                                    func_type_to_string);
-  */
 
+/*
   // Add RegistryHive object
   QScriptValue obj_registry_hive=this->newQObject(this->p_registry_hive);
   this->globalObject().setProperty("RegistryHive",obj_registry_hive);
+*/
 }
 
 DataReporterEngine::~DataReporterEngine() {
@@ -77,7 +94,7 @@ QScriptValue DataReporterEngine::Print(QScriptContext *context,
 
   // Append all arguments to content
   for(i=0;i<context->argumentCount();++i) {
-    if(i>0) content.append(" ");
+    //if(i>0) content.append(" ");
     content.append(context->argument(i).toString());
   }
 
@@ -97,7 +114,7 @@ QScriptValue DataReporterEngine::PrintLn(QScriptContext *context,
 
   // Append all arguments to content
   for(i=0;i<context->argumentCount();++i) {
-    if(i>0) content.append(" ");
+    //if(i>0) content.append(" ");
     content.append(context->argument(i).toString());
   }
 
@@ -105,6 +122,82 @@ QScriptValue DataReporterEngine::PrintLn(QScriptContext *context,
     report_content.append(content).append("\n");
 
   return engine->undefinedValue();
+}
+
+/*
+ * GetRegistryNodes
+ */
+QScriptValue DataReporterEngine::GetRegistryNodes(QScriptContext *context,
+                                                  QScriptEngine *engine)
+{
+  QScriptValue calleeData;
+  RegistryHive *p_hive;
+  QMap<QString,int> nodes;
+  QScriptValue ret_nodes;
+  int ii=0;
+
+  // This function needs one argument, parent node path
+  if(context->argumentCount()!=1) return engine->undefinedValue();
+
+  // Get calle data (Pointer to RegistryHive class)
+  calleeData=context->callee().data();
+  p_hive=qobject_cast<RegistryHive*>(calleeData.toQObject());
+
+  // Get nodes
+  nodes=p_hive->GetNodes(context->argument(0).toString());
+  if(p_hive->Error()) {
+    // Clear error state
+    p_hive->GetErrorMsg();
+    return engine->undefinedValue();
+  }
+
+  // Build script array
+  ret_nodes=engine->newArray(nodes.count());
+  QMapIterator<QString,int> i(nodes);
+  while(i.hasNext()) {
+    i.next();
+    ret_nodes.setProperty(ii++,QScriptValue(i.key()));
+  }
+
+  return ret_nodes;
+}
+
+/*
+ * GetRegistryKeys
+ */
+QScriptValue DataReporterEngine::GetRegistryKeys(QScriptContext *context,
+                                                 QScriptEngine *engine)
+{
+  QScriptValue calleeData;
+  RegistryHive *p_hive;
+  QMap<QString,int> keys;
+  QScriptValue ret_keys;
+  int ii=0;
+
+  // This function needs one argument, parent node path
+  if(context->argumentCount()!=1) return engine->undefinedValue();
+
+  // Get calle data (Pointer to RegistryHive class)
+  calleeData=context->callee().data();
+  p_hive=qobject_cast<RegistryHive*>(calleeData.toQObject());
+
+  // Get keys
+  keys=p_hive->GetKeys(context->argument(0).toString());
+  if(p_hive->Error()) {
+    // Clear error state
+    p_hive->GetErrorMsg();
+    return engine->undefinedValue();
+  }
+
+  // Build script array
+  ret_keys=engine->newArray(keys.count());
+  QMapIterator<QString,int> i(keys);
+  while(i.hasNext()) {
+    i.next();
+    ret_keys.setProperty(ii++,QScriptValue(i.key()));
+  }
+
+  return ret_keys;
 }
 
 /*
@@ -131,8 +224,8 @@ void DataReporterEngine::RegistryKeyValueFromScript(const QScriptValue &obj,
 {
   s.type=obj.property("type").toInt32();
   s.length=obj.property("length").toInt32();
-  // TODO: Don't know if this works
-  s.value=obj.property("value").toVariant().toByteArray();
+  // TODO: Don't know if this works, but it probably does ;)
+  s.value=qvariant_cast<QByteArray>(obj.property("value").data().toVariant());
 }
 
 QScriptValue DataReporterEngine::GetRegistryKeyValue(QScriptContext *context,
@@ -181,15 +274,73 @@ QScriptValue DataReporterEngine::RegistryKeyValueToString(
   // This function needs two arguments, key value and value type
   if(context->argumentCount()!=2) return engine->undefinedValue();
 
-  // TODO: Does not work!!
-  key_value=qscriptvalue_cast<QByteArray>(context->argument(0));
-  //key_value=context->argument(0).toVariant().toByteArray();
+  // Cast ByteArray argument to QByteArray and convert
+  key_value=qvariant_cast<QByteArray>(context->argument(0).data().toVariant());
   ret=RegistryHive::KeyValueToString(key_value,
-                                     hive_t_REG_SZ /*context->argument(1).toInteger()*/);
+                                     context->argument(1).toInt32());
 
-  qDebug("Type: %u Sring: %c",
-         context->argument(1).toInteger(),
-         ret.toAscii().constData());
+  return engine->newVariant(ret);
+}
+
+QScriptValue DataReporterEngine::RegistryKeyValueToVariant(
+  QScriptContext *context,
+  QScriptEngine *engine)
+{
+  int offset=0;
+  QByteArray key_value;
+  QString variant_type;
+  int remaining_data_len;
+  const char *p_data;
+  QString ret="";
+
+  // This function needs at least two arguments, key value and variant type,
+  // and may have an optional third argument specifying an offset
+  if(context->argumentCount()<2 || context->argumentCount()>3)
+    return engine->undefinedValue();
+  if(context->argumentCount()==3) offset=context->argument(2).toInt32();
+
+  // Cast ByteArray argument to QByteArray
+  key_value=qvariant_cast<QByteArray>(context->argument(0).data().toVariant());
+  variant_type=context->argument(1).toString();
+
+  // Calculate how many bytes are remainig after specified offset
+  remaining_data_len=key_value.size()-offset;
+  if(!remaining_data_len>0) {
+    // Nothing to show
+    return engine->undefinedValue();
+  }
+
+  // Get pointer to data at specified offset
+  p_data=key_value.constData();
+  p_data+=offset;
+
+  // Convert
+  if(variant_type=="unixtime" && remaining_data_len>=4) {
+    if(*(uint32_t*)p_data==0) {
+      ret="n/a";
+    } else {
+      QDateTime date_time;
+      date_time.setTime_t(*(uint32_t*)p_data);
+      ret=date_time.toString("yyyy/MM/dd hh:mm:ss");
+    }
+  } else if(variant_type=="filetime" && remaining_data_len>=8) {
+    if(*(uint64_t*)p_data==0) {
+      ret="n/a";
+    } else {
+      QDateTime date_time;
+      date_time.setTime_t((*(uint64_t*)p_data-116444736000000000)/10000000);
+      ret=date_time.toString("yyyy/MM/dd hh:mm:ss");
+    }
+  } else if(variant_type=="ascii") {
+    // TODO: This fails bad if the string is not null terminated!! It might be
+    // wise checking for a null char here
+    ret=QString().fromAscii((char*)p_data);
+  } else if(variant_type=="utf16" && remaining_data_len>=2) {
+    ret=QString().fromUtf16((ushort*)p_data);
+  } else {
+    // Unknown variant type or another error
+    return engine->undefinedValue();
+  }
 
   return engine->newVariant(ret);
 }
@@ -198,6 +349,12 @@ QScriptValue DataReporterEngine::RegistryKeyTypeToString(
   QScriptContext *context,
   QScriptEngine *engine)
 {
+  QString ret="";
+
   // This function needs one arguments, key type
-  if(context->argumentCount()!=2) return engine->undefinedValue();
+  if(context->argumentCount()!=1) return engine->undefinedValue();
+
+  ret=RegistryHive::KeyTypeToString(context->argument(0).toInt32());
+
+  return engine->newVariant(ret);
 }

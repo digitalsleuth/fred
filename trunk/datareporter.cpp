@@ -45,7 +45,7 @@ void DataReporter::LoadReportTemplates() {
   // Get all template files in report_templates directory
   QDir report_dir("../trunk/report_templates/");
   QStringList found_report_templates=report_dir.
-    entryList(QStringList()<<"*.js");
+    entryList(QStringList()<<"*.qs");
 
   for(i=0;i<found_report_templates.count();i++) {
     // Build complete path to template file
@@ -53,7 +53,7 @@ void DataReporter::LoadReportTemplates() {
     report_template.append(QDir::separator());
     report_template.append(found_report_templates.value(i));
 
-    // Extract report category and name from file name (<category>_<name>.js)
+    // Extract report category and name from file name (<category>_<name>.qs)
     report_category=found_report_templates.value(i).left(
       found_report_templates.value(i).indexOf("_"));
     report_name=found_report_templates.value(i).mid(
@@ -123,33 +123,30 @@ QString DataReporter::GenerateReport(RegistryHive *p_hive,
     QFile template_file(p_report->File());
     if(!template_file.open(QIODevice::ReadOnly | QIODevice::Text)) {
       qDebug("Couldn't open file '%s'",p_report->File().toAscii().constData());
-      break;
+      return QString();
     }
     // Read template file
     QTextStream in(&template_file);
     while(!in.atEnd()) {
-      report_code.append(in.readLine());
+      report_code.append(in.readLine()).append("\n");
     }
     // Close report template file
     template_file.close();
 
     QScriptValue report_result=engine.evaluate(report_code,p_report->File());
 
-    if (report_result.isError()) {
+    if (report_result.isError() || engine.hasUncaughtException()) {
       QMessageBox::critical(0,
                             "Hello Script",
                             QString::fromLatin1("%0:%1: %2")
                                    .arg(p_report->File())
                                    .arg(report_result.property("lineNumber").toInt32())
                                    .arg(report_result.toString()));
-      break;
+      return QString();
     }
 
-
-    if(engine.hasUncaughtException()) qDebug("Exception in processing!");
-
-    break;
+    return engine.report_content;
   }
 
-  return engine.report_content;
+  return QString();
 }

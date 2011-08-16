@@ -51,6 +51,10 @@ class DataReporterEngine : public QScriptEngine {
 
     static QScriptValue Print(QScriptContext *context, QScriptEngine *engine);
     static QScriptValue PrintLn(QScriptContext *context, QScriptEngine *engine);
+    static QScriptValue GetRegistryNodes(QScriptContext *context,
+                                         QScriptEngine *engine);
+    static QScriptValue GetRegistryKeys(QScriptContext *context,
+                                        QScriptEngine *engine);
     static QScriptValue RegistryKeyValueToScript(QScriptEngine *engine,
                                                  const s_RegistryKeyValue &s);
     static void RegistryKeyValueFromScript(const QScriptValue &obj,
@@ -59,6 +63,8 @@ class DataReporterEngine : public QScriptEngine {
                                             QScriptEngine *engine);
     static QScriptValue RegistryKeyValueToString(QScriptContext *context,
                                                  QScriptEngine *engine);
+    static QScriptValue RegistryKeyValueToVariant(QScriptContext *context,
+                                                  QScriptEngine *engine);
     static QScriptValue RegistryKeyTypeToString(QScriptContext *context,
                                                 QScriptEngine *engine);
 };

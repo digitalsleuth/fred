@@ -32,6 +32,7 @@
 Q_DECLARE_METATYPE(QByteArray*)
 Q_DECLARE_METATYPE(ByteArray*)
 
+/*
 static qint32 toArrayIndex(const QString &str) {
   QByteArray bytes = str.toUtf8();
   char *eptr;
@@ -45,6 +46,7 @@ static qint32 toArrayIndex(const QString &str) {
 
   return -1;
 }
+*/
 
 ByteArray::ByteArray(QScriptEngine *engine)
   : QObject(engine), QScriptClass(engine)
@@ -53,7 +55,7 @@ ByteArray::ByteArray(QScriptEngine *engine)
                                       this->toScriptValue,
                                       this->fromScriptValue);
 
-  length=engine->toStringHandle(QLatin1String("length"));
+  this->length=engine->toStringHandle(QLatin1String("length"));
 
   this->proto=engine->newQObject(new ByteArrayPrototype(this),
                                  QScriptEngine::QtOwnership,
@@ -61,9 +63,9 @@ ByteArray::ByteArray(QScriptEngine *engine)
                                    QScriptEngine::ExcludeSuperClassMethods |
                                    QScriptEngine::ExcludeSuperClassProperties);
   QScriptValue global=engine->globalObject();
-  this->proto.setPrototype(global.property("Object").property("prototype"));
+  proto.setPrototype(global.property("Object").property("prototype"));
 
-  this->ctor=engine->newFunction(construct);
+  this->ctor=engine->newFunction(this->construct,this->proto);
   this->ctor.setData(qScriptValueFromValue(engine,this));
 }
 
@@ -77,9 +79,10 @@ QScriptClass::QueryFlags ByteArray::queryProperty(const QScriptValue &object,
   QByteArray *ba=qscriptvalue_cast<QByteArray*>(object.data());
 
   if(!ba) return 0;
-  if(name!=length) {
-    qint32 pos=toArrayIndex(name);
-    if(pos==-1) return 0;
+  if(name!=this->length) {
+    bool is_array_index;
+    qint32 pos=name.toArrayIndex(&is_array_index);
+    if(!is_array_index) return 0;
     *id=pos;
     if((flags & HandlesReadAccess) && (pos>=ba->size()))
       flags &= ~HandlesReadAccess;
@@ -111,11 +114,11 @@ void ByteArray::setProperty(QScriptValue &object,
 {
   QByteArray *ba=qscriptvalue_cast<QByteArray*>(object.data());
   if(!ba) return;
-  if(name==length) ba->resize(value.toInt32());
+  if(name==length) this->resize(*ba,value.toInt32());
   else {
     qint32 pos=id;
     if(pos<0) return;
-    if(ba->size()<=pos) ba->resize(pos + 1);
+    if(ba->size()<=pos) this->resize(*ba,pos + 1);
     (*ba)[pos]=char(value.toInt32());
   }
 }
@@ -143,14 +146,15 @@ QString ByteArray::name() const {
 }
 
 QScriptValue ByteArray::prototype() const {
-  return this->proto;
+  return proto;
 }
 
 QScriptValue ByteArray::constructor() {
-  return this->ctor;
+  return ctor;
 }
 
 QScriptValue ByteArray::newInstance(int size) {
+  this->engine()->reportAdditionalMemoryCost(size);
   return newInstance(QByteArray(size,0));
 }
 
@@ -162,7 +166,10 @@ QScriptValue ByteArray::newInstance(const QByteArray &ba) {
 QScriptValue ByteArray::construct(QScriptContext *ctx, QScriptEngine *) {
   ByteArray *cls=qscriptvalue_cast<ByteArray*>(ctx->callee().data());
   if(!cls) return QScriptValue();
-  int size=ctx->argument(0).toInt32();
+  QScriptValue arg=ctx->argument(0);
+  if(arg.instanceOf(ctx->callee()))
+    return cls->newInstance(qscriptvalue_cast<QByteArray>(arg));
+  int size=arg.toInt32();
   return cls->newInstance(size);
 }
 
@@ -175,5 +182,12 @@ QScriptValue ByteArray::toScriptValue(QScriptEngine *eng, const QByteArray &ba)
 }
 
 void ByteArray::fromScriptValue(const QScriptValue &obj, QByteArray &ba) {
-  ba=qscriptvalue_cast<QByteArray>(obj.data());
+  ba=qvariant_cast<QByteArray>(obj.data().toVariant());
 }
+
+void ByteArray::resize(QByteArray &ba, int newSize) {
+  int oldSize=ba.size();
+  ba.resize(newSize);
+  if(newSize>oldSize)
+    this->engine()->reportAdditionalMemoryCost(newSize-oldSize);
+ }

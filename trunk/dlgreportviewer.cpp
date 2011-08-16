@@ -27,7 +27,14 @@ DlgReportViewer::DlgReportViewer(QString &report_data, QWidget *p_parent)
   : QDialog(p_parent), ui(new Ui::DlgReportViewer)
 {
   ui->setupUi(this);
+
+  // Set report content
   this->ui->WebView->setHtml(report_data);
+
+  // Set dialog title based on report content title
+  QString report_title=this->ui->WebView->title();
+  if(report_title.isEmpty()) this->setWindowTitle("Report Viewer");
+  else this->setWindowTitle(report_title.prepend("Report Viewer : "));
 }
 
 DlgReportViewer::~DlgReportViewer() {
