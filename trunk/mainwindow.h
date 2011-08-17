@@ -80,6 +80,12 @@ private:
     DataReporter *p_data_reporter;
 
     /*
+     * CheckUserConfigDir
+     *
+     * Checks for and possibly creates the ~/.fred directory
+     */
+    void CheckUserConfigDir();
+    /*
      * UpdateWindowTitle
      *
      * Updates the window title

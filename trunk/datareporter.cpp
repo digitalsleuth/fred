@@ -35,7 +35,7 @@ DataReporter::~DataReporter() {
   qDeleteAll(this->report_templates);
 }
 
-void DataReporter::LoadReportTemplates() {
+void DataReporter::LoadReportTemplates(QString dir) {
   QString report_template="";
   int i=0;
   QString report_category="";
@@ -43,7 +43,7 @@ void DataReporter::LoadReportTemplates() {
   ReportTemplate *p_report;
 
   // Get all template files in report_templates directory
-  QDir report_dir("../trunk/report_templates/");
+  QDir report_dir(dir);
   QStringList found_report_templates=report_dir.
     entryList(QStringList()<<"*.qs");
 
@@ -58,7 +58,7 @@ void DataReporter::LoadReportTemplates() {
       found_report_templates.value(i).indexOf("_"));
     report_name=found_report_templates.value(i).mid(
       found_report_templates.value(i).indexOf("_")+1);
-    report_name=report_name.left(report_name.lastIndexOf(".")-1);
+    report_name=report_name.left(report_name.lastIndexOf("."));
 
     // Add report to list
     p_report=new ReportTemplate(report_category,

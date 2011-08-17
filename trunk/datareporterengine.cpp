@@ -315,7 +315,19 @@ QScriptValue DataReporterEngine::RegistryKeyValueToVariant(
   p_data+=offset;
 
   // Convert
-  if(variant_type=="unixtime" && remaining_data_len>=4) {
+  if(variant_type=="int8" && remaining_data_len>=1) {
+    ret=QString().sprintf("%d",*(int8_t*)p_data);
+  } else if(variant_type=="uint8" && remaining_data_len>=1) {
+    ret=QString().sprintf("%u",*(uint8_t*)p_data);
+  } else if(variant_type=="int16" && remaining_data_len>=2) {
+    ret=QString().sprintf("%d",*(int16_t*)p_data);
+  } else if(variant_type=="uint16" && remaining_data_len>=2) {
+    ret=QString().sprintf("%u",*(uint16_t*)p_data);
+  } else if(variant_type=="int32" && remaining_data_len>=4) {
+    ret=QString().sprintf("%d",*(int32_t*)p_data);
+  } else if(variant_type=="uint32" && remaining_data_len>=4) {
+    ret=QString().sprintf("%d",*(uint32_t*)p_data);
+  } else if(variant_type=="unixtime" && remaining_data_len>=4) {
     if(*(uint32_t*)p_data==0) {
       ret="n/a";
     } else {
@@ -327,6 +339,7 @@ QScriptValue DataReporterEngine::RegistryKeyValueToVariant(
     if(*(uint64_t*)p_data==0) {
       ret="n/a";
     } else {
+      // TODO: Warn if >32bit
       QDateTime date_time;
       date_time.setTime_t((*(uint64_t*)p_data-116444736000000000)/10000000);
       ret=date_time.toString("yyyy/MM/dd hh:mm:ss");

@@ -18,6 +18,10 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
+#ifndef FRED_REPORT_TEMPLATE_DIR
+  #define FRED_REPORT_TEMPLATE_DIR "/usr/share/fred/report_templates/"
+#endif
+
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QStringList>
@@ -43,6 +47,9 @@ MainWindow::MainWindow(QWidget *parent) :
   this->is_hive_open=false;
   this->p_reg_node_tree_model=NULL;
   this->p_reg_key_table_model=NULL;
+
+  // Check for ~/.fred config dir
+  this->CheckUserConfigDir();
 
   // Set main window size
   int cur_screen=QApplication::desktop()->screenNumber(this);
@@ -165,7 +172,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
   // Load report templates and update menu
   this->p_data_reporter=new DataReporter();
-  this->p_data_reporter->LoadReportTemplates();
+  // Load reports from system wide include dir
+  this->p_data_reporter->LoadReportTemplates(FRED_REPORT_TEMPLATE_DIR);
+  // Load user's report templates
+  this->p_data_reporter->LoadReportTemplates(QDir::homePath()
+                                               .append(QDir::separator())
+                                               .append(".fred")
+                                               .append(QDir::separator())
+                                               .append("report_templates"));
   this->UpdateDataReporterMenu();
 }
 
@@ -354,6 +368,24 @@ void MainWindow::SlotReportClicked() {
     dlg_report_view.exec();
   } else {
     // TODO: Something went wrong!
+  }
+}
+
+void MainWindow::CheckUserConfigDir() {
+  QString user_config_dir=QDir::homePath()
+                            .append(QDir::separator())
+                            .append(".fred");
+  if(!QDir(user_config_dir).exists()) {
+    // User config dir does not exists, try to create it
+    if(!QDir().mkpath(user_config_dir)) {
+      // TODO: Maybe warn user
+      return;
+    }
+    user_config_dir.append(QDir::separator()).append("report_templates");
+    if(!QDir().mkpath(user_config_dir)) {
+      // TODO: Maybe warn user
+      return;
+    }
   }
 }
 

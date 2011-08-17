@@ -32,7 +32,7 @@ class DataReporter {
     DataReporter();
     ~DataReporter();
 
-    void LoadReportTemplates();
+    void LoadReportTemplates(QString dir);
     QStringList GetAvailableReportCategories();
     QStringList GetAvailableReports(QString category);
 
