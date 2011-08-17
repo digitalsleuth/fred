@@ -21,12 +21,15 @@
 #include "dlgreportviewer.h"
 #include "ui_dlgreportviewer.h"
 
-#include <QUrl>
+#include <QPrinter>
+#include <QPrintDialog>
 
 DlgReportViewer::DlgReportViewer(QString &report_data, QWidget *p_parent)
-  : QDialog(p_parent), ui(new Ui::DlgReportViewer)
+  : QMainWindow(p_parent,Qt::Dialog), ui(new Ui::DlgReportViewer)
 {
+  // Init local vars
   ui->setupUi(this);
+  this->p_local_event_loop=NULL;
 
   // Set report content
   this->ui->WebView->setHtml(report_data);
@@ -39,10 +42,11 @@ DlgReportViewer::DlgReportViewer(QString &report_data, QWidget *p_parent)
 
 DlgReportViewer::~DlgReportViewer() {
   delete ui;
+  if(this->p_local_event_loop!=NULL) this->p_local_event_loop->exit();
 }
 
 void DlgReportViewer::changeEvent(QEvent *e) {
-  QDialog::changeEvent(e);
+  QMainWindow::changeEvent(e);
   switch(e->type()) {
     case QEvent::LanguageChange:
       ui->retranslateUi(this);
@@ -52,6 +56,33 @@ void DlgReportViewer::changeEvent(QEvent *e) {
   }
 }
 
-void DlgReportViewer::on_BtnClose_clicked() {
-  this->accept();
+void DlgReportViewer::closeEvent(QCloseEvent *event) {
+  // Make sure we exit the local event loop on exit
+  if(this->p_local_event_loop!=NULL) {
+    this->p_local_event_loop->exit();
+    this->p_local_event_loop=NULL;
+  }
+  event->accept();
+}
+
+void DlgReportViewer::exec() {
+  // Create local event loop
+  this->p_local_event_loop=new QEventLoop(this);
+  // Show window and enter loop
+  this->show();
+  this->p_local_event_loop->exec();
+}
+
+void DlgReportViewer::on_action_Print_triggered() {
+  // Print report
+  QPrinter printer;
+  QPrintDialog *p_dlg_print=new QPrintDialog(&printer);
+  if(p_dlg_print->exec()==QDialog::Accepted) {
+    this->ui->WebView->print(&printer);
+  }
+  delete p_dlg_print;
+}
+
+void DlgReportViewer::on_action_Close_triggered() {
+  this->close();
 }

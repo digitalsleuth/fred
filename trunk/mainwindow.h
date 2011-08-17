@@ -102,6 +102,18 @@ private:
      *
      */
     void UpdateDataReporterMenu();
+    /*
+     * OpenHive
+     *
+     * Open a registry hive
+     */
+    void OpenHive(QString hive_file);
+    /*
+     * ParseCommandLineArgs
+     *
+     * Parse command line arguments
+     */
+    void ParseCommandLineArgs();
 };
 
 #endif // MAINWINDOW_H

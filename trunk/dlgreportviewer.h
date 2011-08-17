@@ -21,13 +21,15 @@
 #ifndef DLGREPORTVIEWER_H
 #define DLGREPORTVIEWER_H
 
-#include <QDialog>
+#include <QMainWindow>
+#include <QEventLoop>
+#include <QCloseEvent>
 
 namespace Ui {
   class DlgReportViewer;
 }
 
-class DlgReportViewer : public QDialog {
+class DlgReportViewer : public QMainWindow {
   Q_OBJECT
 
   public:
@@ -35,14 +37,20 @@ class DlgReportViewer : public QDialog {
                              QWidget *p_parent=0);
     ~DlgReportViewer();
 
+    void exec();
+
   protected:
     void changeEvent(QEvent *e);
+    void closeEvent(QCloseEvent *event);
 
   private slots:
-    void on_BtnClose_clicked();
+    void on_action_Print_triggered();
+    void on_action_Close_triggered();
 
 private:
     Ui::DlgReportViewer *ui;
+    QEventLoop *p_local_event_loop;
+
 };
 
 #endif // DLGREPORTVIEWER_H

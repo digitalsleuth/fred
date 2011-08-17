@@ -146,8 +146,7 @@ MainWindow::MainWindow(QWidget *parent) :
                 SIGNAL(activated(QModelIndex)),
                 this,
                 SLOT(SlotNodeTreeClicked(QModelIndex)));
-  this->connect(this->p_key_table /*->selectionModel()*/,
-                /* SIGNAL(selectionChanged(QItemSelection,QItemSelection)) */
+  this->connect(this->p_key_table,
                 SIGNAL(clicked(QModelIndex)),
                 this,
                 SLOT(SlotKeyTableClicked(QModelIndex)));
@@ -181,6 +180,9 @@ MainWindow::MainWindow(QWidget *parent) :
                                                .append(QDir::separator())
                                                .append("report_templates"));
   this->UpdateDataReporterMenu();
+
+  // Finally, parse command line arguments
+  this->ParseCommandLineArgs();
 }
 
 MainWindow::~MainWindow() {
@@ -203,30 +205,7 @@ void MainWindow::on_action_Open_hive_triggered() {
                                     tr("All files (*)"));
   if(hive_file=="") return;
 
-  // Update last open location
-  this->last_open_location=hive_file.left(hive_file.
-                                            lastIndexOf(QDir::separator()));
-
-  // If another hive is currently open, close it
-  if(this->is_hive_open) this->on_action_Close_hive_triggered();
-
-  // Try to open hive
-  if(!this->p_hive->Open(hive_file)) {
-    QMessageBox::critical(this,
-                          tr("Error opening hive file"),
-                          tr("Unable to open file '%1'").arg(hive_file));
-    return;
-  }
-
-  // Create tree model
-  this->p_reg_node_tree_model=
-    new RegistryNodeTreeModel(this->p_hive);
-  this->p_node_tree->setModel(this->p_reg_node_tree_model);
-
-  this->is_hive_open=true;
-  this->ui->action_Close_hive->setEnabled(true);
-  this->ui->MenuReports->setEnabled(true);
-  this->UpdateWindowTitle(hive_file);
+  this->OpenHive(hive_file);
 }
 
 void MainWindow::on_action_Close_hive_triggered() {
@@ -268,6 +247,8 @@ void MainWindow::on_actionAbout_fred_triggered() {
 void MainWindow::SlotNodeTreeClicked(QModelIndex index) {
   QString node_path;
 
+  if(!index.isValid()) return;
+
   //Built node path
   node_path.clear();
   node_path=this->p_reg_node_tree_model->data(index,Qt::DisplayRole)
@@ -280,7 +261,12 @@ void MainWindow::SlotNodeTreeClicked(QModelIndex index) {
   }
 
   // Create table model and attach it to the table view
-  if(this->p_reg_key_table_model!=NULL) delete this->p_reg_key_table_model;
+  if(this->p_reg_key_table_model!=NULL) {
+    delete this->p_reg_key_table_model;
+    this->p_hex_edit->setData(QByteArray());
+    this->p_hex_edit_status_bar->setText("");
+    this->p_data_interpreter->ClearValues();
+  }
   this->p_reg_key_table_model=new RegistryKeyTableModel(this->p_hive,node_path);
   this->p_key_table->setModel(this->p_reg_key_table_model);
 
@@ -359,13 +345,16 @@ void MainWindow::SlotReportClicked() {
   QString category=((QMenu*)((QAction*)QObject::sender())->parent())->title();
   QString report=((QAction*)QObject::sender())->text();
 
+  // Generate report
   QString report_content=this->p_data_reporter->GenerateReport(this->p_hive,
                                                                category,
                                                                report);
 
+  // Show result in report viewer
   if(report_content!=QString()) {
-    DlgReportViewer dlg_report_view(report_content,this);
-    dlg_report_view.exec();
+    DlgReportViewer *p_dlg_report_view=new DlgReportViewer(report_content,this);
+    p_dlg_report_view->exec();
+    delete p_dlg_report_view;
   } else {
     // TODO: Something went wrong!
   }
@@ -419,9 +408,9 @@ void MainWindow::UpdateDataInterpreter(int hex_offset) {
   p_data=this->selected_key_value.constData();
   p_data+=hex_offset;
 
-  #define rotl32(x,n)   (((x) << n) | ((x) >> (32 - n)))
+  //#define rotl32(x,n)   (((x) << n) | ((x) >> (32 - n)))
   //#define rotr32(x,n)   (((x) >> n) | ((x) << (32 - n)))
-  #define rotl64(x,n)   (((x) << n) | ((x) >> (64 - n)))
+  //#define rotl64(x,n)   (((x) << n) | ((x) >> (64 - n)))
   //#define rotr64(x,n)   (((x) >> n) | ((x) << (64 - n)))
 
   if(remaining_data_len>=1) {
@@ -465,8 +454,8 @@ void MainWindow::UpdateDataInterpreter(int hex_offset) {
                                          toString("yyyy/MM/dd hh:mm:ss"));
   }
 
-  #undef rotl32
-  #undef rotl64
+  //#undef rotl32
+  //#undef rotl64
 }
 
 void MainWindow::UpdateDataReporterMenu() {
@@ -490,5 +479,44 @@ void MainWindow::UpdateDataReporterMenu() {
                     this,
                     SLOT(SlotReportClicked()));
     }
+  }
+}
+
+void MainWindow::OpenHive(QString hive_file) {
+  // Update last open location
+  this->last_open_location=hive_file.left(hive_file.
+                                            lastIndexOf(QDir::separator()));
+
+  // If another hive is currently open, close it
+  if(this->is_hive_open) this->on_action_Close_hive_triggered();
+
+  // Try to open hive
+  if(!this->p_hive->Open(hive_file)) {
+    QMessageBox::critical(this,
+                          tr("Error opening hive file"),
+                          tr("Unable to open file '%1'").arg(hive_file));
+    return;
+  }
+
+  // Create tree model
+  this->p_reg_node_tree_model=
+    new RegistryNodeTreeModel(this->p_hive);
+  this->p_node_tree->setModel(this->p_reg_node_tree_model);
+
+  this->is_hive_open=true;
+  this->ui->action_Close_hive->setEnabled(true);
+  this->ui->MenuReports->setEnabled(true);
+  this->UpdateWindowTitle(hive_file);
+}
+
+void MainWindow::ParseCommandLineArgs() {
+  QStringList args=qApp->arguments();
+
+  // Return if no args were specified
+  if(args.count()==1) return;
+
+  if(args.count()==2) {
+    // Try to open specified hive file
+    this->OpenHive(args.at(1));
   }
 }
