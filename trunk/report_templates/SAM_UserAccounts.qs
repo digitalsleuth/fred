@@ -1,5 +1,15 @@
 // See http://windowsir.blogspot.com/2006/08/getting-user-info-from-image.html
 
+function print_table_row(cell01,cell02) {
+  println("      <tr><td>",cell01,"</td><td>",cell02,"</td></tr>");
+}
+
+function print_v_info(v_key_value,info_name,str_off) {
+  var offset=Number(RegistryKeyValueToVariant(v_key_value,"uint16",str_off))+0x0cc;
+  var len=Number(RegistryKeyValueToVariant(v_key_value,"uint16",str_off+4))/2;
+  if(len>0) print_table_row(info_name,RegistryKeyValueToVariant(v_key_value,"utf16",offset,len));
+}
+
 println("<html>");
 println("  <head><title>User Accounts</title></head>");
 println("  <body>");
@@ -18,31 +28,35 @@ for(var i=0;i<user_names.length;i++) {
   // Get user rid stored in "default" key
   var user_rid=GetRegistryKeyValue(String().concat("\\SAM\\Domains\\Account\\Users\\Names\\",user_names[i]),"");
   user_rid=RegistryKeyTypeToString(user_rid.type);
-  println("<tr><td>RID:</td><td>",Number(user_rid).toString(10)," (",user_rid,")","</td></td>");
+  println("      <tr><td>RID:</td><td>",Number(user_rid).toString(10)," (",user_rid,")","</td></tr>");
 
   // RegistryKeyTypeToString returns the rid prepended with "0x". We have to remove that for further processing
   user_rid=String(user_rid).substr(2);
 
   // Get user's V key and print various infos
   var v_key=GetRegistryKeyValue(String().concat("\\SAM\\Domains\\Account\\Users\\",user_rid),"V");
+  print_v_info(v_key.value,"Full name:",0x18);
+  print_v_info(v_key.value,"Comment:",0x24);
+  print_v_info(v_key.value,"Home directory:",0x48);
+  print_v_info(v_key.value,"Home directory drive:",0x54);
+  print_v_info(v_key.value,"Logon script path:",0x60);
+  print_v_info(v_key.value,"Profile path:",0x6c);
 
   // Get user's F key and print various infos
   var f_key=GetRegistryKeyValue(String().concat("\\SAM\\Domains\\Account\\Users\\",user_rid),"F");
-  println("<tr><td>Last login time:</td><td>",RegistryKeyValueToVariant(f_key.value,"filetime",8),"</td></td>");
-  println("<tr><td>Last pw change:</td><td>",RegistryKeyValueToVariant(f_key.value,"filetime",24),"</td></td>");
-  println("<tr><td>Last failed login:</td><td>",RegistryKeyValueToVariant(f_key.value,"filetime",40),"</td></td>");
-  println("<tr><td>Account expires:</td><td>",RegistryKeyValueToVariant(f_key.value,"filetime",32),"</td></td>");
-  
-  println("<tr><td>Total logins:</td><td>",RegistryKeyValueToVariant(f_key.value,"uint16",66),"</td></td>");
-  println("<tr><td>Failed logins:</td><td>",RegistryKeyValueToVariant(f_key.value,"uint16",64),"</td></td>");
-  
+  print_table_row("Last login time:",RegistryKeyValueToVariant(f_key.value,"filetime",8));
+  print_table_row("Last pw change:",RegistryKeyValueToVariant(f_key.value,"filetime",24));
+  print_table_row("Last failed login:",RegistryKeyValueToVariant(f_key.value,"filetime",40));
+  print_table_row("Account expires:",RegistryKeyValueToVariant(f_key.value,"filetime",32));
+  print_table_row("Total logins:",RegistryKeyValueToVariant(f_key.value,"uint16",66));
+  print_table_row("Failed logins:",RegistryKeyValueToVariant(f_key.value,"uint16",64));
   var acc_flags=Number(RegistryKeyValueToVariant(f_key.value,"uint16",56));
-  print("<tr><td>Account flags:</td><td>");
+  print("      <tr><td>Account flags:</td><td>");
   if(acc_flags&0x0001) print("Disabled ");
   if(acc_flags&0x0002) print("HomeDirReq ");
   if(acc_flags&0x0004) print("PwNotReq ");
   if(acc_flags&0x0008) print("TempDupAcc ");
-  // Don't think this would be useful to show
+  // I don't think this would be useful to show
   //if(acc_flags&0x0010) print("NormUserAcc ");
   if(acc_flags&0x0020) print("MnsAcc ");
   if(acc_flags&0x0040) print("DomTrustAcc ");
@@ -50,14 +64,11 @@ for(var i=0;i<user_names.length;i++) {
   if(acc_flags&0x0100) print("SrvTrustAcc ");
   if(acc_flags&0x0200) print("NoPwExpiry ");
   if(acc_flags&0x0400) print("AccAutoLock ");
-  println("</td></td>");
-  
-  
-  
-  
+  println("</td></tr>");
+
+  // TODO: User group membership
+
   println("  </table>");
-
-
   println("  </p>");
 }
 

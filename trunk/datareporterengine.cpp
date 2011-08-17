@@ -287,6 +287,7 @@ QScriptValue DataReporterEngine::RegistryKeyValueToVariant(
   QScriptEngine *engine)
 {
   int offset=0;
+  int length=0;
   QByteArray key_value;
   QString variant_type;
   int remaining_data_len;
@@ -294,10 +295,19 @@ QScriptValue DataReporterEngine::RegistryKeyValueToVariant(
   QString ret="";
 
   // This function needs at least two arguments, key value and variant type,
-  // and may have an optional third argument specifying an offset
-  if(context->argumentCount()<2 || context->argumentCount()>3)
+  // and may have two optional arguments, offset and length
+  if(context->argumentCount()<2 || context->argumentCount()>4) {
     return engine->undefinedValue();
-  if(context->argumentCount()==3) offset=context->argument(2).toInt32();
+  }
+  if(context->argumentCount()==3) {
+    offset=context->argument(2).toInt32();
+    length=-1;
+  }
+  if(context->argumentCount()==4) {
+    offset=context->argument(2).toInt32();
+    length=context->argument(3).toInt32();
+  }
+
 
   // Cast ByteArray argument to QByteArray
   key_value=qvariant_cast<QByteArray>(context->argument(0).data().toVariant());
@@ -314,7 +324,7 @@ QScriptValue DataReporterEngine::RegistryKeyValueToVariant(
   p_data=key_value.constData();
   p_data+=offset;
 
-  // Convert
+  // ConvertFull name
   if(variant_type=="int8" && remaining_data_len>=1) {
     ret=QString().sprintf("%d",*(int8_t*)p_data);
   } else if(variant_type=="uint8" && remaining_data_len>=1) {
@@ -347,9 +357,9 @@ QScriptValue DataReporterEngine::RegistryKeyValueToVariant(
   } else if(variant_type=="ascii") {
     // TODO: This fails bad if the string is not null terminated!! It might be
     // wise checking for a null char here
-    ret=QString().fromAscii((char*)p_data);
+    ret=QString().fromAscii((char*)p_data,length);
   } else if(variant_type=="utf16" && remaining_data_len>=2) {
-    ret=QString().fromUtf16((ushort*)p_data);
+    ret=QString().fromUtf16((ushort*)p_data,length);
   } else {
     // Unknown variant type or another error
     return engine->undefinedValue();

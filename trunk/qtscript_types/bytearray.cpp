@@ -32,22 +32,6 @@
 Q_DECLARE_METATYPE(QByteArray*)
 Q_DECLARE_METATYPE(ByteArray*)
 
-/*
-static qint32 toArrayIndex(const QString &str) {
-  QByteArray bytes = str.toUtf8();
-  char *eptr;
-
-  quint32 pos = strtoul(bytes.constData(), &eptr, 10);
-  if((eptr == bytes.constData() + bytes.size()) &&
-     (QByteArray::number(pos) == bytes))
-  {
-    return pos;
-  }
-
-  return -1;
-}
-*/
-
 ByteArray::ByteArray(QScriptEngine *engine)
   : QObject(engine), QScriptClass(engine)
 {
@@ -154,7 +138,9 @@ QScriptValue ByteArray::constructor() {
 }
 
 QScriptValue ByteArray::newInstance(int size) {
+#if QT_VERSION >= 0x040700
   this->engine()->reportAdditionalMemoryCost(size);
+#endif
   return newInstance(QByteArray(size,0));
 }
 
@@ -188,6 +174,8 @@ void ByteArray::fromScriptValue(const QScriptValue &obj, QByteArray &ba) {
 void ByteArray::resize(QByteArray &ba, int newSize) {
   int oldSize=ba.size();
   ba.resize(newSize);
+#if QT_VERSION >= 0x040700
   if(newSize>oldSize)
     this->engine()->reportAdditionalMemoryCost(newSize-oldSize);
+#endif
  }
