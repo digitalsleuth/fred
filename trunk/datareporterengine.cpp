@@ -336,7 +336,7 @@ QScriptValue DataReporterEngine::RegistryKeyValueToVariant(
   } else if(variant_type=="int32" && remaining_data_len>=4) {
     ret=QString().sprintf("%d",*(int32_t*)p_data);
   } else if(variant_type=="uint32" && remaining_data_len>=4) {
-    ret=QString().sprintf("%d",*(uint32_t*)p_data);
+    ret=QString().sprintf("%u",*(uint32_t*)p_data);
   } else if(variant_type=="unixtime" && remaining_data_len>=4) {
     if(*(uint32_t*)p_data==0) {
       ret="n/a";

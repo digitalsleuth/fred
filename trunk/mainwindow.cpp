@@ -434,7 +434,7 @@ void MainWindow::UpdateDataInterpreter(int hex_offset) {
                                        QString().sprintf("%d",
                                                          *(int32_t*)p_data));
     this->p_data_interpreter->AddValue("uint32:",
-                                       QString().sprintf("%d",
+                                       QString().sprintf("%u",
                                                          *(uint32_t*)p_data));
     date_time.setTime_t(*(uint32_t*)p_data);
     this->p_data_interpreter->AddValue("Unixtime:",
@@ -446,7 +446,7 @@ void MainWindow::UpdateDataInterpreter(int hex_offset) {
                                        QString().sprintf("%d",
                                                          *(int64_t*)p_data));
     this->p_data_interpreter->AddValue("uint64:",
-                                       QString().sprintf("%d",
+                                       QString().sprintf("%u",
                                                          *(uint64_t*)p_data));
     date_time.setTime_t((*(uint64_t*)p_data-116444736000000000)/10000000);
     this->p_data_interpreter->AddValue("Win64time:",
