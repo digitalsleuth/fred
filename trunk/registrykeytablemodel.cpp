@@ -85,6 +85,7 @@ QVariant RegistryKeyTableModel::data(const QModelIndex &index, int role) const {
     default:
       return QVariant();
   }
+  return QVariant();
 }
 
 Qt::ItemFlags RegistryKeyTableModel::flags(const QModelIndex &index) const {
@@ -233,8 +234,11 @@ QString RegistryKeyTableModel::ValueToString(QByteArray &value,
       break;
     case hive_t_REG_QWORD:
       // QWORD (64 bit integer). Usually little endian.
-      ret=QString().sprintf("0x%016X",*(uint64_t*)value.constData());
-      //ret=QString().sprintf("0x%08X",value.toULongLong());
+#if __WORDSIZE == 64
+      ret=QString().sprintf("0x%016lX",*(uint64_t*)value.constData());
+#else
+      ret=QString().sprintf("0x%016llX",*(uint64_t*)value.constData());
+#endif
       break;
     default:
       ToHexStr();

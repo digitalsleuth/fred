@@ -250,8 +250,8 @@ QScriptValue DataReporterEngine::GetRegistryKeyValue(QScriptContext *context,
                                 context->argument(1).toString(),
                                 &key_type,
                                 &key_length);
-  if(p_hive->Error() || key_length==-1) {
-    // Get error message ro clear error state
+  if(p_hive->Error()) {
+    // Get error message to clear error state
     p_hive->GetErrorMsg();
     return engine->undefinedValue();
   }

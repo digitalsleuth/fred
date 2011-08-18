@@ -276,6 +276,7 @@ void MainWindow::SlotNodeTreeClicked(QModelIndex index) {
 }
 
 void MainWindow::SlotKeyTableDoubleClicked(QModelIndex index) {
+  Q_UNUSED(index);
   /*
   QModelIndex key_index;
   QModelIndex node_index;
@@ -442,12 +443,21 @@ void MainWindow::UpdateDataInterpreter(int hex_offset) {
                                          toString("yyyy/MM/dd hh:mm:ss"));
   }
   if(remaining_data_len>=8) {
+#if __WORDSIZE == 64
     this->p_data_interpreter->AddValue("int64:",
-                                       QString().sprintf("%d",
+                                       QString().sprintf("%ld",
                                                          *(int64_t*)p_data));
     this->p_data_interpreter->AddValue("uint64:",
-                                       QString().sprintf("%u",
+                                       QString().sprintf("%lu",
                                                          *(uint64_t*)p_data));
+#else
+    this->p_data_interpreter->AddValue("int64:",
+                                       QString().sprintf("%lld",
+                                                         *(int64_t*)p_data));
+    this->p_data_interpreter->AddValue("uint64:",
+                                       QString().sprintf("%llu",
+                                                         *(uint64_t*)p_data));
+#endif
     date_time.setTime_t((*(uint64_t*)p_data-116444736000000000)/10000000);
     this->p_data_interpreter->AddValue("Win64time:",
                                        date_time.

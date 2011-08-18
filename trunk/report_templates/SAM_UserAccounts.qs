@@ -12,18 +12,18 @@ function print_v_info(v_key_value,info_name,str_off) {
 
 println("<html>");
 println("  <head><title>User Accounts</title></head>");
-println("  <body>");
+println("  <body style=\"font-size:12\">");
 println("  <h2>User accounts</h2>");
 
 // Iterate over all user names
 var user_names=GetRegistryNodes("\\SAM\\Domains\\Account\\Users\\Names");
 for(var i=0;i<user_names.length;i++) {
-  println("  <p>");
+  println("  <p style=\"font-size:12\">");
 
   // Print user name
-  println("    ",user_names[i],"<br />");
+  println("    <u>",user_names[i],"</u><br />");
 
-  println("    <table style=\"margin-left:20px\">");
+  println("    <table style=\"margin-left:20px; font-size:12\">");
 
   // Get user rid stored in "default" key
   var user_rid=GetRegistryKeyValue(String().concat("\\SAM\\Domains\\Account\\Users\\Names\\",user_names[i]),"");
@@ -65,6 +65,12 @@ for(var i=0;i<user_names.length;i++) {
   if(acc_flags&0x0200) print("NoPwExpiry ");
   if(acc_flags&0x0400) print("AccAutoLock ");
   println("</td></tr>");
+
+  // Get password hint if available
+  var hint=GetRegistryKeyValue(String().concat("\\SAM\\Domains\\Account\\Users\\",user_rid),"UserPasswordHint");
+  if(typeof hint !== 'undefined') {
+    print_table_row("Password hint:",RegistryKeyValueToVariant(hint.value,"utf16",0));
+  }
 
   // TODO: User group membership
 
