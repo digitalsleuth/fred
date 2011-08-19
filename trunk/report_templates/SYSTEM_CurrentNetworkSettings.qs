@@ -47,40 +47,40 @@ for(var i=0;i<adapters.length;i++) {
     print_table_row("Configuration mode:","DHCP");
     // DHCP server
     val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"DhcpServer");
-    print_table_row("Last used DHCP server:",RegistryKeyValueToString(val.value,val.type));
+    print_table_row("Last used DHCP server:",(typeof val !== 'undefined') ? RegistryKeyValueToString(val.value,val.type) : "");
     // IP address
     val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"DhcpIPAddress");
-    print_table_row("IP address:",RegistryKeyValueToString(val.value,val.type));
+    print_table_row("IP address:",(typeof val !== 'undefined') ? RegistryKeyValueToString(val.value,val.type) : "");
     // Subnet mask
     val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"DhcpSubnetMask");
-    print_table_row("Subnet mask:",RegistryKeyValueToString(val.value,val.type));
+    print_table_row("Subnet mask:",(typeof val !== 'undefined') ? RegistryKeyValueToString(val.value,val.type) : "");
     // Nameserver(s)
     val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"DhcpNameServer");
-    print_table_row("Nameserver(s):",RegistryKeyValueToString(val.value,val.type));
+    print_table_row("Nameserver(s):",(typeof val !== 'undefined') ? RegistryKeyValueToString(val.value,val.type) : "");
     // Default gw
     val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"DhcpDefaultGateway");
-    print_table_row("Default gateway:",RegistryKeyValueToVariant(val.value,"utf16",0));
+    print_table_row("Default gateway:",(typeof val !== 'undefined') ? RegistryKeyValueToVariant(val.value,"utf16",0) : "");
     // Lease obtained
     val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"LeaseObtainedTime");
-    print_table_row("Lease obtained:",RegistryKeyValueToVariant(val.value,"unixtime",0));
+    print_table_row("Lease obtained:",(typeof val !== 'undefined') ? RegistryKeyValueToVariant(val.value,"unixtime",0) : "");
     // Lease valid until
     val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"LeaseTerminatesTime");
-    print_table_row("Lease terminates:",RegistryKeyValueToVariant(val.value,"unixtime",0));
+    print_table_row("Lease terminates:",(typeof val !== 'undefined') ? RegistryKeyValueToVariant(val.value,"unixtime",0) : "");
   } else {
     print_table_row("Configuration mode:","Manual");
     // IP address
     val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"IPAddress");
-    print_table_row("IP address:",RegistryKeyValueToVariant(val.value,"utf16",0));
+    print_table_row("IP address:",(typeof val !== 'undefined') ? RegistryKeyValueToVariant(val.value,"utf16",0) : "");
     // Subnet mask
     val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"SubnetMask");
-    print_table_row("Subnet mask:",RegistryKeyValueToVariant(val.value,"utf16",0));
+    print_table_row("Subnet mask:",(typeof val !== 'undefined') ? RegistryKeyValueToVariant(val.value,"utf16",0) : "");
     // Nameserver
     // TODO: Has to be validated
     val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"NameServer");
-    if(typeof val !== 'undefined') print_table_row("Nameserver:",RegistryKeyValueToVariant(val.value,"utf16",0));
+    print_table_row("Nameserver:",(typeof val !== 'undefined') ? RegistryKeyValueToVariant(val.value,"utf16",0) : "");
     // Default gw
     val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"DefaultGateway");
-    print_table_row("Default gateway:",RegistryKeyValueToVariant(val.value,"utf16",0));
+    print_table_row("Default gateway:",(typeof val !== 'undefined') ? RegistryKeyValueToVariant(val.value,"utf16",0) : "");
   }
 
   println("    </table>");

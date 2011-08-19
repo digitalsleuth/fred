@@ -46,29 +46,36 @@ if(typeof val !== 'undefined') {
 println("</td></tr>");
 // Build string
 var val=GetRegistryKeyValue("\\Microsoft\\Windows NT\\CurrentVersion","BuildLab");
-print_table_row("Build string:",RegistryKeyValueToString(val.value,val.type));
+print_table_row("Build string:",(typeof val !== 'undefined') ? RegistryKeyValueToString(val.value,val.type) : "n/a");
+// Extended build string
+var val=GetRegistryKeyValue("\\Microsoft\\Windows NT\\CurrentVersion","BuildLabEx");
+print_table_row("Extended build string:",(typeof val !== 'undefined') ? RegistryKeyValueToString(val.value,val.type) : "n/a");
 
 // Install date
 var val=GetRegistryKeyValue("\\Microsoft\\Windows NT\\CurrentVersion","InstallDate");
-print_table_row("Install date:",RegistryKeyValueToVariant(val.value,"unixtime"));
+print_table_row("Install date:",(typeof val !== 'undefined') ? RegistryKeyValueToVariant(val.value,"unixtime") : "n/a");
 
 // Owner and Organization info
 var val=GetRegistryKeyValue("\\Microsoft\\Windows NT\\CurrentVersion","RegisteredOwner");
-print_table_row("Registered owner:",RegistryKeyValueToString(val.value,val.type));
+print_table_row("Registered owner:",(typeof val !== 'undefined') ? RegistryKeyValueToString(val.value,val.type) : "n/a");
 var val=GetRegistryKeyValue("\\Microsoft\\Windows NT\\CurrentVersion","RegisteredOrganization");
-print_table_row("Registered organization:",RegistryKeyValueToString(val.value,val.type));
+print_table_row("Registered organization:",(typeof val !== 'undefined') ? RegistryKeyValueToString(val.value,val.type) : "n/a");
 
 // Windows ID / Key
 var val=GetRegistryKeyValue("\\Microsoft\\Windows NT\\CurrentVersion","ProductId");
-print_table_row("Product ID:",RegistryKeyValueToString(val.value,val.type));
+print_table_row("Product ID:",(typeof val !== 'undefined') ? RegistryKeyValueToString(val.value,val.type) : "n/a");
 var val=GetRegistryKeyValue("\\Microsoft\\Windows NT\\CurrentVersion","DigitalProductId");
-print_table_row("Product Key:",DecodeProductKey(val.value));
+if(typeof val !== 'undefined') {
+  var key=DecodeProductKey(val.value);
+  if(key!="BBBBB-BBBBB-BBBBB-BBBBB-BBBBB") print_table_row("Product Key:",key);
+  else print_table_row("Product Key:","n/a (Probably a volume license key was used)");
+} else print_table_row("Product Key:","n/a");
 
 // Install directory / Source directory
 var val=GetRegistryKeyValue("\\Microsoft\\Windows NT\\CurrentVersion","PathName");
-print_table_row("Install path:",RegistryKeyValueToString(val.value,val.type));
+print_table_row("Install path:",(typeof val !== 'undefined') ? RegistryKeyValueToString(val.value,val.type) : "n/a");
 var val=GetRegistryKeyValue("\\Microsoft\\Windows NT\\CurrentVersion","SourcePath");
-print_table_row("Source path:",RegistryKeyValueToString(val.value,val.type));
+print_table_row("Source path:",(typeof val !== 'undefined') ? RegistryKeyValueToString(val.value,val.type) : "n/a");
 
 println("    </table>");
 println("  </p>");
