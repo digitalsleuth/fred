@@ -1,4 +1,2 @@
 resources/fred.desktop usr/share/applications/
 resources/fred.png usr/share/pixmaps/
-report_templates/SAM_UserAccounts.qs usr/share/fred/report_templates/
-report_templates/SOFTWARE_WindowsVersion.qs usr/share/fred/report_templates/
