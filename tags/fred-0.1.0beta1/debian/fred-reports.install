@@ -1,0 +1,7 @@
+report_templates/NTUSER_RecentDocs.qs usr/share/fred/report_templates/
+report_templates/NTUSER_TypedUrls.qs usr/share/fred/report_templates/
+report_templates/SAM_UserAccounts.qs usr/share/fred/report_templates/
+report_templates/SOFTWARE_WindowsVersion.qs usr/share/fred/report_templates/
+report_templates/SYSTEM_CurrentNetworkSettings.qs usr/share/fred/report_templates/
+report_templates/SYSTEM_SystemTimeInfo.qs usr/share/fred/report_templates/
+report_templates/SYSTEM_UsbStorageDevices.qs usr/share/fred/report_templates/
