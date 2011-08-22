@@ -416,52 +416,61 @@ void MainWindow::UpdateDataInterpreter(int hex_offset) {
 
   if(remaining_data_len>=1) {
     this->p_data_interpreter->AddValue("int8:",
-                                       QString().sprintf("%d",
-                                                         *(int8_t*)p_data));
+                                       RegistryHive::KeyValueToString(
+                                         this->selected_key_value,
+                                         "int8",
+                                         hex_offset));
     this->p_data_interpreter->AddValue("uint8:",
-                                       QString().sprintf("%u",
-                                                         *(uint8_t*)p_data));
+                                       RegistryHive::KeyValueToString(
+                                         this->selected_key_value,
+                                         "uint8",
+                                         hex_offset));
   }
   if(remaining_data_len>=2) {
     this->p_data_interpreter->AddValue("int16:",
-                                       QString().sprintf("%d",
-                                                         *(int16_t*)p_data));
+                                       RegistryHive::KeyValueToString(
+                                         this->selected_key_value,
+                                         "int16",
+                                         hex_offset));
     this->p_data_interpreter->AddValue("uint16:",
-                                       QString().sprintf("%u",
-                                                         *(uint16_t*)p_data));
+                                       RegistryHive::KeyValueToString(
+                                         this->selected_key_value,
+                                         "uint16",
+                                         hex_offset));
   }
   if(remaining_data_len>=4) {
     this->p_data_interpreter->AddValue("int32:",
-                                       QString().sprintf("%d",
-                                                         *(int32_t*)p_data));
+                                       RegistryHive::KeyValueToString(
+                                         this->selected_key_value,
+                                         "int32",
+                                         hex_offset));
     this->p_data_interpreter->AddValue("uint32:",
-                                       QString().sprintf("%u",
-                                                         *(uint32_t*)p_data));
-    date_time.setTime_t(*(uint32_t*)p_data);
+                                       RegistryHive::KeyValueToString(
+                                         this->selected_key_value,
+                                         "uint32",
+                                         hex_offset));
     this->p_data_interpreter->AddValue("Unixtime:",
-                                       date_time.
-                                         toString("yyyy/MM/dd hh:mm:ss"));
+                                       RegistryHive::KeyValueToString(
+                                         this->selected_key_value,
+                                         "unixtime",
+                                         hex_offset));
   }
   if(remaining_data_len>=8) {
-#if __WORDSIZE == 64
     this->p_data_interpreter->AddValue("int64:",
-                                       QString().sprintf("%ld",
-                                                         *(int64_t*)p_data));
+                                       RegistryHive::KeyValueToString(
+                                         this->selected_key_value,
+                                         "int64",
+                                         hex_offset));
     this->p_data_interpreter->AddValue("uint64:",
-                                       QString().sprintf("%lu",
-                                                         *(uint64_t*)p_data));
-#else
-    this->p_data_interpreter->AddValue("int64:",
-                                       QString().sprintf("%lld",
-                                                         *(int64_t*)p_data));
-    this->p_data_interpreter->AddValue("uint64:",
-                                       QString().sprintf("%llu",
-                                                         *(uint64_t*)p_data));
-#endif
-    date_time.setTime_t((*(uint64_t*)p_data-116444736000000000)/10000000);
-    this->p_data_interpreter->AddValue("Win64time:",
-                                       date_time.
-                                         toString("yyyy/MM/dd hh:mm:ss"));
+                                       RegistryHive::KeyValueToString(
+                                         this->selected_key_value,
+                                         "uint64",
+                                         hex_offset));
+    this->p_data_interpreter->AddValue("Filetime:",
+                                       RegistryHive::KeyValueToString(
+                                         this->selected_key_value,
+                                         "filetime",
+                                         hex_offset));
   }
 
   //#undef rotl32

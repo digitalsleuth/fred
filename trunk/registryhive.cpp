@@ -21,6 +21,7 @@
 #include "registryhive.h"
 
 #include <QStringList>
+#include <QDateTime>
 
 #include <stdlib.h>
 
@@ -272,6 +273,85 @@ QString RegistryHive::KeyValueToString(QByteArray value, int value_type) {
   }
 
   #undef ToHexStr
+
+  return ret;
+}
+
+/*
+ * KeyValueToString
+ */
+QString RegistryHive::KeyValueToString(QByteArray key_value,
+                                       QString format,
+                                       int offset,
+                                       int length)
+{
+  int remaining_data_len;
+  const char *p_data;
+  QString ret="";
+
+  // Calculate how many bytes are remainig after specified offset
+  remaining_data_len=key_value.size()-offset;
+  if(!remaining_data_len>0) {
+    // Nothing to show
+    return QString();
+  }
+
+  // Get pointer to data at specified offset
+  p_data=key_value.constData();
+  p_data+=offset;
+
+  // ConvertFull name
+  if(format=="int8" && remaining_data_len>=1) {
+    ret=QString().sprintf("%d",*(int8_t*)p_data);
+  } else if(format=="uint8" && remaining_data_len>=1) {
+    ret=QString().sprintf("%u",*(uint8_t*)p_data);
+  } else if(format=="int16" && remaining_data_len>=2) {
+    ret=QString().sprintf("%d",*(int16_t*)p_data);
+  } else if(format=="uint16" && remaining_data_len>=2) {
+    ret=QString().sprintf("%u",*(uint16_t*)p_data);
+  } else if(format=="int32" && remaining_data_len>=4) {
+    ret=QString().sprintf("%d",*(int32_t*)p_data);
+  } else if(format=="uint32" && remaining_data_len>=4) {
+    ret=QString().sprintf("%u",*(uint32_t*)p_data);
+  } else if(format=="unixtime" && remaining_data_len>=4) {
+    if(*(uint32_t*)p_data==0) {
+      ret="n/a";
+    } else {
+      QDateTime date_time;
+      date_time.setTime_t(*(uint32_t*)p_data);
+      ret=date_time.toString("yyyy/MM/dd hh:mm:ss");
+    }
+  } else if(format=="int64" && remaining_data_len>=8) {
+#if __WORDSIZE == 64
+    ret=QString().sprintf("%ld",*(int64_t*)p_data);
+#else
+    ret=QString().sprintf("%lld",*(int64_t*)p_data);
+#endif
+  } else if(format=="uint64" && remaining_data_len>=8) {
+#if __WORDSIZE == 64
+    ret=QString().sprintf("%lu",*(uint64_t*)p_data);
+#else
+    ret=QString().sprintf("%llu",*(uint64_t*)p_data);
+#endif
+  } else if(format=="filetime" && remaining_data_len>=8) {
+    if(*(uint64_t*)p_data==0) {
+      ret="n/a";
+    } else {
+      // TODO: Warn if >32bit
+      QDateTime date_time;
+      date_time.setTime_t((*(uint64_t*)p_data-116444736000000000)/10000000);
+      ret=date_time.toString("yyyy/MM/dd hh:mm:ss");
+    }
+  } else if(format=="ascii") {
+    // TODO: This fails bad if the string is not null terminated!! It might be
+    // wise checking for a null char here
+    ret=QString().fromAscii((char*)p_data,length);
+  } else if(format=="utf16" && remaining_data_len>=2) {
+    ret=QString().fromUtf16((ushort*)p_data,length);
+  } else {
+    // Unknown variant type or another error
+    return QString();
+  }
 
   return ret;
 }

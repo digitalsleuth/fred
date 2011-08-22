@@ -50,9 +50,12 @@ class RegistryHive : public QObject {
     QByteArray GetKeyValue(int hive_key,
                            int *p_value_type,
                            size_t *p_value_len);
-    Q_INVOKABLE static QString KeyValueToString(QByteArray value,
-                                                int value_type);
-    Q_INVOKABLE static QString KeyTypeToString(int value_type);
+    static QString KeyValueToString(QByteArray value, int value_type);
+    static QString KeyValueToString(QByteArray value,
+                                    QString format,
+                                    int offset=0,
+                                    int length=0);
+    static QString KeyTypeToString(int value_type);
 
   private:
     QString erro_msg;

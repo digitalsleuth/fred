@@ -74,12 +74,6 @@ DataReporterEngine::DataReporterEngine(RegistryHive *p_hive) : QScriptEngine() {
     this->newFunction(this->RegistryKeyTypeToString,1);
   this->globalObject().setProperty("RegistryKeyTypeToString",
                                    func_type_to_string);
-
-/*
-  // Add RegistryHive object
-  QScriptValue obj_registry_hive=this->newQObject(this->p_registry_hive);
-  this->globalObject().setProperty("RegistryHive",obj_registry_hive);
-*/
 }
 
 DataReporterEngine::~DataReporterEngine() {
@@ -287,11 +281,9 @@ QScriptValue DataReporterEngine::RegistryKeyValueToVariant(
   QScriptEngine *engine)
 {
   int offset=0;
-  int length=0;
+  int length=-1;
   QByteArray key_value;
-  QString variant_type;
-  int remaining_data_len;
-  const char *p_data;
+  QString format="";
   QString ret="";
 
   // This function needs at least two arguments, key value and variant type,
@@ -301,69 +293,17 @@ QScriptValue DataReporterEngine::RegistryKeyValueToVariant(
   }
   if(context->argumentCount()==3) {
     offset=context->argument(2).toInt32();
-    length=-1;
   }
   if(context->argumentCount()==4) {
     offset=context->argument(2).toInt32();
     length=context->argument(3).toInt32();
   }
 
-
   // Cast ByteArray argument to QByteArray
   key_value=qvariant_cast<QByteArray>(context->argument(0).data().toVariant());
-  variant_type=context->argument(1).toString();
+  format=context->argument(1).toString();
 
-  // Calculate how many bytes are remainig after specified offset
-  remaining_data_len=key_value.size()-offset;
-  if(!remaining_data_len>0) {
-    // Nothing to show
-    return engine->undefinedValue();
-  }
-
-  // Get pointer to data at specified offset
-  p_data=key_value.constData();
-  p_data+=offset;
-
-  // ConvertFull name
-  if(variant_type=="int8" && remaining_data_len>=1) {
-    ret=QString().sprintf("%d",*(int8_t*)p_data);
-  } else if(variant_type=="uint8" && remaining_data_len>=1) {
-    ret=QString().sprintf("%u",*(uint8_t*)p_data);
-  } else if(variant_type=="int16" && remaining_data_len>=2) {
-    ret=QString().sprintf("%d",*(int16_t*)p_data);
-  } else if(variant_type=="uint16" && remaining_data_len>=2) {
-    ret=QString().sprintf("%u",*(uint16_t*)p_data);
-  } else if(variant_type=="int32" && remaining_data_len>=4) {
-    ret=QString().sprintf("%d",*(int32_t*)p_data);
-  } else if(variant_type=="uint32" && remaining_data_len>=4) {
-    ret=QString().sprintf("%u",*(uint32_t*)p_data);
-  } else if(variant_type=="unixtime" && remaining_data_len>=4) {
-    if(*(uint32_t*)p_data==0) {
-      ret="n/a";
-    } else {
-      QDateTime date_time;
-      date_time.setTime_t(*(uint32_t*)p_data);
-      ret=date_time.toString("yyyy/MM/dd hh:mm:ss");
-    }
-  } else if(variant_type=="filetime" && remaining_data_len>=8) {
-    if(*(uint64_t*)p_data==0) {
-      ret="n/a";
-    } else {
-      // TODO: Warn if >32bit
-      QDateTime date_time;
-      date_time.setTime_t((*(uint64_t*)p_data-116444736000000000)/10000000);
-      ret=date_time.toString("yyyy/MM/dd hh:mm:ss");
-    }
-  } else if(variant_type=="ascii") {
-    // TODO: This fails bad if the string is not null terminated!! It might be
-    // wise checking for a null char here
-    ret=QString().fromAscii((char*)p_data,length);
-  } else if(variant_type=="utf16" && remaining_data_len>=2) {
-    ret=QString().fromUtf16((ushort*)p_data,length);
-  } else {
-    // Unknown variant type or another error
-    return engine->undefinedValue();
-  }
+  ret=RegistryHive::KeyValueToString(key_value,format,offset,length);
 
   return engine->newVariant(ret);
 }
