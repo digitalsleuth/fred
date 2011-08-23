@@ -1,0 +1,30 @@
+fred (0.1.0beta2) unstable; urgency=low
+
+  * Fixed some more bugs and subclassed QTreeView and QTableView
+
+ -- Daniel Gillen <gillen.dan@pinguin.lu>  Tue, 23 Aug 2011 17:00:00 +0200
+
+fred (0.1.0beta1) unstable; urgency=low
+
+  * Fixed some minor bugs and added more report templates
+
+ -- Daniel Gillen <gillen.dan@pinguin.lu>  Mon, 22 Aug 2011 08:00:00 +0200
+
+fred (0.1.0alpha3) unstable; urgency=low
+
+  * Added data report engine and 2 basic report templates
+
+ -- Daniel Gillen <gillen.dan@pinguin.lu>  Wed, 17 Aug 2011 11:30:00 +0200
+
+fred (0.1.0alpha2) unstable; urgency=low
+
+  * Integrated hexeditor into main windows.
+  * Added data interpreters
+
+ -- Daniel Gillen <gillen.dan@pinguin.lu>  Tue, 09 Aug 2011 17:00:00 +0200
+
+fred (0.1.0alpha1) unstable; urgency=low
+
+  * First public release
+
+ -- Daniel Gillen <gillen.dan@pinguin.lu>  Sat, 06 Aug 2011 22:00:00 +0200
