@@ -22,7 +22,7 @@ system(bash compileinfo.sh > compileinfo.h)
 
 QT        += core \
              gui \
-             xml \
+             thread \
              script \
              webkit
 
@@ -51,7 +51,9 @@ SOURCES   += main.cpp\
     qtscript_types/bytearrayiterator.cpp \
     dlgreportviewer.cpp \
     registrykeytable.cpp \
-    registrynodetree.cpp
+    registrynodetree.cpp \
+    dlgsearch.cpp \
+    threadsearch.cpp
 
 HEADERS   += mainwindow.h \
              registrynode.h \
@@ -72,12 +74,15 @@ HEADERS   += mainwindow.h \
     qtscript_types/bytearrayiterator.h \
     dlgreportviewer.h \
     registrykeytable.h \
-    registrynodetree.h
+    registrynodetree.h \
+    dlgsearch.h \
+    threadsearch.h
 
 FORMS     += mainwindow.ui \
              dlgabout.ui \
              dlgkeydetails.ui \
-    dlgreportviewer.ui
+    dlgreportviewer.ui \
+    dlgsearch.ui
 
 LIBS      += -lhivex
 

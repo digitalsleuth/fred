@@ -156,7 +156,7 @@ QString DataReporter::GenerateReport(RegistryHive *p_hive,
 
     if (report_result.isError() || engine.hasUncaughtException()) {
       QMessageBox::critical(0,
-                            "Hello Script",
+                            "Report engine error",
                             QString::fromLatin1("%0:%1: %2")
                                    .arg(p_report->File())
                                    .arg(report_result.property("lineNumber").toInt32())

@@ -63,7 +63,16 @@
      <string>&amp;Reports</string>
     </property>
    </widget>
+   <widget class="QMenu" name="MenuEdit">
+    <property name="title">
+     <string>&amp;Edit</string>
+    </property>
+    <addaction name="ActionSearch"/>
+    <addaction name="separator"/>
+    <addaction name="ActionPreferences"/>
+   </widget>
    <addaction name="MenuFile"/>
+   <addaction name="MenuEdit"/>
    <addaction name="MenuReports"/>
    <addaction name="MenuHelp"/>
   </widget>
@@ -94,6 +103,22 @@
   <action name="actionAbout_fred">
    <property name="text">
     <string>About fred</string>
+   </property>
+  </action>
+  <action name="ActionSearch">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>&amp;Search</string>
+   </property>
+  </action>
+  <action name="ActionPreferences">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>&amp;Preferences</string>
    </property>
   </action>
  </widget>

@@ -18,40 +18,38 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#include "registrykeytable.h"
+#ifndef DLGSEARCH_H
+#define DLGSEARCH_H
 
-#include <QHeaderView>
+#include <QDialog>
 
-RegistryKeyTable::RegistryKeyTable(QWidget *p_parent) : QTableView(p_parent) {
-  // Configure widget
-  this->setSelectionMode(QAbstractItemView::SingleSelection);
-  this->setSelectionBehavior(QAbstractItemView::SelectRows);
-  this->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
+namespace Ui {
+  class DlgSearch;
 }
 
-void RegistryKeyTable::setModel(QAbstractItemModel *p_model) {
-  QTableView::setModel(p_model);
-  // Resize table rows / columns to fit data
-  this->resizeColumnsToContents();
-  this->horizontalHeader()->stretchLastSection();
-}
+class DlgSearch : public QDialog {
+  Q_OBJECT
 
-int RegistryKeyTable::sizeHintForColumn(int column) const {
-  int size_hint=-1;
-  int i=0;
-  int item_width=0;
-  QFontMetrics fm(this->fontMetrics());
-  QModelIndex idx;
+  public:
+    explicit DlgSearch(QWidget *parent = 0);
+    ~DlgSearch();
 
-  if(this->model()==NULL) return -1;
+  protected:
+    void changeEvent(QEvent *e);
 
-  // Find string that needs the most amount of space
-  idx=this->model()->index(i,column);
-  while(idx.isValid()) {
-    item_width=fm.width(this->model()->data(idx).toString())+10;
-    if(item_width>size_hint) size_hint=item_width;
-    idx=this->model()->index(++i,column);
-  }
+  private slots:
+    void on_BtnCancel_clicked();
 
-  return size_hint;
-}
+    void on_BtnSearch_clicked();
+
+    void on_CbAscii_toggled(bool checked);
+
+    void on_CbUtf16_toggled(bool checked);
+
+    void on_CbHex_toggled(bool checked);
+
+private:
+    Ui::DlgSearch *ui;
+};
+
+#endif // DLGSEARCH_H

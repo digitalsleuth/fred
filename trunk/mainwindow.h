@@ -22,6 +22,14 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QWidget>
+#include <QLabel>
+#include <QTabWidget>
+#include <QVBoxLayout>
+#include <QSplitter>
+
+#include <QString>
+#include <QByteArray>
 
 #include <hivex.h>
 
@@ -58,6 +66,8 @@ class MainWindow : public QMainWindow {
     void SlotHexEditAddressChanged(int hex_offset);
     void SlotReportClicked();
 
+    void on_ActionSearch_triggered();
+
 private:
     Ui::MainWindow *ui;
     QString last_open_location;
@@ -70,6 +80,7 @@ private:
     // Widgets etc...
     RegistryNodeTree *p_node_tree;
     RegistryKeyTable *p_key_table;
+    QTabWidget *p_tab_widget;
     QWidget *p_hex_edit_widget;
     QHexEdit *p_hex_edit;
     QLabel *p_hex_edit_status_bar;

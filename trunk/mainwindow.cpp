@@ -34,6 +34,7 @@
 #include "dlgabout.h"
 #include "dlgkeydetails.h"
 #include "dlgreportviewer.h"
+#include "dlgsearch.h"
 
 #include "compileinfo.h"
 
@@ -80,7 +81,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
   this->p_key_table=new RegistryKeyTable(this->p_vertical_splitter);
 
-  this->p_horizontal_splitter2=new QSplitter(this->p_vertical_splitter);
+  this->p_tab_widget=new QTabWidget(this->p_vertical_splitter);
+
+  this->p_horizontal_splitter2=new QSplitter();
   this->p_horizontal_splitter2->setOrientation(Qt::Horizontal);
 
   this->p_hex_edit_widget=new QWidget(this->p_horizontal_splitter2);
@@ -97,6 +100,11 @@ MainWindow::MainWindow(QWidget *parent) :
   mono_font.setStyleHint(QFont::TypeWriter);
   this->p_hex_edit->setFont(mono_font);
 
+  // Add hexedit page to tab_widget
+  this->p_tab_widget->insertTab(0,
+                                this->p_horizontal_splitter2,
+                                tr("Hex viewer"));
+
   // Lay out widgets
   this->p_hex_edit_layout->addWidget(this->p_hex_edit);
   this->p_hex_edit_layout->addWidget(this->p_hex_edit_status_bar);
@@ -105,7 +113,7 @@ MainWindow::MainWindow(QWidget *parent) :
   this->p_horizontal_splitter2->addWidget(this->p_data_interpreter);
 
   this->p_vertical_splitter->addWidget(this->p_key_table);
-  this->p_vertical_splitter->addWidget(this->p_horizontal_splitter2);
+  this->p_vertical_splitter->addWidget(this->p_tab_widget);
 
   this->p_horizontal_splitter->addWidget(this->p_node_tree);
   this->p_horizontal_splitter->addWidget(this->p_vertical_splitter);
@@ -125,6 +133,11 @@ MainWindow::MainWindow(QWidget *parent) :
   key_table_policy.setVerticalStretch(5);
   key_table_policy.setHorizontalStretch(100);
   this->p_key_table->setSizePolicy(key_table_policy);
+
+  QSizePolicy tab_widget_policy=this->p_tab_widget->sizePolicy();
+  tab_widget_policy.setVerticalStretch(2);
+  tab_widget_policy.setHorizontalStretch(200);
+  this->p_tab_widget->setSizePolicy(tab_widget_policy);
 
   QSizePolicy hex_edit_widget_policy=this->p_hex_edit_widget->sizePolicy();
   hex_edit_widget_policy.setVerticalStretch(2);
@@ -231,6 +244,7 @@ void MainWindow::on_action_Close_hive_triggered() {
 
     this->is_hive_open=false;
     this->ui->action_Close_hive->setEnabled(false);
+    this->ui->ActionSearch->setEnabled(false);
     this->ui->MenuReports->setEnabled(false);
     this->UpdateWindowTitle();
   }
@@ -524,6 +538,7 @@ void MainWindow::OpenHive(QString hive_file) {
 
   this->is_hive_open=true;
   this->ui->action_Close_hive->setEnabled(true);
+  this->ui->ActionSearch->setEnabled(true);
   this->ui->MenuReports->setEnabled(true);
   this->UpdateWindowTitle(hive_file);
 }
@@ -534,5 +549,12 @@ void MainWindow::ParseCommandLineArgs() {
   // If exactly 1 argument was specified, it should be a hive to open
   if(args.count()==2) {
     this->OpenHive(args.at(1));
+  }
+}
+
+void MainWindow::on_ActionSearch_triggered() {
+  DlgSearch dlg_search(this);
+  if(dlg_search.exec()==QDialog::Accepted) {
+    // TODO: Search
   }
 }
