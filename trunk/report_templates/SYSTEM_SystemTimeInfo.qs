@@ -28,9 +28,9 @@ println("<html>");
 println("  <head><title>System Time Info</title></head>");
 println("  <body style=\"font-size:12\">");
 println("  <h2>System time info (",cur_controlset,")</h2>");
-println("  <p style=\"font-size:12\">");
+println("  <p style=\"font-size:12; white-space:nowrap\">");
 println("    <u>Time zone info</u>");
-println("    <table style=\"margin-left:20px; font-size:12\">");
+println("    <table style=\"margin-left:20px; font-size:12; white-space:nowrap\">");
 
 // Active time bias
 val=GetRegistryKeyValue(cur_controlset+"\\Control\\TimeZoneInformation","ActiveTimeBias");
@@ -51,7 +51,7 @@ print_table_row("Daylight time bias:",(typeof val !== 'undefined') ? ToUTC(Regis
 println("    </table>");
 println("    <br />");
 println("    <u>W32Time service info</u>");
-println("    <table style=\"margin-left:20px; font-size:12\">");
+println("    <table style=\"margin-left:20px; font-size:12; white-space:nowrap\">");
 
 // Get W32Time service settings
 val=GetRegistryKeyValue(cur_controlset+"\\Services\\W32Time","Start");

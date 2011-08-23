@@ -18,7 +18,7 @@ println("  <h2>User accounts</h2>");
 // Iterate over all user names
 var user_names=GetRegistryNodes("\\SAM\\Domains\\Account\\Users\\Names");
 for(var i=0;i<user_names.length;i++) {
-  println("  <p style=\"font-size:12\">");
+  println("  <p style=\"font-size:12; white-space:nowrap\">");
 
   // Print user name
   println("    <u>",user_names[i],"</u><br />");

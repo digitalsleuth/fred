@@ -49,7 +49,9 @@ SOURCES   += main.cpp\
     qtscript_types/bytearray.cpp \
     qtscript_types/bytearrayprototype.cpp \
     qtscript_types/bytearrayiterator.cpp \
-    dlgreportviewer.cpp
+    dlgreportviewer.cpp \
+    registrykeytable.cpp \
+    registrynodetree.cpp
 
 HEADERS   += mainwindow.h \
              registrynode.h \
@@ -68,7 +70,9 @@ HEADERS   += mainwindow.h \
     qtscript_types/bytearray.h \
     qtscript_types/bytearrayprototype.h \
     qtscript_types/bytearrayiterator.h \
-    dlgreportviewer.h
+    dlgreportviewer.h \
+    registrykeytable.h \
+    registrynodetree.h
 
 FORMS     += mainwindow.ui \
              dlgabout.ui \

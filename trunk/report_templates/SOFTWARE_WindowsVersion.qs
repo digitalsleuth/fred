@@ -29,8 +29,8 @@ println("<html>");
 println("  <head><title>Windows version info</title></head>");
 println("  <body style=\"font-size:12\">");
 println("  <h2>Windows version info</h2>");
-println("  <p style=\"font-size:12\">");
-println("    <table style=\"margin-left:20px; font-size:12\">");
+println("  <p style=\"font-size:12; white-space:nowrap\">");
+println("    <table style=\"margin-left:20px; font-size:12; white-space:nowrap\">");
 
 // Windows version sp and build info
 var val=GetRegistryKeyValue("\\Microsoft\\Windows NT\\CurrentVersion","ProductName");

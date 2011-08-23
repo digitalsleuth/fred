@@ -72,14 +72,13 @@ MainWindow::MainWindow(QWidget *parent) :
   this->p_horizontal_splitter=new QSplitter();
   this->p_horizontal_splitter->setOrientation(Qt::Horizontal);
 
-  this->p_node_tree=new QTreeView(this->p_horizontal_splitter);
+  this->p_node_tree=new RegistryNodeTree(this->p_horizontal_splitter);
   this->p_node_tree->setHeaderHidden(true);
 
   this->p_vertical_splitter=new QSplitter(this->p_horizontal_splitter);
   this->p_vertical_splitter->setOrientation(Qt::Vertical);
 
-  this->p_key_table=new QTableView(this->p_vertical_splitter);
-  this->p_key_table->setSelectionBehavior(QAbstractItemView::SelectRows);
+  this->p_key_table=new RegistryKeyTable(this->p_vertical_splitter);
 
   this->p_horizontal_splitter2=new QSplitter(this->p_vertical_splitter);
   this->p_horizontal_splitter2->setOrientation(Qt::Horizontal);
@@ -212,10 +211,12 @@ void MainWindow::on_action_Close_hive_triggered() {
   if(this->is_hive_open) {
     // Delete models
     if(this->p_reg_node_tree_model!=NULL) {
+      this->p_node_tree->setModel(NULL);
       delete this->p_reg_node_tree_model;
       this->p_reg_node_tree_model=NULL;
     }
     if(this->p_reg_key_table_model!=NULL) {
+      this->p_key_table->setModel(NULL);
       delete this->p_reg_key_table_model;
       this->p_reg_key_table_model=NULL;
     }
@@ -262,6 +263,7 @@ void MainWindow::SlotNodeTreeClicked(QModelIndex index) {
 
   // Create table model and attach it to the table view
   if(this->p_reg_key_table_model!=NULL) {
+    this->p_key_table->setModel(NULL);
     delete this->p_reg_key_table_model;
     this->p_hex_edit->setData(QByteArray());
     this->p_hex_edit_status_bar->setText("");
@@ -269,10 +271,6 @@ void MainWindow::SlotNodeTreeClicked(QModelIndex index) {
   }
   this->p_reg_key_table_model=new RegistryKeyTableModel(this->p_hive,node_path);
   this->p_key_table->setModel(this->p_reg_key_table_model);
-
-  // Resize table rows / columns to fit data
-  this->p_key_table->resizeColumnsToContents();
-  this->p_key_table->horizontalHeader()->stretchLastSection();
 }
 
 void MainWindow::SlotKeyTableDoubleClicked(QModelIndex index) {
@@ -334,6 +332,8 @@ void MainWindow::SlotKeyTableClicked(QModelIndex index) {
 }
 
 void MainWindow::SlotHexEditAddressChanged(int hex_offset) {
+  if(!this->is_hive_open || this->selected_key_value.isEmpty()) return;
+
   // Update hex edit status bar
   this->p_hex_edit_status_bar->
     setText(QString().sprintf("Byte offset: 0x%04X (%u)",hex_offset,hex_offset));
@@ -449,7 +449,7 @@ void MainWindow::UpdateDataInterpreter(int hex_offset) {
                                          this->selected_key_value,
                                          "uint32",
                                          hex_offset));
-    this->p_data_interpreter->AddValue("Unixtime:",
+    this->p_data_interpreter->AddValue("unixtime:",
                                        RegistryHive::KeyValueToString(
                                          this->selected_key_value,
                                          "unixtime",
@@ -466,7 +466,7 @@ void MainWindow::UpdateDataInterpreter(int hex_offset) {
                                          this->selected_key_value,
                                          "uint64",
                                          hex_offset));
-    this->p_data_interpreter->AddValue("Filetime:",
+    this->p_data_interpreter->AddValue("filetime64:",
                                        RegistryHive::KeyValueToString(
                                          this->selected_key_value,
                                          "filetime",
@@ -531,11 +531,8 @@ void MainWindow::OpenHive(QString hive_file) {
 void MainWindow::ParseCommandLineArgs() {
   QStringList args=qApp->arguments();
 
-  // Return if no args were specified
-  if(args.count()==1) return;
-
+  // If exactly 1 argument was specified, it should be a hive to open
   if(args.count()==2) {
-    // Try to open specified hive file
     this->OpenHive(args.at(1));
   }
 }

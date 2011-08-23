@@ -30,6 +30,8 @@ DataInterpreter::DataInterpreter(QWidget *p_parent)
   this->setTextElideMode(Qt::ElideNone);
   this->horizontalHeader()->setHidden(true);
   this->verticalHeader()->setHidden(true);
+  this->setSelectionBehavior(QAbstractItemView::SelectRows);
+  this->setSelectionMode(QAbstractItemView::SingleSelection);
 }
 
 DataInterpreter::~DataInterpreter() {
@@ -39,7 +41,9 @@ DataInterpreter::~DataInterpreter() {
 
 void DataInterpreter::AddValue(QString name, QString value) {
   QTableWidgetItem *p_name_item=new QTableWidgetItem(name);
+  p_name_item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
   QTableWidgetItem *p_value_item=new QTableWidgetItem(value);
+  p_value_item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
   this->setRowCount(this->rowCount()+1);
   this->setItem(this->rowCount()-1,0,p_name_item);
   this->setItem(this->rowCount()-1,1,p_value_item);

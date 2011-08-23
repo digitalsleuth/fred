@@ -38,6 +38,8 @@ DataReporter::~DataReporter() {
 void DataReporter::LoadReportTemplates(QString dir) {
   QString report_template="";
   int i=0;
+  int ii=0;
+  bool found=false;
   QString report_category="";
   QString report_name="";
   ReportTemplate *p_report;
@@ -60,11 +62,28 @@ void DataReporter::LoadReportTemplates(QString dir) {
       found_report_templates.value(i).indexOf("_")+1);
     report_name=report_name.left(report_name.lastIndexOf("."));
 
-    // Add report to list
-    p_report=new ReportTemplate(report_category,
-                                report_name,
-                                report_template);
-    this->report_templates.append(p_report);
+    // Check if a report with the same category/name was already added
+    found=false;
+    for(ii=0;ii<this->report_templates.count();ii++) {
+      if(this->report_templates.at(ii)->Category()==report_category &&
+         this->report_templates.at(ii)->Name()==report_name)
+      {
+        found=true;
+        break;
+      }
+    }
+
+    if(!found) {
+      // Add report to list
+      p_report=new ReportTemplate(report_category,
+                                  report_name,
+                                  report_template);
+      this->report_templates.append(p_report);
+    } else {
+      // Update report entry
+      p_report=this->report_templates.at(ii);
+      p_report->SetFile(report_template);
+    }
   }
 }
 

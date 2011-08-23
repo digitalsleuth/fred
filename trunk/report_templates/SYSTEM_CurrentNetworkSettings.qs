@@ -16,8 +16,8 @@ println("<html>");
 println("  <head><title>Current Network Settings (Tcp/Ip)</title></head>");
 println("  <body style=\"font-size:12\">");
 println("  <h2>Current network settings (Tcp/Ip)</h2>");
-println("  <p style=\"font-size:12\">");
-println("    <table style=\"margin-left:20px; font-size:12\">");
+println("  <p style=\"font-size:12; white-space:nowrap\">");
+println("    <table style=\"margin-left:20px; font-size:12; white-space:nowrap\">");
 
 print_table_row("Active control set:",cur_controlset);
 
@@ -37,7 +37,7 @@ for(var i=0;i<adapters.length;i++) {
   var adapter_settings_node=GetRegistryKeyValue(cur_controlset+"\\Services\\Tcpip\\Parameters\\Adapters\\"+adapters[i],"IpConfig");
   adapter_settings_node=RegistryKeyValueToVariant(adapter_settings_node.value,"utf16",0);
 
-  println("    <table style=\"margin-left:20px; font-size:12\">");
+  println("    <table style=\"margin-left:20px; font-size:12; white-space:nowrap\">");
 
   // Get configuration mode
   val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"EnableDHCP");

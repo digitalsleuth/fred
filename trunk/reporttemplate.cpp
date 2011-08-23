@@ -29,6 +29,18 @@ ReportTemplate::ReportTemplate(QString report_category,
   this->template_file=report_template_file;
 }
 
+void ReportTemplate::SetCategory(QString new_category) {
+  this->category=new_category;
+}
+
+void ReportTemplate::SetName(QString new_name) {
+  this->name=new_name;
+}
+
+void ReportTemplate::SetFile(QString new_file) {
+  this->template_file=new_file;
+}
+
 QString ReportTemplate::ReportTemplate::Category() {
   return this->category;
 }

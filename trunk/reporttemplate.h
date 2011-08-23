@@ -29,6 +29,10 @@ class ReportTemplate {
                    QString report_name,
                    QString report_template_file);
 
+    void SetCategory(QString new_category);
+    void SetName(QString new_name);
+    void SetFile(QString new_file);
+
     QString Category();
     QString Name();
     QString File();

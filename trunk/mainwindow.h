@@ -26,7 +26,9 @@
 #include <hivex.h>
 
 #include "registryhive.h"
+#include "registrynodetree.h"
 #include "registrynodetreemodel.h"
+#include "registrykeytable.h"
 #include "registrykeytablemodel.h"
 #include "qhexedit/qhexedit.h"
 #include "datainterpreter.h"
@@ -66,8 +68,8 @@ private:
     QByteArray selected_key_value;
 
     // Widgets etc...
-    QTreeView *p_node_tree;
-    QTableView *p_key_table;
+    RegistryNodeTree *p_node_tree;
+    RegistryKeyTable *p_key_table;
     QWidget *p_hex_edit_widget;
     QHexEdit *p_hex_edit;
     QLabel *p_hex_edit_status_bar;
