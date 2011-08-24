@@ -20,7 +20,59 @@
 
 #include "threadsearch.h"
 
+#include <QStringList>
+
 ThreadSearch::ThreadSearch(QObject *p_parent) : QThread(p_parent) {
+  this->hive_file="";
+  this->h_hive=NULL;
+  this->keywords=QList<QByteArray>();
+  this->search_nodes=false;
+  this->search_keys=false;
+  this->search_values=false;
+  this->root_node=0;
+}
+
+bool ThreadSearch::Search(QString registry_hive,
+                          QList<QByteArray> search_keywords,
+                          bool search_node_names,
+                          bool search_key_names,
+                          bool search_key_values,
+                          QString search_path)
+{
+  this->hive_file=registry_hive;
+  this->keywords=search_keywords;
+  this->search_nodes=search_node_names;
+  this->search_keys=search_key_names;
+  this->search_values=search_key_values;
+
+  // Try to open hive
+  this->h_hive=hivex_open(this->hive_file.toAscii().constData(),0);
+  if(this->h_hive==NULL) return false;
+
+  // Get root node
+  this->root_node=hivex_root(this->h_hive);
+  if(this->root_node==0) {
+    hivex_close(this->h_hive);
+    return false;
+  }
+
+  // If a root path was specified, itearte to it
+  if(search_path!="\\") {
+    QStringList path_nodes=search_path.split("\\",QString::SkipEmptyParts);
+    int i;
+    for(i=0;i<path_nodes.count();i++) {
+      this->root_node=hivex_node_get_child(this->h_hive,
+                                           this->root_node,
+                                           path_nodes.at(i).toAscii().constData());
+      if(this->root_node==0) {
+        hivex_close(this->h_hive);
+        return false;
+      }
+    }
+  }
+
+  this->start();
+  return true;
 }
 
 void ThreadSearch::run() {

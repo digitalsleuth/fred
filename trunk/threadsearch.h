@@ -23,6 +23,10 @@
 
 #include <QThread>
 #include <QObject>
+#include <QList>
+#include <QByteArray>
+
+#include <hivex.h>
 
 class ThreadSearch : public QThread {
   Q_OBJECT
@@ -30,8 +34,26 @@ class ThreadSearch : public QThread {
   public:
     ThreadSearch(QObject *p_parent=0);
 
+    bool Search(QString registry_hive,
+                QList<QByteArray> search_keywords,
+                bool search_node_names,
+                bool search_key_names,
+                bool search_key_values,
+                QString search_path="\\");
+
   protected:
     void run();
+
+  private:
+    QString hive_file;
+    hive_h *h_hive;
+    QList<QByteArray> keywords;
+    bool search_nodes;
+    bool search_keys;
+    bool search_values;
+    hive_node_h root_node;
+
+
 };
 
 #endif // THREADSEARCH_H
