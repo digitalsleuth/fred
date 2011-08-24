@@ -44,6 +44,7 @@ bool ThreadSearch::Search(QString registry_hive,
   this->search_nodes=search_node_names;
   this->search_keys=search_key_names;
   this->search_values=search_key_values;
+  this->root_path=search_path;
 
   // Try to open hive
   this->h_hive=hivex_open(this->hive_file.toAscii().constData(),0);
@@ -56,7 +57,7 @@ bool ThreadSearch::Search(QString registry_hive,
     return false;
   }
 
-  // If a root path was specified, itearte to it
+  // If a root path was specified, iterate to it
   if(search_path!="\\") {
     QStringList path_nodes=search_path.split("\\",QString::SkipEmptyParts);
     int i;
@@ -76,4 +77,44 @@ bool ThreadSearch::Search(QString registry_hive,
 }
 
 void ThreadSearch::run() {
+  qDebug("Starting search");
+  this->Match(this->root_node,this->root_path=="\\" ? "" : this->root_path);
+  qDebug("Ending search");
+  hivex_close(this->h_hive);
+}
+
+void ThreadSearch::Match(hive_node_h node, QString path) {
+  char *p_node_name;
+  int i;
+  hive_node_h *p_node_childs;
+  QByteArray *p_byte_array;
+
+  //qDebug("Searching in '%s'",path.toAscii().constData());
+
+  p_node_name=hivex_node_name(this->h_hive,node);
+  if(p_node_name==NULL) return;
+
+  if(this->search_nodes) {
+    // Compare node name with keywords
+    p_byte_array=new QByteArray(p_node_name);
+    for(i=0;i<this->keywords.count();i++) {
+      if(p_byte_array->indexOf(this->keywords.at(i))!=-1) {
+        emit(SIGNAL(SignalFoundMatch(ThreadSearch::eMatchType_NodeName,
+                                     path,
+                                     QString(p_node_name),
+                                     QString())));
+      }
+    }
+    delete p_byte_array;
+  }
+
+  p_node_childs=hivex_node_children(this->h_hive,node);
+  if(p_node_childs!=NULL) {
+    for(i=0;p_node_childs[i];i++) {
+      this->Match(p_node_childs[i],
+                  QString(path).append("\\").append(p_node_name));
+    }
+    delete p_node_childs;
+  }
+  delete p_node_name;
 }

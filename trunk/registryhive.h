@@ -39,6 +39,8 @@ class RegistryHive : public QObject {
     bool Open(QString file, bool read_only=true);
     bool Close(bool commit_changes=false);
 
+    QString Filename();
+
     QMap<QString,int> GetNodes(QString path="\\");
     QMap<QString,int> GetNodes(int parent_node=0);
     QMap<QString,int> GetKeys(QString path="\\");

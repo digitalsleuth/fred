@@ -41,6 +41,7 @@
 #include "qhexedit/qhexedit.h"
 #include "datainterpreter.h"
 #include "datareporter.h"
+#include "threadsearch.h"
 
 namespace Ui {
   class MainWindow;
@@ -65,6 +66,10 @@ class MainWindow : public QMainWindow {
     void SlotKeyTableDoubleClicked(QModelIndex index);
     void SlotHexEditAddressChanged(int hex_offset);
     void SlotReportClicked();
+    void SlotFoundMatch(ThreadSearch::eMatchType match_type,
+                        QString path,
+                        QString key,
+                        QString value);
 
     void on_ActionSearch_triggered();
 

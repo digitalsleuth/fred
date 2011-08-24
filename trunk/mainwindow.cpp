@@ -375,6 +375,14 @@ void MainWindow::SlotReportClicked() {
   }
 }
 
+void MainWindow::SlotFoundMatch(ThreadSearch::eMatchType match_type,
+                                QString path,
+                                QString key,
+                                QString value)
+{
+  qDebug("Found match: path='%s'",path.toAscii().constData());
+}
+
 void MainWindow::CheckUserConfigDir() {
   QString user_config_dir=QDir::homePath()
                             .append(QDir::separator())
@@ -555,6 +563,13 @@ void MainWindow::ParseCommandLineArgs() {
 void MainWindow::on_ActionSearch_triggered() {
   DlgSearch dlg_search(this);
   if(dlg_search.exec()==QDialog::Accepted) {
-    // TODO: Search
+    ThreadSearch *p_search_thread=new ThreadSearch(this);
+    this->connect(p_search_thread,
+                  SIGNAL(SignalFoundMatch(ThreadSearch::eMatchType,QString,QString,QString)),
+                  this,
+                  SLOT(SlotFoundMatch(ThreadSearch::eMatchType,QString,QString,QString)));
+    QList<QByteArray> keywords;
+    keywords.append(QByteArray(QString("Windows").toAscii()));
+    p_search_thread->Search(this->p_hive->Filename(),keywords,true,false,false);
   }
 }

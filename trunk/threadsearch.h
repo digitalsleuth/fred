@@ -23,6 +23,7 @@
 
 #include <QThread>
 #include <QObject>
+#include <QString>
 #include <QList>
 #include <QByteArray>
 
@@ -32,6 +33,12 @@ class ThreadSearch : public QThread {
   Q_OBJECT
 
   public:
+    enum eMatchType {
+      eMatchType_NodeName=0,
+      eMatchType_KeyName,
+      eMatchType_KeyValue
+    };
+
     ThreadSearch(QObject *p_parent=0);
 
     bool Search(QString registry_hive,
@@ -40,6 +47,12 @@ class ThreadSearch : public QThread {
                 bool search_key_names,
                 bool search_key_values,
                 QString search_path="\\");
+
+  signals:
+    void SignalFoundMatch(ThreadSearch::eMatchType match_type,
+                          QString path,
+                          QString key,
+                          QString value);
 
   protected:
     void run();
@@ -51,9 +64,12 @@ class ThreadSearch : public QThread {
     bool search_nodes;
     bool search_keys;
     bool search_values;
+    QString root_path;
     hive_node_h root_node;
 
-
+    void Match(hive_node_h node, QString path);
 };
+
+//Q_DECLARE_TYPEINFO(ThreadSearch::eMatchType,Q_PRIMITIVE_TYPE);
 
 #endif // THREADSEARCH_H

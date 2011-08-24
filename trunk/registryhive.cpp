@@ -101,6 +101,11 @@ bool RegistryHive::Close(bool commit_changes) {
   return true;
 }
 
+QString RegistryHive::Filename() {
+  if(this->is_hive_open) return this->hive_file;
+  return QString();
+}
+
 /*
  * GetNodes
  */
