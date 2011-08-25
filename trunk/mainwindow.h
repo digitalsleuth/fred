@@ -60,18 +60,14 @@ class MainWindow : public QMainWindow {
     void on_action_Close_hive_triggered();
     void on_actionAbout_Qt_triggered();
     void on_actionAbout_fred_triggered();
+    void on_ActionSearch_triggered();
 
     void SlotNodeTreeClicked(QModelIndex index);
     void SlotKeyTableClicked(QModelIndex index);
     void SlotKeyTableDoubleClicked(QModelIndex index);
     void SlotHexEditAddressChanged(int hex_offset);
     void SlotReportClicked();
-    void SlotFoundMatch(ThreadSearch::eMatchType match_type,
-                        QString path,
-                        QString key,
-                        QString value);
-
-    void on_ActionSearch_triggered();
+    void SlotSearchFinished();
 
 private:
     Ui::MainWindow *ui;
@@ -94,8 +90,8 @@ private:
     QSplitter *p_horizontal_splitter;
     QSplitter *p_horizontal_splitter2;
     QSplitter *p_vertical_splitter;
-
     DataReporter *p_data_reporter;
+    ThreadSearch *p_search_thread;
 
     /*
      * CheckUserConfigDir

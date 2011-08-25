@@ -32,6 +32,22 @@ DlgSearch::~DlgSearch() {
   delete ui;
 }
 
+QList<QByteArray> DlgSearch::Keywords() {
+  return this->keywords;
+}
+
+bool DlgSearch::SearchNodeNames() {
+  return this->search_nodes;
+}
+
+bool DlgSearch::SearchKeyNames() {
+  return this->search_keys;
+}
+
+bool DlgSearch::SearchKeyValues() {
+  return this->search_values;
+}
+
 void DlgSearch::changeEvent(QEvent *e) {
   QDialog::changeEvent(e);
   switch (e->type()) {
@@ -71,6 +87,21 @@ void DlgSearch::on_BtnSearch_clicked() {
     return;
   }
 
+  // Save settings
+  QString keyword=this->ui->EdtValue->text();
+  this->keywords.clear();
+  if(this->ui->CbAscii->isChecked()) this->keywords.append(QByteArray(keyword.toAscii()));
+  if(this->ui->CbUtf16->isChecked()) {
+    // TODO: .size()*2 will definetly fail sometimes!!!!
+    this->keywords.append(QByteArray((char*)(keyword.utf16()),keyword.size()*2));
+  }
+  if(this->ui->CbHex->isChecked()) {
+    // TODO: Convert to hex
+  }
+
+  this->search_nodes=this->ui->CbNodeNames->isChecked();
+  this->search_keys=this->ui->CbKeyNames->isChecked();
+  this->search_values=this->ui->CbKeyValues->isChecked();
 
   this->accept();
 }

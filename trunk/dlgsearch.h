@@ -22,6 +22,8 @@
 #define DLGSEARCH_H
 
 #include <QDialog>
+#include <QList>
+#include <QByteArray>
 
 namespace Ui {
   class DlgSearch;
@@ -34,22 +36,27 @@ class DlgSearch : public QDialog {
     explicit DlgSearch(QWidget *parent = 0);
     ~DlgSearch();
 
+    QList<QByteArray> Keywords();
+    bool SearchNodeNames();
+    bool SearchKeyNames();
+    bool SearchKeyValues();
+
   protected:
     void changeEvent(QEvent *e);
 
   private slots:
     void on_BtnCancel_clicked();
-
     void on_BtnSearch_clicked();
-
     void on_CbAscii_toggled(bool checked);
-
     void on_CbUtf16_toggled(bool checked);
-
     void on_CbHex_toggled(bool checked);
 
-private:
+  private:
     Ui::DlgSearch *ui;
+    QList<QByteArray> keywords;
+    bool search_nodes;
+    bool search_keys;
+    bool search_values;
 };
 
 #endif // DLGSEARCH_H

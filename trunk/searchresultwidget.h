@@ -18,56 +18,28 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#ifndef THREADSEARCH_H
-#define THREADSEARCH_H
+#ifndef SEARCHRESULTWIDGET_H
+#define SEARCHRESULTWIDGET_H
 
-#include <QThread>
-#include <QObject>
-#include <QString>
-#include <QList>
-#include <QByteArray>
+#include <QTableWidget>
 
-#include <hivex.h>
+#include "threadsearch.h"
 
-class ThreadSearch : public QThread {
+class SearchResultWidget : public QTableWidget {
   Q_OBJECT
 
   public:
-    enum eMatchType {
-      eMatchType_NodeName=0,
-      eMatchType_KeyName,
-      eMatchType_KeyValue
-    };
+    SearchResultWidget(QWidget *p_parent=0);
 
-    ThreadSearch(QObject *p_parent=0);
-
-    bool Search(QString registry_hive,
-                QList<QByteArray> search_keywords,
-                bool search_node_names,
-                bool search_key_names,
-                bool search_key_values,
-                QString search_path="\\");
-
-  signals:
-    void SignalFoundMatch(ThreadSearch::eMatchType match_type,
-                          QString path,
-                          QString key,
-                          QString value);
+  public slots:
+    void SlotFoundMatch(ThreadSearch::eMatchType match_type,
+                        QString path,
+                        QString key,
+                        QString value);
+    void SlotSearchFinished();
 
   protected:
-    void run();
-
-  private:
-    QString hive_file;
-    hive_h *h_hive;
-    QList<QByteArray> keywords;
-    bool search_nodes;
-    bool search_keys;
-    bool search_values;
-    QString root_path;
-    hive_node_h root_node;
-
-    void Match(QString path="", hive_node_h node=0);
+    int sizeHintForColumn(int column) const;
 };
 
-#endif // THREADSEARCH_H
+#endif // SEARCHRESULTWIDGET_H

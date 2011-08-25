@@ -35,6 +35,7 @@
 #include "dlgkeydetails.h"
 #include "dlgreportviewer.h"
 #include "dlgsearch.h"
+#include "searchresultwidget.h"
 
 #include "compileinfo.h"
 
@@ -48,6 +49,7 @@ MainWindow::MainWindow(QWidget *parent) :
   this->is_hive_open=false;
   this->p_reg_node_tree_model=NULL;
   this->p_reg_key_table_model=NULL;
+  this->p_search_thread=NULL;
 
   // Check for ~/.fred config dir
   this->CheckUserConfigDir();
@@ -259,6 +261,46 @@ void MainWindow::on_actionAbout_fred_triggered() {
   dlg_about.exec();
 }
 
+void MainWindow::on_ActionSearch_triggered() {
+  DlgSearch dlg_search(this);
+  if(dlg_search.exec()==QDialog::Accepted) {
+    // Create search thread and connect needed signals/slots
+    this->p_search_thread=new ThreadSearch(this);
+    QList<QByteArray> keywords;
+    keywords.append(QByteArray(QString("Windows").toAscii()));
+
+    // Add new search widget to tabwidget
+    SearchResultWidget *p_search_widget=
+      new SearchResultWidget(this->p_tab_widget);
+    this->p_tab_widget->addTab(p_search_widget,tr("Search results"));
+    this->p_tab_widget->setCurrentIndex(this->p_tab_widget->count()-1);
+
+    // Connect search thread to result widget
+    this->connect(this->p_search_thread,
+                  SIGNAL(SignalFoundMatch(ThreadSearch::eMatchType,
+                                          QString,QString,QString)),
+                  p_search_widget,
+                  SLOT(SlotFoundMatch(ThreadSearch::eMatchType,
+                                      QString,QString,QString)));
+    this->connect(this->p_search_thread,
+                  SIGNAL(finished()),
+                  this,
+                  SLOT(SlotSearchFinished()));
+    this->connect(this->p_search_thread,
+                  SIGNAL(finished()),
+                  p_search_widget,
+                  SLOT(SlotSearchFinished()));
+
+    // Start searching
+    this->ui->ActionSearch->setEnabled(false);
+    p_search_thread->Search(this->p_hive->Filename(),
+                            dlg_search.Keywords(),
+                            dlg_search.SearchNodeNames(),
+                            dlg_search.SearchKeyNames(),
+                            dlg_search.SearchKeyValues());
+  }
+}
+
 void MainWindow::SlotNodeTreeClicked(QModelIndex index) {
   QString node_path;
 
@@ -306,7 +348,7 @@ void MainWindow::SlotKeyTableDoubleClicked(QModelIndex index) {
     .toString();
   key_index=this->p_reg_key_table_model->index(index.row(),1);
   key_type=this->p_reg_key_table_model->data(key_index,Qt::DisplayRole)
-    .toString();
+    .toString();ThreadSearch
   key_index=this->p_reg_key_table_model->index(index.row(),2);
   key_value=this->p_reg_key_table_model->data(key_index,
                                               RegistryKeyTableModel::
@@ -375,12 +417,10 @@ void MainWindow::SlotReportClicked() {
   }
 }
 
-void MainWindow::SlotFoundMatch(ThreadSearch::eMatchType match_type,
-                                QString path,
-                                QString key,
-                                QString value)
-{
-  qDebug("Found match: path='%s'",path.toAscii().constData());
+void MainWindow::SlotSearchFinished() {
+  delete this->p_search_thread;
+  this->p_search_thread=NULL;
+  this->ui->ActionSearch->setEnabled(true);
 }
 
 void MainWindow::CheckUserConfigDir() {
@@ -503,7 +543,6 @@ void MainWindow::UpdateDataReporterMenu() {
   int i=0,ii=0;
   QMenu *p_category_entry;
   QAction *p_report_entry;
-
   QStringList categories=this->p_data_reporter->GetAvailableReportCategories();
   QStringList reports;
 
@@ -557,19 +596,5 @@ void MainWindow::ParseCommandLineArgs() {
   // If exactly 1 argument was specified, it should be a hive to open
   if(args.count()==2) {
     this->OpenHive(args.at(1));
-  }
-}
-
-void MainWindow::on_ActionSearch_triggered() {
-  DlgSearch dlg_search(this);
-  if(dlg_search.exec()==QDialog::Accepted) {
-    ThreadSearch *p_search_thread=new ThreadSearch(this);
-    this->connect(p_search_thread,
-                  SIGNAL(SignalFoundMatch(ThreadSearch::eMatchType,QString,QString,QString)),
-                  this,
-                  SLOT(SlotFoundMatch(ThreadSearch::eMatchType,QString,QString,QString)));
-    QList<QByteArray> keywords;
-    keywords.append(QByteArray(QString("Windows").toAscii()));
-    p_search_thread->Search(this->p_hive->Filename(),keywords,true,false,false);
   }
 }

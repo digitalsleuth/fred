@@ -53,7 +53,8 @@ SOURCES   += main.cpp\
     registrykeytable.cpp \
     registrynodetree.cpp \
     dlgsearch.cpp \
-    threadsearch.cpp
+    threadsearch.cpp \
+    searchresultwidget.cpp
 
 HEADERS   += mainwindow.h \
              registrynode.h \
@@ -76,7 +77,8 @@ HEADERS   += mainwindow.h \
     registrykeytable.h \
     registrynodetree.h \
     dlgsearch.h \
-    threadsearch.h
+    threadsearch.h \
+    searchresultwidget.h
 
 FORMS     += mainwindow.ui \
              dlgabout.ui \
