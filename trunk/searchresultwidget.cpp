@@ -73,10 +73,13 @@ void SearchResultWidget::SlotFoundMatch(ThreadSearch::eMatchType match_type,
   int rows=this->rowCount();
   this->setRowCount(rows+1);
   p_item=new QTableWidgetItem(full_path=="" ? "\\" : full_path);
+  p_item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
   this->setItem(rows,0,p_item);
   p_item=new QTableWidgetItem(type);
+  p_item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
   this->setItem(rows,1,p_item);
   p_item=new QTableWidgetItem(match);
+  p_item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
   this->setItem(rows,2,p_item);
 }
 
@@ -97,4 +100,5 @@ int SearchResultWidget::sizeHintForColumn(int column) const {
 
 void SearchResultWidget::SlotSearchFinished() {
   this->resizeColumnsToContents();
+  this->resizeRowsToContents();
 }

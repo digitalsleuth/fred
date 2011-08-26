@@ -68,6 +68,7 @@ class MainWindow : public QMainWindow {
     void SlotHexEditAddressChanged(int hex_offset);
     void SlotReportClicked();
     void SlotSearchFinished();
+    void SlotSearchResultWidgetDoubleClicked(QModelIndex index);
 
 private:
     Ui::MainWindow *ui;

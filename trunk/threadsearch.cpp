@@ -19,6 +19,7 @@
 *******************************************************************************/
 
 #include "threadsearch.h"
+#include "registryhive.h"
 
 #include <QStringList>
 #include <QMetaType>
@@ -157,7 +158,7 @@ void ThreadSearch::Match(QString path, hive_node_h node) {
               emit(SignalFoundMatch(ThreadSearch::eMatchType_KeyValue,
                                     path.append("\\").append(p_node_name),
                                     QString(p_keyname),
-                                    QString()));
+                                    RegistryHive::KeyValueToString(*p_byte_array,val_type)));
               delete p_keyname;
             }
           }

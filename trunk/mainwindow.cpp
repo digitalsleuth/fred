@@ -272,6 +272,12 @@ void MainWindow::on_ActionSearch_triggered() {
     // Add new search widget to tabwidget
     SearchResultWidget *p_search_widget=
       new SearchResultWidget(this->p_tab_widget);
+
+    this->connect(p_search_widget,
+                  SIGNAL(doubleClicked(QModelIndex)),
+                  this,
+                  SLOT(SlotSearchResultWidgetDoubleClicked(QModelIndex)));
+
     this->p_tab_widget->addTab(p_search_widget,tr("Search results"));
     this->p_tab_widget->setCurrentIndex(this->p_tab_widget->count()-1);
 
@@ -421,6 +427,12 @@ void MainWindow::SlotSearchFinished() {
   delete this->p_search_thread;
   this->p_search_thread=NULL;
   this->ui->ActionSearch->setEnabled(true);
+}
+
+void MainWindow::SlotSearchResultWidgetDoubleClicked(QModelIndex index) {
+  if(!index.isValid()) return;
+
+  qDebug("Clicked on %u",index.row());
 }
 
 void MainWindow::CheckUserConfigDir() {
