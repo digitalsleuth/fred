@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd hivex
-./configure --without-ocaml --without-perl --without-python --without-ruby
+./configure --disable-ocaml --disable-perl --disable-python --disable-ruby
 make
 cd ..
 
