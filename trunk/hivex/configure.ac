@@ -22,7 +22,7 @@ m4_define([hivex_release], [1])
 # extra can be any string
 m4_define([hivex_extra],   [])
 
-AC_INIT([hivex],hivex_major.hivex_minor.hivex_release[]hivex_extra)
+AC_INIT([hivex],[hivex_major.hivex_minor.hivex_releasehivex_extra])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([foreign])
 
@@ -40,7 +40,7 @@ AC_DEFINE([PACKAGE_VERSION_EXTRA],["hivex_extra"],[Extra version string])
 gl_EARLY
 gl_INIT
 
-AM_PROG_LIBTOOL
+LT_INIT
 
 dnl Check for basic C environment.
 AC_PROG_CC_STDC
@@ -170,11 +170,18 @@ PKG_CHECK_MODULES([LIBXML2], [libxml-2.0])
 AC_SUBST([LIBXML2_CFLAGS])
 AC_SUBST([LIBXML2_LIBS])
 
+
+dnl ////////////////////////////////////////////////////////////////////////////
 dnl Check for OCaml (optional, for OCaml bindings).
+
+AC_ARG_ENABLE([ocaml],
+       AS_HELP_STRING([--with-ocaml],[build Ocaml binding]))
+
+
 AC_PROG_OCAML
 AC_PROG_FINDLIB
 AM_CONDITIONAL([HAVE_OCAML],
-    [test "x$OCAMLC" != "xno" && test "x$OCAMLFIND" != "xno"])
+    [test "x$OCAMLC" != "xno" -a "x$OCAMLFIND" != "xno" -a "x$enable_ocaml" = "xyes"])
 AM_CONDITIONAL([HAVE_OCAMLOPT],
     [test "x$OCAMLOPT" != "xno" && test "x$OCAMLFIND" != "xno"])
 
@@ -207,6 +214,8 @@ if test "x$OCAMLC" != "xno"; then
     rm -f conftest conftest.* conftest_ml.*
 fi
 
+dnl ///////////////////////////////////////////////////////////////////////////////////////
+
 dnl Check for Perl (optional, for Perl bindings).
 dnl XXX This isn't quite right, we should check for Perl devel library.
 AC_CHECK_PROG([PERL],[perl],[perl],[no])
@@ -214,21 +223,35 @@ AC_CHECK_PROG([PERL],[perl],[perl],[no])
 dnl Check for Perl modules that must be present to compile and
 dnl test the Perl bindings.
 missing_perl_modules=no
-for pm in Test::More ExtUtils::MakeMaker IO::Stringy; do
-    AC_MSG_CHECKING([for $pm])
-    if ! perl -M$pm -e1 >/dev/null 2>&1; then
-        AC_MSG_RESULT([no])
-        missing_perl_modules=yes
-    else
-        AC_MSG_RESULT([yes])
-    fi
-done
-if test "x$missing_perl_modules" = "xyes"; then
-    AC_MSG_WARN([some Perl modules required to compile or test the Perl bindings are missing])
-fi
+
+AC_ARG_ENABLE([perl],
+       AS_HELP_STRING([--with-perl],[build Perl binding]))
+
+
+PERL=
+AS_IF([test "x$enable_perl" != "xno" ],[
+       AC_CHECK_PROG([PERL],[perl],[yes],[no])
+
+    for pm in Test::More ExtUtils::MakeMaker IO::Stringy; do
+        AC_MSG_CHECKING([for $pm])
+        if ! perl -M$pm -e1 >/dev/null 2>&1; then
+            AC_MSG_RESULT([no])
+            missing_perl_modules=yes
+        else
+            AC_MSG_RESULT([yes])
+        fi
+    done
+
+    AS_IF([test "x$missing_perl_modules" = "xyes"],
+        [AC_MSG_FAILURE([some Perl modules required to compile or test the Perl bindings are missing])],
+        )
+])
+
 
 AM_CONDITIONAL([HAVE_PERL],
-    [test "x$PERL" != "xno" && test "x$missing_perl_modules" != "xyes"])
+    [test "x$PERL" != "xno" -a "x$missing_perl_modules" != "xyes" -a "x$enable_perl" = "xyes"])
+
+dnl //////////////////////////////////////////////////////////////////////////////////////////////////
 
 dnl Check for Python (optional, for Python bindings).
 AC_CHECK_PROG([PYTHON],[python],[python],[no])
@@ -266,15 +289,21 @@ AC_SUBST(PYTHON_VERSION)
 AC_SUBST(PYTHON_INCLUDEDIR)
 AC_SUBST(PYTHON_SITE_PACKAGES)
 
+AC_ARG_ENABLE([python],
+       AS_HELP_STRING([--with-python],[build Python binding]))
+
 AM_CONDITIONAL([HAVE_PYTHON],
-    [test "x$PYTHON_INCLUDEDIR" != "x" && test "x$PYTHON_SITE_PACKAGES" != "x"])
+    [test "x$PYTHON_INCLUDEDIR" != "x" -a  "x$PYTHON_SITE_PACKAGES" != "x" -a "x$enable_python" = "xyes"])
 
 dnl Check for Ruby and rake (optional, for Ruby bindings).
 AC_CHECK_LIB([ruby],[ruby_init],[HAVE_LIBRUBY=1],[HAVE_LIBRUBY=0])
 AC_CHECK_PROG([RAKE],[rake],[rake],[no])
 
+AC_ARG_ENABLE([ruby],
+       AS_HELP_STRING([--with-ruby],[build Ruby binding]))
+
 AM_CONDITIONAL([HAVE_RUBY],
-    [test "x$RAKE" != "xno" && test -n "$HAVE_LIBRUBY"])
+    [test "x$RAKE" != "xno" && test -n "$HAVE_LIBRUBY" -a "x$enable_ruby" = "xyes"])
 
 dnl dnl Check for Java.
 dnl AC_ARG_WITH(java_home,

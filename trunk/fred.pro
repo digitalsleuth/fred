@@ -18,7 +18,14 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.                    *
 #******************************************************************************/
 
-system(bash compileinfo.sh > compileinfo.h)
+# Generate compileinfo.h
+#system(bash compileinfo.sh > compileinfo.h)
+compileinfo.target   = compileinfo.h
+compileinfo.commands = bash $$PWD/compileinfo.sh > $$PWD/compileinfo.h
+QMAKE_EXTRA_TARGETS += compileinfo
+PRE_TARGETDEPS      += compileinfo.h
+
+# Build fred
 
 QT        += core \
              gui \
@@ -44,17 +51,17 @@ SOURCES   += main.cpp\
              datainterpreter.cpp \
              reporttemplate.cpp \
              datareporter.cpp \
-    datareporterengine.cpp \
-    registryhive.cpp \
-    qtscript_types/bytearray.cpp \
-    qtscript_types/bytearrayprototype.cpp \
-    qtscript_types/bytearrayiterator.cpp \
-    dlgreportviewer.cpp \
-    registrykeytable.cpp \
-    registrynodetree.cpp \
-    dlgsearch.cpp \
-    threadsearch.cpp \
-    searchresultwidget.cpp
+             datareporterengine.cpp \
+             registryhive.cpp \
+             qtscript_types/bytearray.cpp \
+             qtscript_types/bytearrayprototype.cpp \
+             qtscript_types/bytearrayiterator.cpp \
+             dlgreportviewer.cpp \
+             registrykeytable.cpp \
+             registrynodetree.cpp \
+             dlgsearch.cpp \
+             threadsearch.cpp \
+             searchresultwidget.cpp
 
 HEADERS   += mainwindow.h \
              registrynode.h \
@@ -68,24 +75,25 @@ HEADERS   += mainwindow.h \
              datainterpreter.h \
              reporttemplate.h \
              datareporter.h \
-    datareporterengine.h \
-    registryhive.h \
-    qtscript_types/bytearray.h \
-    qtscript_types/bytearrayprototype.h \
-    qtscript_types/bytearrayiterator.h \
-    dlgreportviewer.h \
-    registrykeytable.h \
-    registrynodetree.h \
-    dlgsearch.h \
-    threadsearch.h \
-    searchresultwidget.h
+             datareporterengine.h \
+             registryhive.h \
+             qtscript_types/bytearray.h \
+             qtscript_types/bytearrayprototype.h \
+             qtscript_types/bytearrayiterator.h \
+             dlgreportviewer.h \
+             registrykeytable.h \
+             registrynodetree.h \
+             dlgsearch.h \
+             threadsearch.h \
+             searchresultwidget.h
 
 FORMS     += mainwindow.ui \
              dlgabout.ui \
              dlgkeydetails.ui \
-    dlgreportviewer.ui \
-    dlgsearch.ui
+             dlgreportviewer.ui \
+             dlgsearch.ui
 
-LIBS      += -lhivex
+#LIBS      += -lhivex
+LIBS      += $$PWD/hivex/lib/.libs/libhivex.a
 
 RESOURCES += fred.qrc
