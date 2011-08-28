@@ -42,6 +42,7 @@
 #include "datainterpreter.h"
 #include "datareporter.h"
 #include "threadsearch.h"
+#include "searchresultwidget.h"
 
 namespace Ui {
   class MainWindow;
@@ -78,6 +79,7 @@ private:
     RegistryNodeTreeModel *p_reg_node_tree_model;
     RegistryKeyTableModel *p_reg_key_table_model;
     QByteArray selected_key_value;
+    QList<SearchResultWidget*> search_result_widgets;
 
     // Widgets etc...
     RegistryNodeTree *p_node_tree;

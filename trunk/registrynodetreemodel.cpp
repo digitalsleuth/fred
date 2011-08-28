@@ -19,6 +19,8 @@
 *******************************************************************************/
 #include "registrynodetreemodel.h"
 
+#include <QStringList>
+
 #include <stdlib.h>
 
 RegistryNodeTreeModel::RegistryNodeTreeModel(RegistryHive *p_hive,
@@ -113,6 +115,31 @@ int RegistryNodeTreeModel::rowCount(const QModelIndex &parent) const {
 int RegistryNodeTreeModel::columnCount(const QModelIndex &parent) const {
   Q_UNUSED(parent);
   return 1;
+}
+
+QList<QModelIndex> RegistryNodeTreeModel::GetIndexListOf(QString &path) const {
+  RegistryNode *p_parent_node=this->p_root_node;
+  QList<QModelIndex> ret;
+  QStringList nodes=path.split("\\",QString::SkipEmptyParts);
+  int i,ii;
+  bool found=false;
+
+  // Create a list of all index's that form the supplied path
+  ret.clear();
+  for(i=0;i<nodes.count();i++) {
+    found=false;
+    for(ii=0;ii<p_parent_node->childCount();ii++) {
+      if(p_parent_node->child(ii)->data()==nodes.at(i)) {
+        ret.append(this->createIndex(ii,0,p_parent_node));
+        p_parent_node==p_parent_node->child(ii);
+        found=true;
+        break;
+      }
+    }
+    if(!found) return QList<QModelIndex>();
+  }
+
+  return ret;
 }
 
 void RegistryNodeTreeModel::SetupModelData(RegistryHive *p_hive,

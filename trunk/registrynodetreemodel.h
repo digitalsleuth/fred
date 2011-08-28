@@ -22,6 +22,8 @@
 #define REGISTRYNODETREEMODEL_H
 
 #include <QAbstractItemModel>
+#include <QList>
+#include <QString>
 
 #include "registrynode.h"
 #include "registryhive.h"
@@ -44,6 +46,8 @@ class RegistryNodeTreeModel : public QAbstractItemModel {
     QModelIndex parent(const QModelIndex &index) const;
     int rowCount(const QModelIndex &parent=QModelIndex()) const;
     int columnCount(const QModelIndex &parent=QModelIndex()) const;
+
+    QList<QModelIndex> GetIndexListOf(QString &path) const;
 
   private:
     RegistryNode *p_root_node;

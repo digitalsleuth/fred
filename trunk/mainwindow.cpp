@@ -35,7 +35,6 @@
 #include "dlgkeydetails.h"
 #include "dlgreportviewer.h"
 #include "dlgsearch.h"
-#include "searchresultwidget.h"
 
 #include "compileinfo.h"
 
@@ -50,6 +49,7 @@ MainWindow::MainWindow(QWidget *parent) :
   this->p_reg_node_tree_model=NULL;
   this->p_reg_key_table_model=NULL;
   this->p_search_thread=NULL;
+  this->search_result_widgets.clear();
 
   // Check for ~/.fred config dir
   this->CheckUserConfigDir();
@@ -269,9 +269,10 @@ void MainWindow::on_ActionSearch_triggered() {
     QList<QByteArray> keywords;
     keywords.append(QByteArray(QString("Windows").toAscii()));
 
-    // Add new search widget to tabwidget
+    // Add new search widget to tabwidget and to internal widget list
     SearchResultWidget *p_search_widget=
       new SearchResultWidget(this->p_tab_widget);
+    //this->search_result_widgets.append(p_search_widget);
 
     this->connect(p_search_widget,
                   SIGNAL(doubleClicked(QModelIndex)),
@@ -430,9 +431,36 @@ void MainWindow::SlotSearchFinished() {
 }
 
 void MainWindow::SlotSearchResultWidgetDoubleClicked(QModelIndex index) {
+  SearchResultWidget *p_sender;
+  QString path;
+  QString match_type;
+  QString key;
+  int i;
+
   if(!index.isValid()) return;
 
-  qDebug("Clicked on %u",index.row());
+  // Get pointer to sender
+  p_sender=(SearchResultWidget*)QObject::sender();
+
+  // Get path and matchtype
+  path=p_sender->item(index.row(),0)->text();
+  match_type=p_sender->item(index.row(),1)->text();
+
+  qDebug("Clicked on '%s' of type '%s'",path.toAscii().constData(),match_type.toAscii().constData());
+
+  if(match_type==tr("Node name")) {
+    // Search matched on node name, just expand treeview to correct node
+    QList<QModelIndex> indexes=
+      this->p_reg_node_tree_model->GetIndexListOf(path);
+    for(i=0;i<indexes.count();i++) {
+      this->p_node_tree->expand(indexes.at(i));
+    }
+  } else if(match_type==tr("Key name")) {
+
+  } else if(match_type==tr("Key value")) {
+
+  }
+
 }
 
 void MainWindow::CheckUserConfigDir() {

@@ -54,17 +54,17 @@ void SearchResultWidget::SlotFoundMatch(ThreadSearch::eMatchType match_type,
 
   switch(match_type) {
     case ThreadSearch::eMatchType_NodeName:
-      type="Node name";
+      type=tr("Node name");
       full_path=path;
       match=key;
       break;
     case ThreadSearch::eMatchType_KeyName:
-      type="Key node";
+      type=tr("Key node");
       full_path=path;
       match=key;
       break;
     case ThreadSearch::eMatchType_KeyValue:
-      type="Key value";
+      type=tr("Key value");
       full_path=path.append("\\").append(key);
       match=value;
       break;
