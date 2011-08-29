@@ -19,17 +19,16 @@
 #******************************************************************************/
 
 # Generate compileinfo.h
-#system(bash compileinfo.sh > compileinfo.h)
-compileinfo.target   = compileinfo.h
-compileinfo.commands = bash $$PWD/compileinfo.sh > $$PWD/compileinfo.h
-QMAKE_EXTRA_TARGETS += compileinfo
-PRE_TARGETDEPS      += compileinfo.h
+system(bash compileinfo.sh > compileinfo.h)
+#compileinfo.target   = compileinfo.h
+#compileinfo.commands = $$PWD/compileinfo.sh > compileinfo.h
+#QMAKE_EXTRA_TARGETS += compileinfo
+#PRE_TARGETDEPS      += compileinfo.h
 
 # Build fred
 
 QT        += core \
              gui \
-             thread \
              script \
              webkit
 

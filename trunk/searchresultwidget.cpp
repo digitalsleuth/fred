@@ -72,6 +72,8 @@ void SearchResultWidget::SlotFoundMatch(ThreadSearch::eMatchType match_type,
 
   int rows=this->rowCount();
   this->setRowCount(rows+1);
+  // TODO: Use setCellWidget to add QTextEdit and then use insertText and
+  // insertHtml to format match
   p_item=new QTableWidgetItem(full_path=="" ? "\\" : full_path);
   p_item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
   this->setItem(rows,0,p_item);

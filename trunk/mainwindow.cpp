@@ -446,14 +446,21 @@ void MainWindow::SlotSearchResultWidgetDoubleClicked(QModelIndex index) {
   path=p_sender->item(index.row(),0)->text();
   match_type=p_sender->item(index.row(),1)->text();
 
-  qDebug("Clicked on '%s' of type '%s'",path.toAscii().constData(),match_type.toAscii().constData());
-
   if(match_type==tr("Node name")) {
     // Search matched on node name, just expand treeview to correct node
     QList<QModelIndex> indexes=
       this->p_reg_node_tree_model->GetIndexListOf(path);
     for(i=0;i<indexes.count();i++) {
       this->p_node_tree->expand(indexes.at(i));
+    }
+    if(indexes.count()>0) {
+      // Scroll to last expanded node, select it and update widgets
+      this->p_node_tree->scrollTo(indexes.at(indexes.count()-1));
+      this->p_node_tree->selectionModel()->clear();
+      this->p_node_tree->selectionModel()->
+        select(indexes.at(indexes.count()-1),
+               QItemSelectionModel::Select);
+      this->SlotNodeTreeClicked(indexes.at(indexes.count()-1));
     }
   } else if(match_type==tr("Key name")) {
 
