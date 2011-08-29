@@ -1,5 +1,11 @@
 #!/bin/bash
 
+PWD=""
+if [ $# -eq 1 ]; then
+  PWD="$1"
+  PWD="${PWD%/}/"
+fi
+
 echo '// Automatically generated file. See project file and compileinfo.sh for further informations.'
 #head -n 1 debian/changelog | awk '{
 #                                    Version = $2
@@ -16,7 +22,7 @@ date '+#define APP_COMPILETIME "%Y/%m/%d %H:%M:%S"'
 
 GOT_VERSION=0
 
-if [[ $GOT_VERSION -eq 0 && -f debian/changelog ]]; then
+if [[ $GOT_VERSION -eq 0 && -f "$PWD"debian/changelog ]]; then
   # Get version and release timestamp from debian/changelog file
   CUR_LINE=0
   while read LINE; do
@@ -29,7 +35,7 @@ if [[ $GOT_VERSION -eq 0 && -f debian/changelog ]]; then
                             print "#define APP_VERSION \"" Version "\"" }'
       break
     fi
-  done <debian/changelog
+  done <"$PWD"debian/changelog
   GOT_VERSION=1
 fi
 
