@@ -19,7 +19,11 @@
 *******************************************************************************/
 
 #ifndef FRED_REPORT_TEMPLATE_DIR
-  #define FRED_REPORT_TEMPLATE_DIR "/usr/share/fred/report_templates/"
+  #ifndef __MINGW32__
+    #define FRED_REPORT_TEMPLATE_DIR "/usr/share/fred/report_templates/"
+  #else
+    #define FRED_REPORT_TEMPLATE_DIR ".\\report_templates\\"
+  #endif
 #endif
 
 #include <QFileDialog>
