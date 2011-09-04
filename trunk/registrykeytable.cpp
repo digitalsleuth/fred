@@ -30,6 +30,7 @@ RegistryKeyTable::RegistryKeyTable(QWidget *p_parent) : QTableView(p_parent) {
   this->setSelectionBehavior(QAbstractItemView::SelectRows);
   this->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
   this->verticalHeader()->setHidden(true);
+  this->setTextElideMode(Qt::ElideNone);
 
   // Create context menu
   this->p_menu_copy=new QMenu(tr("Copy"),this);
