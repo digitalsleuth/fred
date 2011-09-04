@@ -50,6 +50,8 @@ class RegistryKeyTableModel : public QAbstractTableModel {
     int rowCount(const QModelIndex &parent=QModelIndex()) const;
     int columnCount(const QModelIndex &parent=QModelIndex()) const;
 
+    int GetKeyRow(QString key_name) const;
+
   private:
     enum ColumnContent {
       ColumnContent_KeyName=0,
@@ -60,8 +62,6 @@ class RegistryKeyTableModel : public QAbstractTableModel {
     RegistryKey *p_keys;
 
     void SetupModelData(RegistryHive *p_hive, QString &node_path);
-    QString ValueToString(QByteArray &value, int value_type) const;
-    QString TypeToString(int value_type) const;
 };
 
 #endif // REGISTRYKEYTABLEMODEL_H

@@ -21,20 +21,59 @@
 #include "registrykeytable.h"
 
 #include <QHeaderView>
+#include <QApplication>
+#include <QClipboard>
 
 RegistryKeyTable::RegistryKeyTable(QWidget *p_parent) : QTableView(p_parent) {
   // Configure widget
   this->setSelectionMode(QAbstractItemView::SingleSelection);
   this->setSelectionBehavior(QAbstractItemView::SelectRows);
   this->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
+  this->verticalHeader()->setHidden(true);
+
+  // Create context menu
+  this->p_menu_copy=new QMenu(tr("Copy"),this);
+  this->p_action_copy_key_name=new QAction(tr("Key name"),
+                                           this->p_menu_copy);
+  this->p_menu_copy->addAction(this->p_action_copy_key_name);
+  this->connect(this->p_action_copy_key_name,
+                SIGNAL(triggered()),
+                this,
+                SLOT(SlotCopyKeyName()));
+  this->p_action_copy_key_value=new QAction(tr("Key value"),
+                                            this->p_menu_copy);
+  this->p_menu_copy->addAction(this->p_action_copy_key_value);
+  this->connect(this->p_action_copy_key_value,
+                SIGNAL(triggered()),
+                this,
+                SLOT(SlotCopyKeyValue()));
+}
+
+RegistryKeyTable::~RegistryKeyTable() {
+  // Delete context menu
+  delete this->p_action_copy_key_name;
+  delete this->p_action_copy_key_value;
+  delete this->p_menu_copy;
 }
 
 void RegistryKeyTable::setModel(QAbstractItemModel *p_model) {
   QTableView::setModel(p_model);
   // Resize table rows / columns to fit data
   this->resizeColumnsToContents();
+  this->resizeRowsToContents();
   this->horizontalHeader()->stretchLastSection();
 }
+
+/*
+void RegistryKeyTable::selectRow(QString key_name) {
+  int i;
+
+  this->clearSelection();
+  for(i=0;i<this->model()->rowCount();i++) {
+    if(this->model())
+  }
+}
+*/
 
 int RegistryKeyTable::sizeHintForColumn(int column) const {
   int size_hint=-1;
@@ -54,4 +93,36 @@ int RegistryKeyTable::sizeHintForColumn(int column) const {
   }
 
   return size_hint;
+}
+
+void RegistryKeyTable::contextMenuEvent(QContextMenuEvent *p_event) {
+  // Only show context menu when a row is selected
+  if(this->selectedIndexes().count()!=3) return;
+  // Only show context menu when user clicked on selected row
+  if(!(this->indexAt(p_event->pos())==this->selectedIndexes().at(0) ||
+       this->indexAt(p_event->pos())==this->selectedIndexes().at(1) ||
+       this->indexAt(p_event->pos())==this->selectedIndexes().at(2)))
+  {
+    return;
+  }
+
+  // Emit a click signal
+  emit(this->clicked(this->indexAt(p_event->pos())));
+
+  // Create context menu and add actions
+  QMenu context_menu(this);
+  context_menu.addMenu(this->p_menu_copy);
+  context_menu.exec(p_event->globalPos());
+}
+
+void RegistryKeyTable::SlotCopyKeyName() {
+  QApplication::clipboard()->
+    setText(this->selectedIndexes().at(0).data().toString(),
+            QClipboard::Clipboard);
+}
+
+void RegistryKeyTable::SlotCopyKeyValue() {
+  QApplication::clipboard()->
+    setText(this->selectedIndexes().at(2).data().toString(),
+            QClipboard::Clipboard);
 }

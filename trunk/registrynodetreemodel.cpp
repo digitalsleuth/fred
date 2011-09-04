@@ -117,7 +117,7 @@ int RegistryNodeTreeModel::columnCount(const QModelIndex &parent) const {
   return 1;
 }
 
-QList<QModelIndex> RegistryNodeTreeModel::GetIndexListOf(QString &path) const {
+QList<QModelIndex> RegistryNodeTreeModel::GetIndexListOf(QString path) const {
   RegistryNode *p_parent_node=this->p_root_node;
   QList<QModelIndex> ret;
   QStringList nodes=path.split("\\",QString::SkipEmptyParts);
@@ -136,10 +136,29 @@ QList<QModelIndex> RegistryNodeTreeModel::GetIndexListOf(QString &path) const {
         break;
       }
     }
-    if(!found) return QList<QModelIndex>();
+    // Break when last child node was found
+    if(found && i==nodes.count()-1) break;
+    // Return an empty list when a child node wasn't found
+    else if(!found) return QList<QModelIndex>();
   }
 
   return ret;
+}
+
+QString RegistryNodeTreeModel::GetNodePath(QModelIndex child_index) const
+{
+  QString path;
+
+  // Get current node name
+  path=this->data(child_index,Qt::DisplayRole).toString().prepend("\\");
+  // Build node path by prepending all parent nodes names
+  while(this->parent(child_index)!=QModelIndex()) {
+    child_index=this->parent(child_index);
+    path.prepend(this->data(child_index,
+                            Qt::DisplayRole).toString().prepend("\\"));
+  }
+
+  return path;
 }
 
 void RegistryNodeTreeModel::SetupModelData(RegistryHive *p_hive,

@@ -19,12 +19,39 @@
 *******************************************************************************/
 
 #include "registrynodetree.h"
+#include "registrynodetreemodel.h"
 
 #include <QHeaderView>
+#include <QApplication>
+#include <QClipboard>
 
 RegistryNodeTree::RegistryNodeTree(QWidget *p_parent) : QTreeView(p_parent) {
   // Configure widget
   this->setTextElideMode(Qt::ElideNone);
+
+  // Create context menu
+  this->p_menu_copy=new QMenu(tr("Copy"),this);
+  this->p_action_copy_node_name=new QAction(tr("Copy node name"),
+                                            this->p_menu_copy);
+  this->p_menu_copy->addAction(this->p_action_copy_node_name);
+  this->connect(this->p_action_copy_node_name,
+                SIGNAL(triggered()),
+                this,
+                SLOT(SlotCopyNodeName()));
+  this->p_action_copy_node_path=new QAction(tr("Copy node path"),
+                                            this->p_menu_copy);
+  this->p_menu_copy->addAction(this->p_action_copy_node_path);
+  this->connect(this->p_action_copy_node_path,
+                SIGNAL(triggered()),
+                this,
+                SLOT(SlotCopyNodePath()));
+}
+
+RegistryNodeTree::~RegistryNodeTree() {
+  // Delete context menu
+  delete this->p_action_copy_node_name;
+  delete this->p_action_copy_node_path;
+  delete this->p_menu_copy;
 }
 
 void RegistryNodeTree::setModel(QAbstractItemModel *p_model) {
@@ -34,3 +61,30 @@ void RegistryNodeTree::setModel(QAbstractItemModel *p_model) {
 }
 
 //int RegistryNodeTree::sizeHintForColumn(int column) const {}
+
+void RegistryNodeTree::contextMenuEvent(QContextMenuEvent *p_event) {
+  // Only show context menu when a node is selected
+  if(this->selectedIndexes().count()!=1) return;
+  // Only show context menu when user clicked on selected row
+  if(this->indexAt(p_event->pos())!=this->selectedIndexes().at(0)) return;
+
+  // Emit a click signal
+  emit(this->clicked(this->indexAt(p_event->pos())));
+
+  // Create context menu and add actions
+  QMenu context_menu(this);
+  context_menu.addMenu(this->p_menu_copy);
+  context_menu.exec(p_event->globalPos());
+}
+
+void RegistryNodeTree::SlotCopyNodeName() {
+  QApplication::clipboard()->
+    setText(this->selectedIndexes().at(0).data().toString(),
+            QClipboard::Clipboard);
+}
+
+void RegistryNodeTree::SlotCopyNodePath() {
+  QString path=((RegistryNodeTreeModel*)(this->model()))->
+    GetNodePath(this->selectedIndexes().at(0));
+  QApplication::clipboard()->setText(path,QClipboard::Clipboard);
+}

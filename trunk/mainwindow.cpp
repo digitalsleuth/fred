@@ -83,7 +83,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
   this->p_key_table=new RegistryKeyTable(this->p_vertical_splitter);
 
-  this->p_tab_widget=new QTabWidget(this->p_vertical_splitter);
+  this->p_tab_widget=new TabWidget(this->p_vertical_splitter);
 
   this->p_horizontal_splitter2=new QSplitter();
   this->p_horizontal_splitter2->setOrientation(Qt::Horizontal);
@@ -103,9 +103,7 @@ MainWindow::MainWindow(QWidget *parent) :
   this->p_hex_edit->setFont(mono_font);
 
   // Add hexedit page to tab_widget
-  this->p_tab_widget->insertTab(0,
-                                this->p_horizontal_splitter2,
-                                tr("Hex viewer"));
+  this->p_tab_widget->addTab(this->p_horizontal_splitter2,tr("Hex viewer"));
 
   // Lay out widgets
   this->p_hex_edit_layout->addWidget(this->p_hex_edit);
@@ -172,10 +170,14 @@ MainWindow::MainWindow(QWidget *parent) :
                 SIGNAL(currentAddressChanged(int)),
                 this,
                 SLOT(SlotHexEditAddressChanged(int)));
+  this->connect(this->p_tab_widget,
+                SIGNAL(tabCloseRequested(int)),
+                this,
+                SLOT(SlotTabCloseButtonClicked(int)));
 
   // Add central widget
-  this->setContentsMargins(4,4,4,0);
   this->setCentralWidget(this->p_horizontal_splitter);
+  this->centralWidget()->setContentsMargins(4,4,4,0);
 
   // Set window title
   this->UpdateWindowTitle();
@@ -224,6 +226,13 @@ void MainWindow::on_action_Open_hive_triggered() {
 
 void MainWindow::on_action_Close_hive_triggered() {
   if(this->is_hive_open) {
+    // Remove search results
+    while(this->p_tab_widget->count()>1) {
+      this->p_tab_widget->removeTab(this->p_tab_widget->count()-1);
+      delete this->search_result_widgets.at(this->p_tab_widget->count()-1);
+      this->search_result_widgets.removeLast();
+    }
+
     // Delete models
     if(this->p_reg_node_tree_model!=NULL) {
       this->p_node_tree->setModel(NULL);
@@ -272,14 +281,15 @@ void MainWindow::on_ActionSearch_triggered() {
     // Add new search widget to tabwidget and to internal widget list
     SearchResultWidget *p_search_widget=
       new SearchResultWidget(this->p_tab_widget);
-    //this->search_result_widgets.append(p_search_widget);
+    p_search_widget->setEnabled(false);
+    this->search_result_widgets.append(p_search_widget);
 
     this->connect(p_search_widget,
                   SIGNAL(doubleClicked(QModelIndex)),
                   this,
                   SLOT(SlotSearchResultWidgetDoubleClicked(QModelIndex)));
 
-    this->p_tab_widget->addTab(p_search_widget,tr("Search results"));
+    this->p_tab_widget->addTab(p_search_widget,tr("Search results"),true);
     this->p_tab_widget->setCurrentIndex(this->p_tab_widget->count()-1);
 
     // Connect search thread to result widget
@@ -314,15 +324,7 @@ void MainWindow::SlotNodeTreeClicked(QModelIndex index) {
   if(!index.isValid()) return;
 
   //Built node path
-  node_path.clear();
-  node_path=this->p_reg_node_tree_model->data(index,Qt::DisplayRole)
-    .toString().prepend("\\");
-  while(this->p_reg_node_tree_model->parent(index)!=QModelIndex()) {
-    // Prepend all parent nodes
-    index=this->p_reg_node_tree_model->parent(index);
-    node_path.prepend(this->p_reg_node_tree_model->data(index,Qt::DisplayRole)
-                        .toString().prepend("\\"));
-  }
+  node_path=this->p_reg_node_tree_model->GetNodePath(index);
 
   // Create table model and attach it to the table view
   if(this->p_reg_key_table_model!=NULL) {
@@ -399,7 +401,9 @@ void MainWindow::SlotHexEditAddressChanged(int hex_offset) {
 
   // Update hex edit status bar
   this->p_hex_edit_status_bar->
-    setText(QString().sprintf("Byte offset: 0x%04X (%u)",hex_offset,hex_offset));
+    setText(QString("Byte offset: 0x%1 (%2)")
+              .arg((uint16_t)hex_offset,4,16,QChar('0'))
+              .arg(hex_offset));
   // Update data interpreter
   this->UpdateDataInterpreter(hex_offset);
 }
@@ -428,13 +432,16 @@ void MainWindow::SlotSearchFinished() {
   delete this->p_search_thread;
   this->p_search_thread=NULL;
   this->ui->ActionSearch->setEnabled(true);
+  // Enable result widget
+  this->search_result_widgets.last()->setEnabled(true);
 }
 
 void MainWindow::SlotSearchResultWidgetDoubleClicked(QModelIndex index) {
   SearchResultWidget *p_sender;
   QString path;
   QString match_type;
-  QString key;
+  QString value;
+  QString key="";
   int i;
 
   if(!index.isValid()) return;
@@ -445,29 +452,56 @@ void MainWindow::SlotSearchResultWidgetDoubleClicked(QModelIndex index) {
   // Get path and matchtype
   path=p_sender->item(index.row(),0)->text();
   match_type=p_sender->item(index.row(),1)->text();
+  value=p_sender->item(index.row(),2)->text();
 
   if(match_type==tr("Node name")) {
-    // Search matched on node name, just expand treeview to correct node
-    QList<QModelIndex> indexes=
-      this->p_reg_node_tree_model->GetIndexListOf(path);
-    for(i=0;i<indexes.count();i++) {
-      this->p_node_tree->expand(indexes.at(i));
-    }
-    if(indexes.count()>0) {
-      // Scroll to last expanded node, select it and update widgets
-      this->p_node_tree->scrollTo(indexes.at(indexes.count()-1));
-      this->p_node_tree->selectionModel()->clear();
-      this->p_node_tree->selectionModel()->
-        select(indexes.at(indexes.count()-1),
-               QItemSelectionModel::Select);
-      this->SlotNodeTreeClicked(indexes.at(indexes.count()-1));
-    }
+    // Node name is not part of path. Add it
+    if(path=="\\") path.append(value);
+    else path.append("\\").append(value);
   } else if(match_type==tr("Key name")) {
-
+    // Key name is stored in value
+    key=value;
   } else if(match_type==tr("Key value")) {
-
+    // Key name is part of path. Save and remove it
+    QStringList nodes=path.split("\\",QString::SkipEmptyParts);
+    key=nodes.at(nodes.count()-1);
+    // Remove \<key name> from path
+    path.chop(key.length()+1);
   }
 
+  // Expand treeview to correct node
+  QList<QModelIndex> indexes=
+    this->p_reg_node_tree_model->GetIndexListOf(path);
+  for(i=0;i<indexes.count();i++) {
+    this->p_node_tree->expand(indexes.at(i));
+  }
+  if(indexes.count()>0) {
+    // Scroll to last expanded node, select it and update widgets
+    this->p_node_tree->scrollTo(indexes.at(indexes.count()-1),
+                                QAbstractItemView::PositionAtCenter);
+    this->p_node_tree->selectionModel()->clear();
+    this->p_node_tree->selectionModel()->
+      select(indexes.at(indexes.count()-1),
+             QItemSelectionModel::Select);
+    this->SlotNodeTreeClicked(indexes.at(indexes.count()-1));
+  }
+
+  // Select correct key if search matched on keay name / value
+  if(key!="") {
+    int row=this->p_reg_key_table_model->GetKeyRow(key);
+    this->p_key_table->clearSelection();
+    this->p_key_table->scrollTo(this->p_reg_key_table_model->index(row,0),
+                                QAbstractItemView::PositionAtCenter);
+    this->p_key_table->selectRow(row);
+    this->SlotKeyTableClicked(this->p_reg_key_table_model->index(row,0));
+  }
+}
+
+void MainWindow::SlotTabCloseButtonClicked(int index) {
+  // Delete tab widget and remove tab
+  this->p_tab_widget->removeTab(index);
+  delete this->search_result_widgets.at(index-1);
+  this->search_result_widgets.removeAt(index-1);
 }
 
 void MainWindow::CheckUserConfigDir() {
@@ -490,12 +524,12 @@ void MainWindow::CheckUserConfigDir() {
 
 void MainWindow::UpdateWindowTitle(QString filename) {
   if(filename=="") {
-    this->setWindowTitle(QString().sprintf("%s v%s",APP_TITLE,APP_VERSION));
+    this->setWindowTitle(QString("%1 v%2").arg(APP_TITLE,APP_VERSION));
   } else {
-    this->setWindowTitle(QString().sprintf("%s v%s - %s",
-                                           APP_TITLE,
-                                           APP_VERSION,
-                                           filename.toLocal8Bit().constData()));
+    this->setWindowTitle(QString("%1 v%2 - %3").arg(APP_TITLE,
+                                                    APP_VERSION,
+                                                    filename.toLocal8Bit()
+                                                      .constData()));
   }
 }
 

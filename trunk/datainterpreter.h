@@ -23,6 +23,8 @@
 
 #include <QWidget>
 #include <QTableWidget>
+#include <QContextMenuEvent>
+#include <QAction>
 
 class DataInterpreter : public QTableWidget {
   Q_OBJECT
@@ -52,6 +54,15 @@ class DataInterpreter : public QTableWidget {
      * to resize hidden columns too.
      */
     int sizeHintForColumn(int column) const;
+    void contextMenuEvent(QContextMenuEvent *p_event);
+
+  private:
+    QAction *p_action_copy_value;
+
+  private slots:
+    void SlotCopyValue();
+
+
 };
 
 #endif // DATAINTERPRETER_H

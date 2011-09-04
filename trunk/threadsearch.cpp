@@ -63,7 +63,7 @@ bool ThreadSearch::Search(QString registry_hive,
   }
 
   // If a root path was specified, iterate to it
-  if(search_path!="\\") {
+  if(this->root_path!="") {
     QStringList path_nodes=search_path.split("\\",QString::SkipEmptyParts);
     int i;
     for(i=0;i<path_nodes.count();i++) {
@@ -82,9 +82,7 @@ bool ThreadSearch::Search(QString registry_hive,
 }
 
 void ThreadSearch::run() {
-  qDebug("Starting search");
   this->Match();
-  qDebug("Ending search");
   hivex_close(this->h_hive);
 }
 
@@ -94,9 +92,8 @@ void ThreadSearch::Match(QString path, hive_node_h node) {
   hive_node_h *p_node_childs;
   QByteArray *p_byte_array;
 
-  //qDebug("Searching in '%s'",path.toAscii().constData());
-
   if(node!=0) {
+
     p_node_name=hivex_node_name(this->h_hive,node);
     if(p_node_name==NULL) return;
 
@@ -109,6 +106,7 @@ void ThreadSearch::Match(QString path, hive_node_h node) {
                                 path,
                                 QString(p_node_name),
                                 QString()));
+          break;
         }
       }
       delete p_byte_array;
@@ -132,9 +130,10 @@ void ThreadSearch::Match(QString path, hive_node_h node) {
           for(ii=0;ii<this->keywords.count();ii++) {
             if(p_byte_array->indexOf(this->keywords.at(ii))!=-1) {
               emit(SignalFoundMatch(ThreadSearch::eMatchType_KeyName,
-                                    path.append("\\").append(p_node_name),
-                                    QString(p_keyname),
+                                    path+"\\"+p_node_name,
+                                    strlen(p_keyname)==0 ? QString("(default)") : QString(p_keyname),
                                     QString()));
+              break;
             }
           }
           delete p_byte_array;
@@ -156,10 +155,11 @@ void ThreadSearch::Match(QString path, hive_node_h node) {
               char *p_keyname=hivex_value_key(this->h_hive,p_keys[i]);
               if(p_keyname==NULL) continue;
               emit(SignalFoundMatch(ThreadSearch::eMatchType_KeyValue,
-                                    path.append("\\").append(p_node_name),
-                                    QString(p_keyname),
+                                    path+"\\"+p_node_name,
+                                     strlen(p_keyname)==0 ? QString("(default)") : QString(p_keyname),
                                     RegistryHive::KeyValueToString(*p_byte_array,val_type)));
               delete p_keyname;
+              break;
             }
           }
           delete p_byte_array;
@@ -173,9 +173,10 @@ void ThreadSearch::Match(QString path, hive_node_h node) {
     // Search in subnodes
     p_node_childs=hivex_node_children(this->h_hive,node);
     if(p_node_childs!=NULL) {
-      for(i=0;p_node_childs[i];i++) {
-        this->Match(QString(path).append("\\").append(p_node_name),
-                    p_node_childs[i]);
+      i=0;
+      while(p_node_childs[i]) {
+        this->Match(path+"\\"+p_node_name,p_node_childs[i]);
+        i++;
       }
       delete p_node_childs;
     }
@@ -183,8 +184,11 @@ void ThreadSearch::Match(QString path, hive_node_h node) {
   } else {
     p_node_childs=hivex_node_children(this->h_hive,this->root_node);
     if(p_node_childs!=NULL) {
-      for(i=0;p_node_childs[i];i++) this->Match(this->root_path,
-                                                p_node_childs[i]);
+      i=0;
+      while(p_node_childs[i]) {
+        this->Match(this->root_path,p_node_childs[i]);
+        i++;
+      }
       delete p_node_childs;
     }
   }

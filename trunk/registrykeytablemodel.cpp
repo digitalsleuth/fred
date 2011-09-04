@@ -55,7 +55,7 @@ QVariant RegistryKeyTableModel::data(const QModelIndex &index, int role) const {
         case RegistryKeyTableModel::ColumnContent_KeyType: {
           int value_type=p_key->Data(index.column()).toInt(&ok);
           if(!ok) return QVariant();
-          return this->TypeToString(value_type);
+          return RegistryHive::KeyTypeToString(value_type);
           break;
         }
         case RegistryKeyTableModel::ColumnContent_KeyValue: {
@@ -70,7 +70,7 @@ QVariant RegistryKeyTableModel::data(const QModelIndex &index, int role) const {
           if(!ok) return QVariant();
           // Return value converted to human readeable string
           QByteArray value_array=p_key->Data(index.column()).toByteArray();
-          return this->ValueToString(value_array,value_type);
+          return RegistryHive::KeyValueToString(value_array,value_type);
           break;
         }
         default:
@@ -141,6 +141,19 @@ int RegistryKeyTableModel::columnCount(const QModelIndex &parent) const {
   return 3;
 }
 
+int RegistryKeyTableModel::GetKeyRow(QString key_name) const {
+  int i;
+
+  for(i=0;i<this->p_keys->RowCount();i++) {
+    if(this->p_keys->Key(i)->Data(0)==key_name) {
+      return i;
+    }
+  }
+
+  // When key isn't found, return the first row
+  return 0;
+}
+
 void RegistryKeyTableModel::SetupModelData(RegistryHive *p_hive,
                                            QString &node_path)
 {
@@ -168,130 +181,4 @@ void RegistryKeyTableModel::SetupModelData(RegistryHive *p_hive,
                             key_value);
     this->p_keys->Append(p_key);
   }
-}
-
-QString RegistryKeyTableModel::ValueToString(QByteArray &value,
-                                             int value_type) const
-{
-  QString ret="";
-  int i=0;
-
-  #define ToHexStr() {                                                        \
-    for(i=0;i<value.size();i++) {                                             \
-      ret.append(QString().sprintf("%02X ",(uint8_t)(value.constData()[i]))); \
-    }                                                                         \
-    ret.chop(1);                                                              \
-  }
-
-  switch(value_type) {
-    case hive_t_REG_NONE:
-      // Just a key without a value, but to be certain...
-      ToHexStr();
-      break;
-    case hive_t_REG_SZ:
-      // A Windows string (encoding is unknown, but often UTF16-LE)
-      // TODO: What happens if encoding is not UTF16-LE ??? Thx Billy!!!
-      ret=value.size() ? QString().fromUtf16((ushort*)(value.constData())) : "";
-      break;
-    case hive_t_REG_EXPAND_SZ:
-      // A Windows string that contains %env% (environment variable expansion)
-      ret=value.size() ? QString().fromUtf16((ushort*)(value.constData())) : "";
-      break;
-    case hive_t_REG_BINARY:
-      // A blob of binary
-      ToHexStr();
-      break;
-    case hive_t_REG_DWORD:
-      // DWORD (32 bit integer), little endian
-      ret=QString().sprintf("0x%08X",*(uint32_t*)value.constData());
-      //ret=QString().sprintf("0x%08X",value.toUInt());
-      break;
-    case hive_t_REG_DWORD_BIG_ENDIAN:
-      // DWORD (32 bit integer), big endian
-      ret=QString().sprintf("0x%08X",*(uint32_t*)value.constData());
-      //ret=QString().sprintf("0x%08X",value.toUInt());
-      break;
-    case hive_t_REG_LINK:
-      // Symbolic link to another part of the registry tree
-      ToHexStr();
-      break;
-    case hive_t_REG_MULTI_SZ:
-      // Multiple Windows strings.
-      // See http://blogs.msdn.com/oldnewthing/archive/2009/10/08/9904646.aspx
-      ToHexStr();
-      break;
-    case hive_t_REG_RESOURCE_LIST:
-      // Resource list
-      ToHexStr();
-      break;
-    case hive_t_REG_FULL_RESOURCE_DESCRIPTOR:
-      // Resource descriptor
-      ToHexStr();
-      break;
-    case hive_t_REG_RESOURCE_REQUIREMENTS_LIST:
-      // Resouce requirements list
-      ToHexStr();
-      break;
-    case hive_t_REG_QWORD:
-      // QWORD (64 bit integer). Usually little endian.
-#if __WORDSIZE == 64
-      ret=QString().sprintf("0x%016lX",*(uint64_t*)value.constData());
-#else
-      ret=QString().sprintf("0x%016llX",*(uint64_t*)value.constData());
-#endif
-      break;
-    default:
-      ToHexStr();
-  }
-
-  #undef ToHexStr
-
-  return ret;
-}
-
-QString RegistryKeyTableModel::TypeToString(int value_type) const {
-  QString ret="";
-
-  switch(value_type) {
-    case hive_t_REG_NONE:
-      ret="REG_NONE";
-      break;
-    case hive_t_REG_SZ:
-      ret="REG_SZ";
-      break;
-    case hive_t_REG_EXPAND_SZ:
-      ret="REG_EXPAND_SZ";
-      break;
-    case hive_t_REG_BINARY:
-      ret="REG_BINARY";
-      break;
-    case hive_t_REG_DWORD:
-      ret="REG_DWORD";
-      break;
-    case hive_t_REG_DWORD_BIG_ENDIAN:
-      ret="REG_DWORD_BIG_ENDIAN";
-      break;
-    case hive_t_REG_LINK:
-      ret="REG_LINK";
-      break;
-    case hive_t_REG_MULTI_SZ:
-      ret="REG_MULTI_SZ";
-      break;
-    case hive_t_REG_RESOURCE_LIST:
-      ret="REG_RESOURCE_LIST";
-      break;
-    case hive_t_REG_FULL_RESOURCE_DESCRIPTOR:
-      ret="REG_FULL_RESOURCE_DESC";
-      break;
-    case hive_t_REG_RESOURCE_REQUIREMENTS_LIST:
-      ret="REG_RESOURCE_REQ_LIST";
-      break;
-    case hive_t_REG_QWORD:
-      ret="REG_QWORD";
-      break;
-    default:
-      ret=QString().sprintf("0x%08X",(uint32_t)value_type);
-  }
-
-  return ret;
 }

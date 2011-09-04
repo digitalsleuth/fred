@@ -27,6 +27,8 @@ system(bash compileinfo.sh > compileinfo.h)
 
 # Build fred
 
+QMAKE_CXXFLAGS  += -Wall
+
 QT        += core \
              gui \
              script \
@@ -35,7 +37,6 @@ QT        += core \
 TARGET     = fred
 
 TEMPLATE   = app
-
 
 SOURCES   += main.cpp\
              mainwindow.cpp \
@@ -60,7 +61,8 @@ SOURCES   += main.cpp\
              registrynodetree.cpp \
              dlgsearch.cpp \
              threadsearch.cpp \
-             searchresultwidget.cpp
+             searchresultwidget.cpp \
+             tabwidget.cpp
 
 HEADERS   += mainwindow.h \
              registrynode.h \
@@ -84,7 +86,8 @@ HEADERS   += mainwindow.h \
              registrynodetree.h \
              dlgsearch.h \
              threadsearch.h \
-             searchresultwidget.h
+             searchresultwidget.h \
+             tabwidget.h
 
 FORMS     += mainwindow.ui \
              dlgabout.ui \
@@ -93,6 +96,9 @@ FORMS     += mainwindow.ui \
              dlgsearch.ui
 
 #LIBS      += -lhivex
-LIBS      += $$PWD/hivex/lib/.libs/libhivex.a
+LIBS      += $$PWD/hivex/lib/.libs/libhivex.a \
+             -liconv
+
+#DEFINES   += __STDC_FORMAT_MACROS
 
 RESOURCES += fred.qrc

@@ -18,44 +18,48 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#ifndef REGISTRYNODETREEMODEL_H
-#define REGISTRYNODETREEMODEL_H
+#include "tabwidget.h"
 
-#include <QAbstractItemModel>
-#include <QList>
-#include <QString>
+#include <QTabBar>
+#include <QPushButton>
+#include <QIcon>
+#include <QSize>
+#include <QPoint>
 
-#include "registrynode.h"
-#include "registryhive.h"
+TabWidget::TabWidget(QWidget *p_parent) : QTabWidget(p_parent) {}
 
-class RegistryNodeTreeModel : public QAbstractItemModel {
-  Q_OBJECT
+int TabWidget::addTab(QWidget *p_widget,
+                      const QString &title,
+                      bool close_button)
+{
+  // Add tab
+  int tab_index=QTabWidget::addTab(p_widget,title);
 
-  public:
-    RegistryNodeTreeModel(RegistryHive *p_hive, QObject *p_parent=0);
-    ~RegistryNodeTreeModel();
+  // If desired, add a close button to the tab
+  if(close_button) {
+    // Create close button
+    QPushButton *p_close_button=
+      new QPushButton(QIcon(":/icons/close_button"),QString());
+    p_close_button->setFlat(true);
+    p_close_button->setIconSize(QSize(14,14));
+    p_close_button->setGeometry(p_close_button->x(),p_close_button->y(),14,14);
+    // Connect clicked signal
+    this->connect(p_close_button,
+                  SIGNAL(clicked()),
+                  this,
+                  SLOT(SlotCloseButtonClicked()));
+    this->tabBar()->setTabButton(tab_index,QTabBar::RightSide,p_close_button);
+  }
 
-    QVariant data(const QModelIndex &index, int role) const;
-    Qt::ItemFlags flags(const QModelIndex &index) const;
-    QVariant headerData(int section,
-                        Qt::Orientation orientation,
-                        int role=Qt::DisplayRole) const;
-    QModelIndex index(int row,
-                      int column,
-                      const QModelIndex &parent=QModelIndex()) const;
-    QModelIndex parent(const QModelIndex &index) const;
-    int rowCount(const QModelIndex &parent=QModelIndex()) const;
-    int columnCount(const QModelIndex &parent=QModelIndex()) const;
+  return tab_index;
+}
 
-    QList<QModelIndex> GetIndexListOf(QString path) const;
-    QString GetNodePath(QModelIndex child_index) const;
-
-  private:
-    RegistryNode *p_root_node;
-
-    void SetupModelData(RegistryHive *p_hive,
-                        RegistryNode *p_parent,
-                        int hive_node=0);
-};
-
-#endif // REGISTRYNODETREEMODEL_H
+void TabWidget::SlotCloseButtonClicked() {
+  // Find index of tab to close. The trolls do it by iterating over all tabs
+  // and comparing their widget with QObject::sender().
+  QPushButton *p_close_button=(QPushButton*)(QObject::sender());
+  int index=this->tabBar()->tabAt(QPoint(p_close_button->x(),
+                                         p_close_button->y()));
+  // Emit tabCloseRequested
+  emit(this->tabCloseRequested(index));
+}

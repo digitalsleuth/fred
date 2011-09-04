@@ -18,44 +18,24 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#ifndef REGISTRYNODETREEMODEL_H
-#define REGISTRYNODETREEMODEL_H
+#ifndef TABWIDGET_H
+#define TABWIDGET_H
 
-#include <QAbstractItemModel>
-#include <QList>
+#include <QTabWidget>
 #include <QString>
 
-#include "registrynode.h"
-#include "registryhive.h"
-
-class RegistryNodeTreeModel : public QAbstractItemModel {
+class TabWidget : public QTabWidget {
   Q_OBJECT
 
   public:
-    RegistryNodeTreeModel(RegistryHive *p_hive, QObject *p_parent=0);
-    ~RegistryNodeTreeModel();
+    TabWidget(QWidget *p_parent);
 
-    QVariant data(const QModelIndex &index, int role) const;
-    Qt::ItemFlags flags(const QModelIndex &index) const;
-    QVariant headerData(int section,
-                        Qt::Orientation orientation,
-                        int role=Qt::DisplayRole) const;
-    QModelIndex index(int row,
-                      int column,
-                      const QModelIndex &parent=QModelIndex()) const;
-    QModelIndex parent(const QModelIndex &index) const;
-    int rowCount(const QModelIndex &parent=QModelIndex()) const;
-    int columnCount(const QModelIndex &parent=QModelIndex()) const;
+    int addTab(QWidget *p_widget,
+               const QString &title,
+               bool close_button=false);
 
-    QList<QModelIndex> GetIndexListOf(QString path) const;
-    QString GetNodePath(QModelIndex child_index) const;
-
-  private:
-    RegistryNode *p_root_node;
-
-    void SetupModelData(RegistryHive *p_hive,
-                        RegistryNode *p_parent,
-                        int hive_node=0);
+  private slots:
+    void SlotCloseButtonClicked();
 };
 
-#endif // REGISTRYNODETREEMODEL_H
+#endif // TABWIDGET_H

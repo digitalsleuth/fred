@@ -22,6 +22,9 @@
 
 #include <QHeaderView>
 #include <QFontMetrics>
+#include <QMenu>
+#include <QApplication>
+#include <QClipboard>
 
 DataInterpreter::DataInterpreter(QWidget *p_parent)
   : QTableWidget(p_parent)
@@ -32,11 +35,21 @@ DataInterpreter::DataInterpreter(QWidget *p_parent)
   this->verticalHeader()->setHidden(true);
   this->setSelectionBehavior(QAbstractItemView::SelectRows);
   this->setSelectionMode(QAbstractItemView::SingleSelection);
+
+  // Create context menu actions
+  this->p_action_copy_value=new QAction(tr("Copy value"),this);
+  this->connect(this->p_action_copy_value,
+                SIGNAL(triggered()),
+                this,
+                SLOT(SlotCopyValue()));
 }
 
 DataInterpreter::~DataInterpreter() {
   // Free table widget items
   this->ClearValues();
+
+  // Delete context menu actions
+  delete this->p_action_copy_value;
 }
 
 void DataInterpreter::AddValue(QString name, QString value) {
@@ -73,4 +86,26 @@ int DataInterpreter::sizeHintForColumn(int column) const {
   }
 
   return size_hint;
+}
+
+void DataInterpreter::contextMenuEvent(QContextMenuEvent *p_event) {
+  // Only show context menu when a node is selected
+  if(this->selectedIndexes().count()!=2) return;
+  // Only show context menu when user clicked on selected row
+  if(!(this->indexAt(p_event->pos())==this->selectedIndexes().at(0) ||
+       this->indexAt(p_event->pos())==this->selectedIndexes().at(1)))
+  {
+    return;
+  }
+
+  // Create context menu and add actions
+  QMenu context_menu(this);
+  context_menu.addAction(this->p_action_copy_value);
+  context_menu.exec(p_event->globalPos());
+}
+
+void DataInterpreter::SlotCopyValue() {
+  QApplication::clipboard()->
+    setText(this->selectedIndexes().at(1).data().toString(),
+            QClipboard::Clipboard);
 }

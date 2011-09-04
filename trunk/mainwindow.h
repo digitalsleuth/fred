@@ -43,6 +43,7 @@
 #include "datareporter.h"
 #include "threadsearch.h"
 #include "searchresultwidget.h"
+#include "tabwidget.h"
 
 namespace Ui {
   class MainWindow;
@@ -70,6 +71,7 @@ class MainWindow : public QMainWindow {
     void SlotReportClicked();
     void SlotSearchFinished();
     void SlotSearchResultWidgetDoubleClicked(QModelIndex index);
+    void SlotTabCloseButtonClicked(int index);
 
 private:
     Ui::MainWindow *ui;
@@ -84,7 +86,7 @@ private:
     // Widgets etc...
     RegistryNodeTree *p_node_tree;
     RegistryKeyTable *p_key_table;
-    QTabWidget *p_tab_widget;
+    TabWidget *p_tab_widget;
     QWidget *p_hex_edit_widget;
     QHexEdit *p_hex_edit;
     QLabel *p_hex_edit_status_bar;

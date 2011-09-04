@@ -25,6 +25,18 @@
 
 #include <stdlib.h>
 
+// TODO: __WORDSIZE is not defined under mingw and I currently have no idea how
+// to identify a 64bit windows
+#ifndef __WORDSIZE
+  #define __WORDSIZE 32
+#endif
+
+#if __WORDSIZE == 64
+  #define EPOCH_DIFF 0x19DB1DED53E8000
+#else
+  #define EPOCH_DIFF 0x19DB1DED53E8000LL
+#endif
+
 /*
  * RegistryHive
  */
@@ -209,11 +221,11 @@ QString RegistryHive::KeyValueToString(QByteArray value, int value_type) {
   QString ret="";
   int i=0;
 
-  #define ToHexStr() {                                                        \
-    for(i=0;i<value.size();i++) {                                             \
-      ret.append(QString().sprintf("%02X ",(uint8_t)(value.constData()[i]))); \
-    }                                                                         \
-    ret.chop(1);                                                              \
+  #define ToHexStr() {                                                      \
+    for(i=0;i<value.size();i++) {                                           \
+    ret.append(QString().sprintf("%02X ",(uint8_t)(value.constData()[i]))); \
+    }                                                                       \
+    ret.chop(1);                                                            \
   }
 
   switch(value_type) {
@@ -237,12 +249,10 @@ QString RegistryHive::KeyValueToString(QByteArray value, int value_type) {
     case hive_t_REG_DWORD:
       // DWORD (32 bit integer), little endian
       ret=QString().sprintf("0x%08X",*(uint32_t*)value.constData());
-      //ret=QString().sprintf("0x%08X",value.toUInt());
       break;
     case hive_t_REG_DWORD_BIG_ENDIAN:
       // DWORD (32 bit integer), big endian
       ret=QString().sprintf("0x%08X",*(uint32_t*)value.constData());
-      //ret=QString().sprintf("0x%08X",value.toUInt());
       break;
     case hive_t_REG_LINK:
       // Symbolic link to another part of the registry tree
@@ -267,11 +277,8 @@ QString RegistryHive::KeyValueToString(QByteArray value, int value_type) {
       break;
     case hive_t_REG_QWORD:
       // QWORD (64 bit integer). Usually little endian.
-#if __WORDSIZE == 64
-      ret=QString().sprintf("0x%016lX",*(uint64_t*)value.constData());
-#else
-      ret=QString().sprintf("0x%016llX",*(uint64_t*)value.constData());
-#endif
+      ret=
+        QString("0x%1").arg((quint64)(*(uint64_t*)value.constData()),16,16,QChar('0'));
       break;
     default:
       ToHexStr();
@@ -327,24 +334,16 @@ QString RegistryHive::KeyValueToString(QByteArray key_value,
       ret=date_time.toString("yyyy/MM/dd hh:mm:ss");
     }
   } else if(format=="int64" && remaining_data_len>=8) {
-#if __WORDSIZE == 64
-    ret=QString().sprintf("%ld",*(int64_t*)p_data);
-#else
-    ret=QString().sprintf("%lld",*(int64_t*)p_data);
-#endif
+    ret=QString("%1").arg(*(int64_t*)p_data);
   } else if(format=="uint64" && remaining_data_len>=8) {
-#if __WORDSIZE == 64
-    ret=QString().sprintf("%lu",*(uint64_t*)p_data);
-#else
-    ret=QString().sprintf("%llu",*(uint64_t*)p_data);
-#endif
+    ret=QString("%1").arg(*(uint64_t*)p_data);
   } else if(format=="filetime" && remaining_data_len>=8) {
     if(*(uint64_t*)p_data==0) {
       ret="n/a";
     } else {
       // TODO: Warn if >32bit
       QDateTime date_time;
-      date_time.setTime_t((*(uint64_t*)p_data-116444736000000000)/10000000);
+      date_time.setTime_t((*(uint64_t*)p_data-EPOCH_DIFF)/10000000);
       ret=date_time.toString("yyyy/MM/dd hh:mm:ss");
     }
   } else if(format=="ascii") {

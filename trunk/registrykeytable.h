@@ -22,17 +22,32 @@
 #define REGISTRYKEYTABLE_H
 
 #include <QTableView>
+#include <QContextMenuEvent>
+#include <QMenu>
+#include <QAction>
 
 class RegistryKeyTable : public QTableView {
   Q_OBJECT
 
   public:
     RegistryKeyTable(QWidget *p_parent=0);
+    ~RegistryKeyTable();
 
     void setModel(QAbstractItemModel *p_model);
+    //void selectRow(QString key_name);
 
   protected:
     int sizeHintForColumn(int column) const;
+    void contextMenuEvent(QContextMenuEvent *p_event);
+
+  private:
+    QMenu *p_menu_copy;
+    QAction *p_action_copy_key_name;
+    QAction *p_action_copy_key_value;
+
+  private slots:
+    void SlotCopyKeyName();
+    void SlotCopyKeyValue();
 };
 
 #endif // REGISTRYKEYTABLE_H

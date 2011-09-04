@@ -1,3 +1,12 @@
+fred (0.1.0beta3) unstable; urgency=low
+
+  * Added search functionality
+  * Added various context menus to copy values to clipboard
+  * Now linking statically against libhivex to support older Debian / Ubuntu distros
+  * Some small fixes to ease portability
+
+ -- Daniel Gillen <gillen.dan@pinguin.lu>  Sun, 04 Sep 2011 00:15:00 +0200
+
 fred (0.1.0beta2) unstable; urgency=low
 
   * Fixed some more bugs and subclassed QTreeView and QTableView

@@ -23,17 +23,31 @@
 
 #include <QTreeView>
 #include <QAbstractItemModel>
+#include <QContextMenuEvent>
+#include <QMenu>
+#include <QAction>
 
 class RegistryNodeTree : public QTreeView {
   Q_OBJECT
 
   public:
     RegistryNodeTree(QWidget *p_parent=0);
+    ~RegistryNodeTree();
 
     void setModel(QAbstractItemModel *p_model);
 
-  //protected:
+  protected:
   //  int sizeHintForColumn(int column) const;
+    void contextMenuEvent(QContextMenuEvent *p_event);
+
+  private:
+    QMenu *p_menu_copy;
+    QAction *p_action_copy_node_name;
+    QAction *p_action_copy_node_path;
+
+  private slots:
+    void SlotCopyNodeName();
+    void SlotCopyNodePath();
 };
 
 #endif // REGISTRYNODETREE_H
