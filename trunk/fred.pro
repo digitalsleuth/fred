@@ -103,3 +103,4 @@ LIBS      += $$PWD/hivex/lib/.libs/libhivex.a \
 
 RESOURCES += fred.qrc
 RC_FILE    = fred.rc
+ICON       = resources/fred.icns

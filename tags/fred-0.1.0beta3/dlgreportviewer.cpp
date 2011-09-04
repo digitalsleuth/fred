@@ -25,7 +25,7 @@
 #include <QPrintDialog>
 
 DlgReportViewer::DlgReportViewer(QString &report_data, QWidget *p_parent)
-  : QMainWindow(p_parent,Qt::Dialog), ui(new Ui::DlgReportViewer)
+  : QMainWindow(p_parent,Qt::Dialog | Qt::Popup), ui(new Ui::DlgReportViewer)
 {
   // Init local vars
   ui->setupUi(this);
