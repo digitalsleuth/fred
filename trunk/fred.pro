@@ -102,3 +102,4 @@ LIBS      += $$PWD/hivex/lib/.libs/libhivex.a \
 #DEFINES   += __STDC_FORMAT_MACROS
 
 RESOURCES += fred.qrc
+RC_FILE    = fred.rc
