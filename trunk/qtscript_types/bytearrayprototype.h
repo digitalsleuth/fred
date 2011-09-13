@@ -31,7 +31,7 @@
 
 class ByteArrayPrototype : public QObject, public QScriptable {
   Q_OBJECT
- 
+
   public:
     ByteArrayPrototype(QObject *p_parent=0);
     ~ByteArrayPrototype();
@@ -42,6 +42,7 @@ class ByteArrayPrototype : public QObject, public QScriptable {
     QByteArray left(int len) const;
     QByteArray mid(int pos, int len = -1) const;
     QScriptValue remove(int pos, int len);
+    QScriptValue appendByte(char byte) const;
     QByteArray right(int len) const;
     QByteArray simplified() const;
     QByteArray toBase64() const;

@@ -97,7 +97,6 @@ FORMS     += mainwindow.ui \
 
 #LIBS      += -lhivex
 LIBS      += $$PWD/hivex/lib/.libs/libhivex.a \
-             -liconv
 
 #DEFINES   += __STDC_FORMAT_MACROS
 

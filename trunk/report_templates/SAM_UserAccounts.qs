@@ -69,7 +69,10 @@ for(var i=0;i<user_names.length;i++) {
   // Get password hint if available
   var hint=GetRegistryKeyValue(String().concat("\\SAM\\Domains\\Account\\Users\\",user_rid),"UserPasswordHint");
   if(typeof hint !== 'undefined') {
-    print_table_row("Password hint:",RegistryKeyValueToVariant(hint.value,"utf16",0));
+    // Append missing trailing utf16 zero byte
+    hint.value.appendByte(0);
+    hint.value.appendByte(0);
+    print_table_row("Password hint:",RegistryKeyValueToVariant(hint.value,"utf16"));
   }
 
   // TODO: User group membership
