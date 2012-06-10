@@ -24,7 +24,8 @@
 #include <QMap>
 #include <QMapIterator>
 #include <QStringList>
-#include <QDateTime>
+
+#include <stdio.h>
 
 DataReporterEngine::DataReporterEngine(RegistryHive *p_hive) : QScriptEngine() {
   // Init vars
@@ -247,6 +248,7 @@ QScriptValue DataReporterEngine::GetRegistryKeyValue(QScriptContext *context,
   if(p_hive->Error()) {
     // Get error message to clear error state
     p_hive->GetErrorMsg();
+//    printf("\nError: %s\n",p_hive->GetErrorMsg().toAscii().constData());
     return engine->undefinedValue();
   }
 

@@ -24,6 +24,7 @@
 #include <QDialog>
 #include <QList>
 #include <QByteArray>
+#include <QKeyEvent>
 
 namespace Ui {
   class DlgSearch;
@@ -43,6 +44,7 @@ class DlgSearch : public QDialog {
 
   protected:
     void changeEvent(QEvent *e);
+    void keyPressEvent(QKeyEvent *p_event);
 
   private slots:
     void on_BtnCancel_clicked();

@@ -64,6 +64,7 @@ for(var i=0;i<user_names.length;i++) {
   if(acc_flags&0x0100) print("SrvTrustAcc ");
   if(acc_flags&0x0200) print("NoPwExpiry ");
   if(acc_flags&0x0400) print("AccAutoLock ");
+  print(" (",acc_flags,")");
   println("</td></tr>");
 
   // Get password hint if available

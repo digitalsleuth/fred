@@ -25,15 +25,15 @@
 
 /** \cond docNever */
 
-
 #include <QtGui>
+#include <QPoint>
 
-class QHexEditPrivate : public QWidget
-{
-Q_OBJECT
+class QHexEditPrivate : public QWidget {
+  Q_OBJECT
 
-public:
+  public:
     QHexEditPrivate(QScrollArea *parent);
+    ~QHexEditPrivate();
 
     void setAddressOffset(int offset);
     int addressOffset();
@@ -62,24 +62,29 @@ public:
     void setHighlighting(bool mode);
     virtual void setFont(const QFont &font);
 
-signals:
+  signals:
     void currentAddressChanged(int address);
     void currentSizeChanged(int size);
     void dataChanged();
     void overwriteModeChanged(bool state);
 
-protected:
+  protected:
     void keyPressEvent(QKeyEvent * event);
-    void mousePressEvent(QMouseEvent * event);
+    void mousePressEvent(QMouseEvent *p_event);
+    void mouseMoveEvent(QMouseEvent *p_event);
     void paintEvent(QPaintEvent *event);
-    void setCursorPos(QPoint pos);
     void setCursorPos(int position);
+    void contextMenuEvent(QContextMenuEvent *p_event);
 
-private slots:
+  private slots:
     void updateCursor();
+    void SlotCopySelectedBytes();
+    void SlotCopySelectedTextAsAscii();
+    void SlotCopySelectedTextAsUtf8();
 
-private:
+  private:
     void adjust();
+    int Point2Char(QPoint pos);
 
     QColor _addressAreaColor;
     QByteArray _data;
@@ -87,6 +92,13 @@ private:
     QColor _highlightingColor;
     QScrollArea *_scrollArea;
     QTimer _cursorTimer;
+    QPoint sel_origin;
+    QPoint sel_start;
+    QPoint sel_end;
+    QMenu *p_menu_copy;
+    QAction *p_action_copy_selected_bytes;
+    QAction *p_action_copy_selected_text_ascii;
+    QAction *p_action_copy_selected_text_utf8;
 
     bool _blink;
     bool _addressArea;

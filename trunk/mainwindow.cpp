@@ -162,6 +162,10 @@ MainWindow::MainWindow(QWidget *parent) :
                 SIGNAL(activated(QModelIndex)),
                 this,
                 SLOT(SlotNodeTreeClicked(QModelIndex)));
+  this->connect(this->p_node_tree,
+                SIGNAL(CurrentItemChanged(QModelIndex)),
+                this,
+                SLOT(SlotNodeTreeClicked(QModelIndex)));
   this->connect(this->p_key_table,
                 SIGNAL(clicked(QModelIndex)),
                 this,
@@ -170,6 +174,10 @@ MainWindow::MainWindow(QWidget *parent) :
                 SIGNAL(doubleClicked(QModelIndex)),
                 this,
                 SLOT(SlotKeyTableDoubleClicked(QModelIndex)));
+  this->connect(this->p_key_table,
+                SIGNAL(CurrentItemChanged(QModelIndex)),
+                this,
+                SLOT(SlotKeyTableClicked(QModelIndex)));
   this->connect(this->p_hex_edit,
                 SIGNAL(currentAddressChanged(int)),
                 this,
@@ -340,6 +348,8 @@ void MainWindow::SlotNodeTreeClicked(QModelIndex index) {
   }
   this->p_reg_key_table_model=new RegistryKeyTableModel(this->p_hive,node_path);
   this->p_key_table->setModel(this->p_reg_key_table_model);
+  // Set focus back to nodetree to be able to navigate with keyboard
+  this->p_node_tree->setFocus();
 }
 
 void MainWindow::SlotKeyTableDoubleClicked(QModelIndex index) {
@@ -398,6 +408,8 @@ void MainWindow::SlotKeyTableClicked(QModelIndex index) {
                                         AdditionalRoles_GetRawData)
                                           .toByteArray();
   this->p_hex_edit->setData(this->selected_key_value);
+  // Set focus back to nodetree to be able to navigate with keyboard
+  this->p_key_table->setFocus();
 }
 
 void MainWindow::SlotHexEditAddressChanged(int hex_offset) {
@@ -487,6 +499,7 @@ void MainWindow::SlotSearchResultWidgetDoubleClicked(QModelIndex index) {
     this->p_node_tree->selectionModel()->
       select(indexes.at(indexes.count()-1),
              QItemSelectionModel::Select);
+    // TODO: This does not work!!
     this->SlotNodeTreeClicked(indexes.at(indexes.count()-1));
   }
 
@@ -538,7 +551,6 @@ void MainWindow::UpdateWindowTitle(QString filename) {
 }
 
 void MainWindow::UpdateDataInterpreter(int hex_offset) {
-  QDateTime date_time;
   const char *p_data;
   int remaining_data_len;
 
@@ -613,6 +625,14 @@ void MainWindow::UpdateDataInterpreter(int hex_offset) {
                                          this->selected_key_value,
                                          "uint64",
                                          hex_offset));
+/*
+  TODO: Check one could implement this
+    this->p_data_interpreter->AddValue("unixtime64:",
+                                       RegistryHive::KeyValueToString(
+                                         this->selected_key_value,
+                                         "unixtime64",
+                                         hex_offset));
+*/
     this->p_data_interpreter->AddValue("filetime64:",
                                        RegistryHive::KeyValueToString(
                                          this->selected_key_value,

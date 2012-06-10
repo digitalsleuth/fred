@@ -29,26 +29,62 @@ const int GAP_ADR_HEX = 10;
 const int GAP_HEX_ASCII = 16;
 const int BYTES_PER_LINE = 16;
 
-QHexEditPrivate::QHexEditPrivate(QScrollArea *parent) : QWidget(parent)
-{
-    _scrollArea = parent;
-    setAddressWidth(4);
-    setAddressOffset(0);
-    setAddressArea(true);
-    setAsciiArea(true);
-    setHighlighting(true);
-    setOverwriteMode(true);
-    setAddressAreaColor(QColor(Qt::lightGray).lighter(110));
-    setHighlightingColor(QColor(Qt::yellow).lighter(160));
-    this->setReadOnly(true);
+QHexEditPrivate::QHexEditPrivate(QScrollArea *parent) : QWidget(parent) {
+  _scrollArea = parent;
+  setAddressWidth(4);
+  setAddressOffset(0);
+  setAddressArea(true);
+  setAsciiArea(true);
+  setHighlighting(true);
+  setOverwriteMode(true);
+  setAddressAreaColor(QColor(Qt::lightGray).lighter(110));
+  setHighlightingColor(QColor(Qt::yellow).lighter(160));
+  this->setReadOnly(true);
+  this->sel_origin=QPoint(0,0);
+  this->sel_start=QPoint(0,0);
+  this->sel_end=QPoint(0,0);
 
-    setFont(QFont("Mono", 10));
-    connect(&_cursorTimer, SIGNAL(timeout()), this, SLOT(updateCursor()));
+  setFont(QFont("Mono", 10));
+  connect(&_cursorTimer, SIGNAL(timeout()), this, SLOT(updateCursor()));
 
-    _cursorTimer.setInterval(500);
+  _cursorTimer.setInterval(500);
 
-    setFocusPolicy(Qt::StrongFocus);
-    _size = -1;
+  setFocusPolicy(Qt::StrongFocus);
+  _size = -1;
+
+  // Create context menu
+  this->p_menu_copy=new QMenu(tr("Copy"),this);
+  this->p_action_copy_selected_bytes=
+      new QAction(tr("Selected bytes"),this->p_menu_copy);
+  this->p_action_copy_selected_text_ascii=
+      new QAction(tr("Selected text as ASCII"),this->p_menu_copy);
+  this->p_action_copy_selected_text_utf8=
+      new QAction(tr("Selected text as UTF8"),this->p_menu_copy);
+
+  this->p_menu_copy->addAction(this->p_action_copy_selected_bytes);
+  this->p_menu_copy->addAction(this->p_action_copy_selected_text_ascii);
+  this->p_menu_copy->addAction(this->p_action_copy_selected_text_utf8);
+
+  this->connect(this->p_action_copy_selected_bytes,
+                SIGNAL(triggered()),
+                this,
+                SLOT(SlotCopySelectedBytes()));
+  this->connect(this->p_action_copy_selected_text_ascii,
+                SIGNAL(triggered()),
+                this,
+                SLOT(SlotCopySelectedBytes()));
+  this->connect(this->p_action_copy_selected_text_utf8,
+                SIGNAL(triggered()),
+                this,
+                SLOT(SlotCopySelectedBytes()));
+}
+
+QHexEditPrivate::~QHexEditPrivate() {
+  // Delete context menu
+  delete this->p_action_copy_selected_bytes;
+  delete this->p_action_copy_selected_text_ascii;
+  delete this->p_action_copy_selected_text_utf8;
+  delete this->p_menu_copy;
 }
 
 void QHexEditPrivate::setAddressOffset(int offset)
@@ -265,160 +301,234 @@ void QHexEditPrivate::keyPressEvent(QKeyEvent *event)
     update();
 }
 
-void QHexEditPrivate::mousePressEvent(QMouseEvent * event)
-{
-    setCursorPos(event->pos());
+void QHexEditPrivate::mousePressEvent(QMouseEvent *p_event) {
+  if(p_event->button()==Qt::LeftButton) {
+    // Init selection origin, start and end point
+    this->sel_origin=p_event->pos();
+    this->sel_end=this->sel_start=this->sel_origin;
+
+    // Set cursor to current pos
+    int curs_pos=this->Point2Char(this->sel_start);
+    if(curs_pos!=-1) setCursorPos(curs_pos);
+  } else {
+    QWidget::mousePressEvent(p_event);
+  }
 }
 
-void QHexEditPrivate::paintEvent(QPaintEvent *event)
-{
-    QPainter painter(this);
-
-    // draw some patterns if needed
-    painter.fillRect(event->rect(), this->palette().color(QPalette::Base));
-    if (_addressArea)
-        painter.fillRect(QRect(_xPosAdr, event->rect().top(), _xPosHex - GAP_ADR_HEX + 2, height()), _addressAreaColor);
-    if (_asciiArea)
-    {
-        int linePos = _xPosAscii - (GAP_HEX_ASCII / 2);
-        painter.setPen(Qt::gray);
-        painter.drawLine(linePos, event->rect().top(), linePos, height());
+void QHexEditPrivate::mouseMoveEvent(QMouseEvent *p_event) {
+  if(p_event->buttons()==Qt::LeftButton) {
+    // Update current selection and repaint hexedit
+    if(this->Point2Char(p_event->pos())>this->Point2Char(this->sel_origin)) {
+      this->sel_start=this->sel_origin;
+      this->sel_end=p_event->pos();
+    } else {
+      this->sel_end=this->sel_origin;
+      this->sel_start=p_event->pos();
     }
+    this->update();
+  } else {
+    QWidget::mouseMoveEvent(p_event);
+  }
+}
 
-    painter.setPen(this->palette().color(QPalette::WindowText));
+void QHexEditPrivate::paintEvent(QPaintEvent *event) {
+  QPainter painter(this);
 
-    // calc position
-    int firstLineIdx = ((event->rect().top()/ _charHeight) - _charHeight) * BYTES_PER_LINE;
-    if (firstLineIdx < 0)
-        firstLineIdx = 0;
-    int lastLineIdx = ((event->rect().bottom() / _charHeight) + _charHeight) * BYTES_PER_LINE;
-    if (lastLineIdx > _data.size())
-        lastLineIdx = _data.size();
-    int yPosStart = ((firstLineIdx) / BYTES_PER_LINE) * _charHeight + _charHeight;
+  // Draw some patterns if needed
+  painter.fillRect(event->rect(), this->palette().color(QPalette::Base));
+  if(_addressArea) {
+    painter.fillRect(QRect(_xPosAdr,
+                           event->rect().top(),
+                           _xPosHex-GAP_ADR_HEX+2,
+                           height()),
+                     _addressAreaColor);
+  }
+  if(_asciiArea) {
+    int linePos=_xPosAscii-(GAP_HEX_ASCII / 2);
+    painter.setPen(Qt::gray);
+    painter.drawLine(linePos,event->rect().top(),linePos,height());
+  }
 
-    // paint address area
-    if (_addressArea)
+  painter.setPen(this->palette().color(QPalette::WindowText));
+
+  // Calc positions
+  int firstLineIdx=
+      ((event->rect().top()/_charHeight)-_charHeight)*BYTES_PER_LINE;
+  if(firstLineIdx<0) firstLineIdx=0;
+  int lastLineIdx=
+      ((event->rect().bottom()/_charHeight)+_charHeight)*BYTES_PER_LINE;
+  if(lastLineIdx>_data.size()) lastLineIdx=_data.size();
+  int yPosStart=((firstLineIdx)/BYTES_PER_LINE)*_charHeight+_charHeight;
+
+  // Paint address area
+  if(_addressArea) {
+    for(int lineIdx=firstLineIdx, yPos=yPosStart;
+        lineIdx<lastLineIdx;
+        lineIdx+=BYTES_PER_LINE, yPos+=_charHeight)
     {
-        for (int lineIdx = firstLineIdx, yPos = yPosStart; lineIdx < lastLineIdx; lineIdx += BYTES_PER_LINE, yPos +=_charHeight)
-        {
-            QString address = QString("%1")
-                              .arg(lineIdx + _addressOffset, _realAddressNumbers, 16, QChar('0'));
-            painter.drawText(_xPosAdr, yPos, address);
+      QString address=QString("%1").arg(lineIdx+_addressOffset,
+                                        _realAddressNumbers,
+                                        16,
+                                        QChar('0'));
+      painter.drawText(_xPosAdr, yPos, address);
+    }
+  }
+
+  // Prepare values for a selection
+  int selection_start=0,selection_end=0;
+  bool selection=false;
+  if(!(this->sel_start.isNull() && this->sel_end.isNull()) &&
+     this->sel_start!=this->sel_end)
+  {
+    selection_start=this->Point2Char(this->sel_start)/2;
+    selection_end=this->Point2Char(this->sel_end)/2;
+    selection=true;
+  }
+
+  // Paint hex area
+  QByteArray hexBa(_data.mid(firstLineIdx,lastLineIdx-firstLineIdx+1).toHex());
+  QBrush highLighted=QBrush(_highlightingColor);
+  painter.setBackground(highLighted);
+  painter.setBackgroundMode(Qt::TransparentMode);
+  for(int lineIdx=firstLineIdx, yPos=yPosStart;
+      lineIdx<lastLineIdx;
+      lineIdx+=BYTES_PER_LINE, yPos+=_charHeight)
+  {
+    QByteArray hex;
+    int xPos=_xPosHex;
+    for(int colIdx=0;
+        ((lineIdx+colIdx)<_data.size() && (colIdx<BYTES_PER_LINE));
+        colIdx++)
+    {
+      // Highlight diff bytes
+      if(_highlighting) {
+        int posBa=lineIdx+colIdx;
+        if(posBa>=_originalData.size()) {
+          painter.setBackgroundMode(Qt::TransparentMode);
+        } else {
+          if(_data[posBa]==_originalData[posBa]) {
+            painter.setBackgroundMode(Qt::TransparentMode);
+          } else {
+            painter.setBackgroundMode(Qt::OpaqueMode);
+          }
         }
-    }
+      }
 
-    // paint hex area
-    QByteArray hexBa(_data.mid(firstLineIdx, lastLineIdx - firstLineIdx + 1).toHex());
-    QBrush highLighted = QBrush(_highlightingColor);
-    painter.setBackground(highLighted);
-    painter.setBackgroundMode(Qt::TransparentMode);
-    for (int lineIdx = firstLineIdx, yPos = yPosStart; lineIdx < lastLineIdx; lineIdx += BYTES_PER_LINE, yPos +=_charHeight)
-    {
-        QByteArray hex;
-        int xPos = _xPosHex;
-        for (int colIdx = 0; ((lineIdx + colIdx) < _data.size() and (colIdx < BYTES_PER_LINE)); colIdx++)
-        {
-            // hilight diff bytes
-            if (_highlighting)
-            {
-                int posBa = lineIdx + colIdx;
-                if (posBa >= _originalData.size())
-                    painter.setBackgroundMode(Qt::TransparentMode);
-                else
-                    if (_data[posBa] == _originalData[posBa])
-                        painter.setBackgroundMode(Qt::TransparentMode);
-                    else
-                        painter.setBackgroundMode(Qt::OpaqueMode);
-            }
-
-            // render hex value
-            if (colIdx == 0)
-            {
-                hex = hexBa.mid((lineIdx - firstLineIdx) * 2, 2);
-                painter.drawText(xPos, yPos, hex);
-                xPos += 2 * _charWidth;
-            } else {
-                hex = hexBa.mid((lineIdx + colIdx - firstLineIdx) * 2, 2).prepend(" ");
-                painter.drawText(xPos, yPos, hex);
-                xPos += 3 * _charWidth;
-            }
+      // Highlight selection
+      if(selection) {
+        int cur_char=lineIdx+colIdx;
+        if(cur_char>=selection_start && cur_char<=selection_end) {
+          painter.setBackgroundMode(Qt::OpaqueMode);
+        } else {
+          painter.setBackgroundMode(Qt::TransparentMode);
         }
-    }
-    painter.setBackgroundMode(Qt::TransparentMode);
+      }
 
-    // paint ascii area
-    if (_asciiArea)
+      // Render hex value
+      if(colIdx==0) {
+        hex=hexBa.mid((lineIdx-firstLineIdx)*2,2);
+        painter.drawText(xPos,yPos,hex);
+        xPos+=2*_charWidth;
+      } else {
+        hex=hexBa.mid((lineIdx+colIdx-firstLineIdx)*2,2).prepend(" ");
+        painter.drawText(xPos,yPos,hex);
+        xPos+=3*_charWidth;
+      }
+    }
+  }
+
+  // Paint ascii area
+  if(_asciiArea) {
+    for(int lineIdx=firstLineIdx, yPos=yPosStart;
+        lineIdx<lastLineIdx;
+        lineIdx+=BYTES_PER_LINE, yPos+=_charHeight)
     {
-        for (int lineIdx = firstLineIdx, yPos = yPosStart; lineIdx < lastLineIdx; lineIdx += BYTES_PER_LINE, yPos +=_charHeight)
-        {
-            QByteArray ascii = _data.mid(lineIdx, BYTES_PER_LINE);
-            for (int idx=0; idx < ascii.size(); idx++)
-                if (((char)ascii[idx] < 0x20) or ((char)ascii[idx] > 0x7e))
-                    ascii[idx] = '.';
-            painter.drawText(_xPosAscii, yPos, ascii);
+      QByteArray ascii=_data.mid(lineIdx,BYTES_PER_LINE);
+      for(int idx=0, xpos=_xPosAscii;
+          idx<ascii.size();
+          idx++, xpos+=_charWidth)
+      {
+        // Highlight selection
+        if(selection) {
+          int cur_char=lineIdx+idx;
+          if(cur_char>=selection_start && cur_char<=selection_end) {
+            painter.setBackgroundMode(Qt::OpaqueMode);
+          } else {
+            painter.setBackgroundMode(Qt::TransparentMode);
+          }
         }
-    }
 
-    // paint cursor
-    if (_blink && !this->_data.isNull() && !this->_data.isEmpty())
-    {
-        if (_overwriteMode)
-            painter.fillRect(_cursorX, _cursorY + _charHeight - 2, _charWidth, 2, this->palette().color(QPalette::WindowText));
-        else
-            painter.fillRect(_cursorX, _cursorY, 2, _charHeight, this->palette().color(QPalette::WindowText));
+        // Render char
+        if(((char)ascii[idx]<0x20) || ((char)ascii[idx]>0x7e)) {
+          painter.drawText(xpos, yPos, QString("."));
+        } else {
+          painter.drawText(xpos, yPos, QString(ascii.at(idx)));
+        }
+      }
     }
+  }
 
-    if (_size != _data.size())
-    {
-        _size = _data.size();
-        emit currentSizeChanged(_size);
+  // Reset painter background if it is still set from highlighting
+  painter.setBackgroundMode(Qt::TransparentMode);
+
+  // Paint cursor
+  if(_blink && !this->_data.isNull() && !this->_data.isEmpty()) {
+    if(_overwriteMode) {
+      painter.fillRect(_cursorX,
+                       _cursorY+_charHeight-2,
+                       _charWidth,
+                       2,
+                       this->palette().color(QPalette::WindowText));
+    } else {
+      painter.fillRect(_cursorX,
+                       _cursorY,
+                       2,
+                       _charHeight,
+                       this->palette().color(QPalette::WindowText));
     }
+  }
+
+  if(_size!=_data.size()) {
+    _size=_data.size();
+    emit currentSizeChanged(_size);
+  }
 }
 
 void QHexEditPrivate::setCursorPos(int position)
 {
-    // delete cursor
-    _blink = false;
-    update();
+  // delete cursor
+  _blink=false;
+  update();
 
-    // cursor in range?
-    if (_overwriteMode)
-    {
-        if (position > (_data.size() * 2 - 1))
-            position = _data.size() * 2 - 1;
-    } else {
-        if (position > (_data.size() * 2))
-            position = _data.size() * 2;
-    }
+  // cursor in range?
+  if(_overwriteMode) {
+    if(position>(_data.size()*2-1)) position=_data.size()*2-1;
+  } else {
+    if(position>(_data.size()*2)) position=_data.size()*2;
+  }
 
-    if (position < 0)
-        position = 0;
+  if(position < 0) position=0;
 
-    // calc position
-    _cursorPosition = position;
-    _cursorY = (position / (2 * BYTES_PER_LINE)) * _charHeight + 4;
-    int x = (position % (2 * BYTES_PER_LINE));
-    _cursorX = (((x / 2) * 3) + (x % 2)) * _charWidth + _xPosHex;
+  // calc position
+  _cursorPosition=position;
+  _cursorY=(position/(2*BYTES_PER_LINE))*_charHeight+4;
+  int x=(position%(2*BYTES_PER_LINE));
+  _cursorX=(((x/2)*3)+(x%2))*_charWidth+_xPosHex;
 
-    // immiadately draw cursor
-    _blink = true;
-    update();
-    emit currentAddressChanged(_cursorPosition/2);
+  // immiadately draw cursor
+  _blink=true;
+  update();
+  emit currentAddressChanged(_cursorPosition/2);
 }
 
-void QHexEditPrivate::setCursorPos(QPoint pos)
-{
-    // find char under cursor
-    if ((pos.x() >= _xPosHex) and (pos.x() < (_xPosHex + HEXCHARS_IN_LINE * _charWidth)))
-    {
-        int x = (pos.x() - _xPosHex) / _charWidth;
-        if ((x % 3) == 0)
-            x = (x / 3) * 2;
-        else
-            x = ((x / 3) * 2) + 1;
-        int y = (pos.y() / _charHeight) * 2 * BYTES_PER_LINE;
-        setCursorPos(x + y);
-    }
+void QHexEditPrivate::contextMenuEvent(QContextMenuEvent *p_event) {
+
+  // TODO: Only show context menu when something is selected
+
+  // Create context menu and add actions
+  QMenu context_menu(this);
+  context_menu.addMenu(this->p_menu_copy);
+  context_menu.exec(p_event->globalPos());
 }
 
 void QHexEditPrivate::updateCursor()
@@ -428,6 +538,18 @@ void QHexEditPrivate::updateCursor()
     else
         _blink = true;
     update(_cursorX, _cursorY, _charWidth, _charHeight);
+}
+
+void QHexEditPrivate::SlotCopySelectedBytes() {
+  // TODO: Implement
+}
+
+void QHexEditPrivate::SlotCopySelectedTextAsAscii() {
+  // TODO: Implement
+}
+
+void QHexEditPrivate::SlotCopySelectedTextAsUtf8() {
+  // TODO: Implement
 }
 
 void QHexEditPrivate::adjust()
@@ -452,4 +574,16 @@ void QHexEditPrivate::adjust()
     setMinimumWidth(_xPosAscii + (BYTES_PER_LINE * _charWidth));
 
     update();
+}
+
+int QHexEditPrivate::Point2Char(QPoint pos) {
+  // find char under cursor
+  if((pos.x()>=_xPosHex) && (pos.x()<(_xPosHex+HEXCHARS_IN_LINE*_charWidth))) {
+    int x=(pos.x()-_xPosHex)/_charWidth;
+    if((x%3)==0) x=(x/3)*2;
+    else x=((x/3)*2)+1;
+    int y=(pos.y()/_charHeight)*2*BYTES_PER_LINE;
+    return x+y;
+  }
+  return -1;
 }

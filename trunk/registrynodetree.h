@@ -36,14 +36,20 @@ class RegistryNodeTree : public QTreeView {
 
     void setModel(QAbstractItemModel *p_model);
 
+  Q_SIGNALS:
+    void CurrentItemChanged(QModelIndex current);
+
   protected:
   //  int sizeHintForColumn(int column) const;
     void contextMenuEvent(QContextMenuEvent *p_event);
+    void keyPressEvent(QKeyEvent *p_event);
 
   private:
     QMenu *p_menu_copy;
     QAction *p_action_copy_node_name;
     QAction *p_action_copy_node_path;
+    void currentChanged(const QModelIndex &current,
+                        const QModelIndex &previous);
 
   private slots:
     void SlotCopyNodeName();

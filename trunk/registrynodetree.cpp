@@ -58,6 +58,10 @@ void RegistryNodeTree::setModel(QAbstractItemModel *p_model) {
   QTreeView::setModel(p_model);
   this->header()->setResizeMode(0,QHeaderView::ResizeToContents);
   this->header()->setStretchLastSection(false);
+  if(p_model!=NULL && p_model->index(0,0).isValid()) {
+    // Select first tree item
+    this->setCurrentIndex(p_model->index(0,0));
+  }
 }
 
 //int RegistryNodeTree::sizeHintForColumn(int column) const {}
@@ -75,6 +79,41 @@ void RegistryNodeTree::contextMenuEvent(QContextMenuEvent *p_event) {
   QMenu context_menu(this);
   context_menu.addMenu(this->p_menu_copy);
   context_menu.exec(p_event->globalPos());
+}
+
+void RegistryNodeTree::keyPressEvent(QKeyEvent *p_event) {
+  // Only react if a node is selected and user pressed Key_Left
+  if(this->selectedIndexes().count()==1 &&
+     p_event->key()==Qt::Key_Left)
+  {
+    QModelIndex cur_index=this->selectedIndexes().at(0);
+
+    if(this->model()->hasChildren(cur_index)) {
+      // Collapse current node
+      this->collapse(cur_index);
+    }
+    if(!cur_index.parent().isValid()) {
+      // Do no try to collapse anything above root node
+      return;
+    }
+    this->collapse(cur_index.parent());
+    this->setCurrentIndex(cur_index.parent());
+    return;
+  }
+
+  // If we didn't handle the key event, let our parent handle it
+  QTreeView::keyPressEvent(p_event);
+}
+
+void RegistryNodeTree::currentChanged(const QModelIndex &current,
+                                      const QModelIndex &previous)
+{
+  // Call parent class's currentChanged first
+  QTreeView::currentChanged(current,previous);
+
+  // Now emit our signal
+  QModelIndex current_item=QModelIndex(current);
+  emit(RegistryNodeTree::CurrentItemChanged(current_item));
 }
 
 void RegistryNodeTree::SlotCopyNodeName() {

@@ -24,6 +24,7 @@
 #include <QDateTime>
 
 #include <stdlib.h>
+#include <stdio.h>
 
 // TODO: __WORDSIZE is not defined under mingw and I currently have no idea how
 // to identify a 64bit windows
@@ -330,6 +331,7 @@ QString RegistryHive::KeyValueToString(QByteArray key_value,
       ret="n/a";
     } else {
       QDateTime date_time;
+      date_time.setTimeSpec(Qt::UTC);
       date_time.setTime_t(*(uint32_t*)p_data);
       ret=date_time.toString("yyyy/MM/dd hh:mm:ss");
     }
@@ -337,12 +339,29 @@ QString RegistryHive::KeyValueToString(QByteArray key_value,
     ret=QString("%1").arg(*(int64_t*)p_data);
   } else if(format=="uint64" && remaining_data_len>=8) {
     ret=QString("%1").arg(*(uint64_t*)p_data);
+/*
+  // TODO: Check how one could implement this
+  } else if(format=="unixtime64" && remaining_data_len>=8) {
+    if(*(uint64_t*)p_data==0) {
+      ret="n/a";
+    } else {
+      uint64_t secs=*(uint64_t*)p_data;
+      QDateTime date_time;
+      date_time.setTimeSpec(Qt::UTC);
+      // Set 32bit part of date/time
+      date_time.setTime_t(secs&0xFFFFFFFF);
+      // Now add high 32bit part of date/time
+      date_time.addSecs(secs>>32);
+      ret=date_time.toString("yyyy/MM/dd hh:mm:ss");
+    }
+*/
   } else if(format=="filetime" && remaining_data_len>=8) {
     if(*(uint64_t*)p_data==0) {
       ret="n/a";
     } else {
       // TODO: Warn if >32bit
       QDateTime date_time;
+      date_time.setTimeSpec(Qt::UTC);
       date_time.setTime_t((*(uint64_t*)p_data-EPOCH_DIFF)/10000000);
       ret=date_time.toString("yyyy/MM/dd hh:mm:ss");
     }
@@ -439,6 +458,7 @@ bool RegistryHive::GetNodeHandle(QString &path, hive_node_h *p_node) {
 
     // Iterate to the correct parent node
     for(i=0;i<nodes.count();i++) {
+//      printf("Spotting node '%s'\n",nodes.value(i).toAscii().constData());
       *p_node=hivex_node_get_child(this->p_hive,
                                    *p_node,
                                    nodes.value(i).toAscii().constData());

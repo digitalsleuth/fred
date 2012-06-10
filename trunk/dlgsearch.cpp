@@ -59,6 +59,14 @@ void DlgSearch::changeEvent(QEvent *e) {
   }
 }
 
+void DlgSearch::keyPressEvent(QKeyEvent *p_event) {
+  if(p_event->key()==Qt::Key_Return || p_event->key()==Qt::Key_Enter) {
+    this->on_BtnSearch_clicked();
+  } else {
+    QDialog::keyPressEvent(p_event);
+  }
+}
+
 void DlgSearch::on_BtnCancel_clicked() {
   this->reject();
 }

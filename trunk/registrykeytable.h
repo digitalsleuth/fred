@@ -36,6 +36,9 @@ class RegistryKeyTable : public QTableView {
     void setModel(QAbstractItemModel *p_model);
     //void selectRow(QString key_name);
 
+  Q_SIGNALS:
+    void CurrentItemChanged(QModelIndex current);
+
   protected:
     int sizeHintForColumn(int column) const;
     void contextMenuEvent(QContextMenuEvent *p_event);
@@ -44,6 +47,8 @@ class RegistryKeyTable : public QTableView {
     QMenu *p_menu_copy;
     QAction *p_action_copy_key_name;
     QAction *p_action_copy_key_value;
+    void currentChanged(const QModelIndex &current,
+                        const QModelIndex &previous);
 
   private slots:
     void SlotCopyKeyName();

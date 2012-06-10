@@ -28,6 +28,7 @@ RegistryKeyTable::RegistryKeyTable(QWidget *p_parent) : QTableView(p_parent) {
   // Configure widget
   this->setSelectionMode(QAbstractItemView::SingleSelection);
   this->setSelectionBehavior(QAbstractItemView::SelectRows);
+  this->setAutoScroll(false);
   this->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
   this->verticalHeader()->setHidden(true);
   this->setTextElideMode(Qt::ElideNone);
@@ -63,6 +64,10 @@ void RegistryKeyTable::setModel(QAbstractItemModel *p_model) {
   this->resizeColumnsToContents();
   this->resizeRowsToContents();
   this->horizontalHeader()->stretchLastSection();
+  if(p_model!=NULL && p_model->rowCount()>0) {
+    // Select first table item
+    this->selectRow(0);
+  }
 }
 
 /*
@@ -114,6 +119,17 @@ void RegistryKeyTable::contextMenuEvent(QContextMenuEvent *p_event) {
   QMenu context_menu(this);
   context_menu.addMenu(this->p_menu_copy);
   context_menu.exec(p_event->globalPos());
+}
+
+void RegistryKeyTable::currentChanged(const QModelIndex &current,
+                                      const QModelIndex &previous)
+{
+  // Call parent class's currentChanged first
+  QTableView::currentChanged(current,previous);
+
+  // Now emit our signal
+  QModelIndex current_item=QModelIndex(current);
+  emit(RegistryKeyTable::CurrentItemChanged(current_item));
 }
 
 void RegistryKeyTable::SlotCopyKeyName() {
