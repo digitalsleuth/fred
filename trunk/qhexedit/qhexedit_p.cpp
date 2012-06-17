@@ -21,6 +21,7 @@
 *******************************************************************************/
 
 #include <QtGui>
+#include <QClipboard>
 
 #include "qhexedit_p.h"
 
@@ -57,13 +58,17 @@ QHexEditPrivate::QHexEditPrivate(QScrollArea *parent) : QWidget(parent) {
   this->p_action_copy_selected_bytes=
       new QAction(tr("Selected bytes"),this->p_menu_copy);
   this->p_action_copy_selected_text_ascii=
-      new QAction(tr("Selected text as ASCII"),this->p_menu_copy);
+      new QAction(tr("Selected bytes converted to ASCII"),this->p_menu_copy);
+/*
   this->p_action_copy_selected_text_utf8=
       new QAction(tr("Selected text as UTF8"),this->p_menu_copy);
+*/
 
   this->p_menu_copy->addAction(this->p_action_copy_selected_bytes);
   this->p_menu_copy->addAction(this->p_action_copy_selected_text_ascii);
+/*
   this->p_menu_copy->addAction(this->p_action_copy_selected_text_utf8);
+*/
 
   this->connect(this->p_action_copy_selected_bytes,
                 SIGNAL(triggered()),
@@ -72,18 +77,22 @@ QHexEditPrivate::QHexEditPrivate(QScrollArea *parent) : QWidget(parent) {
   this->connect(this->p_action_copy_selected_text_ascii,
                 SIGNAL(triggered()),
                 this,
-                SLOT(SlotCopySelectedBytes()));
+                SLOT(SlotCopySelectedTextAsAscii()));
+/*
   this->connect(this->p_action_copy_selected_text_utf8,
                 SIGNAL(triggered()),
                 this,
-                SLOT(SlotCopySelectedBytes()));
+                SLOT(SlotCopySelectedTextAsUtf8()));
+*/
 }
 
 QHexEditPrivate::~QHexEditPrivate() {
   // Delete context menu
   delete this->p_action_copy_selected_bytes;
   delete this->p_action_copy_selected_text_ascii;
+/*
   delete this->p_action_copy_selected_text_utf8;
+*/
   delete this->p_menu_copy;
 }
 
@@ -100,6 +109,12 @@ int QHexEditPrivate::addressOffset()
 
 void QHexEditPrivate::setData(const QByteArray &data)
 {
+  // Delete any previous selections
+  this->sel_origin.setX(0);
+  this->sel_origin.setY(0);
+  this->sel_start=this->sel_origin;
+  this->sel_end=this->sel_origin;
+
   if(!data.isNull() && !data.isEmpty()) this->_cursorTimer.start();
   else this->_cursorTimer.stop();
   this->_data = data;
@@ -522,13 +537,15 @@ void QHexEditPrivate::setCursorPos(int position)
 }
 
 void QHexEditPrivate::contextMenuEvent(QContextMenuEvent *p_event) {
-
-  // TODO: Only show context menu when something is selected
-
-  // Create context menu and add actions
-  QMenu context_menu(this);
-  context_menu.addMenu(this->p_menu_copy);
-  context_menu.exec(p_event->globalPos());
+  // Only show context menu when something is selected
+  if(!(this->sel_start.isNull() && this->sel_end.isNull()) &&
+     this->sel_start!=this->sel_end)
+  {
+    // Create context menu and add actions
+    QMenu context_menu(this);
+    context_menu.addMenu(this->p_menu_copy);
+    context_menu.exec(p_event->globalPos());
+  }
 }
 
 void QHexEditPrivate::updateCursor()
@@ -541,16 +558,38 @@ void QHexEditPrivate::updateCursor()
 }
 
 void QHexEditPrivate::SlotCopySelectedBytes() {
-  // TODO: Implement
+  int selection_start=this->Point2Char(this->sel_start)/2;
+  int selection_count=this->Point2Char(this->sel_end)/2;
+  selection_count-=(selection_start-1);
+
+  QByteArray hex(this->_data.mid(selection_start,selection_count).toHex());
+
+  QApplication::clipboard()->setText(hex,QClipboard::Clipboard);
 }
 
 void QHexEditPrivate::SlotCopySelectedTextAsAscii() {
-  // TODO: Implement
+  int selection_start=this->Point2Char(this->sel_start)/2;
+  int selection_count=this->Point2Char(this->sel_end)/2;
+  selection_count-=(selection_start-1);
+
+  QByteArray values(this->_data.mid(selection_start,selection_count));
+
+  QString ascii="";
+  int i=0;
+  for(i=0;i<values.size();i++) {
+    if(!(((char)values[i]<0x20) || ((char)values[i]>0x7e))) {
+      ascii.append(values.at(i));
+    }
+  }
+
+  QApplication::clipboard()->setText(ascii,QClipboard::Clipboard);
 }
 
+/*
 void QHexEditPrivate::SlotCopySelectedTextAsUtf8() {
   // TODO: Implement
 }
+*/
 
 void QHexEditPrivate::adjust()
 {

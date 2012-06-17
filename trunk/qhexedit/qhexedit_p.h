@@ -80,7 +80,9 @@ class QHexEditPrivate : public QWidget {
     void updateCursor();
     void SlotCopySelectedBytes();
     void SlotCopySelectedTextAsAscii();
+/*
     void SlotCopySelectedTextAsUtf8();
+*/
 
   private:
     void adjust();
@@ -98,7 +100,9 @@ class QHexEditPrivate : public QWidget {
     QMenu *p_menu_copy;
     QAction *p_action_copy_selected_bytes;
     QAction *p_action_copy_selected_text_ascii;
+/*
     QAction *p_action_copy_selected_text_utf8;
+*/
 
     bool _blink;
     bool _addressArea;
