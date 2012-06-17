@@ -1,5 +1,5 @@
 /*******************************************************************************
-* fred Copyright (c) 2011 by Gillen Daniel <gillen.dan@pinguin.lu>             *
+* fred Copyright (c) 2011-2012 by Gillen Daniel <gillen.dan@pinguin.lu>        *
 *                                                                              *
 * Forensic Registry EDitor (fred) is a cross-platform M$ registry hive editor  *
 * with special feautures useful during forensic analysis.                      *
@@ -33,6 +33,7 @@
 
 #include <hivex.h>
 
+#include "argparser.h"
 #include "registryhive.h"
 #include "registrynodetree.h"
 #include "registrynodetreemodel.h"
@@ -53,7 +54,7 @@ class MainWindow : public QMainWindow {
   Q_OBJECT
 
   public:
-    explicit MainWindow(QWidget *parent = 0);
+    explicit MainWindow(ArgParser *p_arg_parser);
     ~MainWindow();
 
   private slots:
@@ -75,6 +76,7 @@ class MainWindow : public QMainWindow {
 
 private:
     Ui::MainWindow *ui;
+    ArgParser *p_args;
     QString last_open_location;
     RegistryHive *p_hive;
     bool is_hive_open;
@@ -127,12 +129,6 @@ private:
      * Open a registry hive
      */
     void OpenHive(QString hive_file);
-    /*
-     * ParseCommandLineArgs
-     *
-     * Parse command line arguments
-     */
-    void ParseCommandLineArgs();
 };
 
 #endif // MAINWINDOW_H

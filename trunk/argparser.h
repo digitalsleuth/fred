@@ -18,27 +18,33 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#ifndef REGISTRYKEY_H
-#define REGISTRYKEY_H
+#ifndef ARGPARSER_H
+#define ARGPARSER_H
 
-#include <QList>
-#include <QVariant>
-#include <inttypes.h>
+#include <QString>
+#include <QStringList>
+#include <QHash>
 
-class RegistryKey {
+class ArgParser {
   public:
-    RegistryKey(const QList<QVariant> &data);
-    ~RegistryKey();
+    ArgParser(QStringList args);
 
-    void Append(RegistryKey *p_key);
-    RegistryKey *Key(uint64_t row);
-    uint64_t RowCount();
-    QVariant Data(uint64_t column) const;
-    uint64_t Row() const;
+    QString GetErrorMsg();
+
+    bool ParseArgs();
+
+    bool IsSet(QString arg);
+    QString GetArgVal(QString arg);
+
+    void PrintUsage();
 
   private:
-    QList<RegistryKey*> keys;
-    QList<QVariant> key_data;
+    QStringList argv;
+    int argc;
+    QString error_msg;
+    QHash<QString,QString> parsed_args;
+
+    void SetError(QString msg=QString());
 };
 
-#endif // REGISTRYKEY_H
+#endif // ARGPARSER_H

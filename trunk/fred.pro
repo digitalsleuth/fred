@@ -1,5 +1,5 @@
 #*******************************************************************************
-# fred Copyright (c) 2011 by Gillen Daniel <gillen.dan@pinguin.lu>             *
+# fred Copyright (c) 2011-2012 by Gillen Daniel <gillen.dan@pinguin.lu>        *
 #                                                                              *
 # Forensic Registry EDitor (fred) is a cross-platform M$ registry hive editor  *
 # with special feautures useful during forensic analysis.                      *
@@ -34,6 +34,8 @@ QT        += core \
              script \
              webkit
 
+CONFIG    += console
+
 TARGET     = fred
 
 TEMPLATE   = app
@@ -62,7 +64,8 @@ SOURCES   += main.cpp\
              dlgsearch.cpp \
              threadsearch.cpp \
              searchresultwidget.cpp \
-             tabwidget.cpp
+             tabwidget.cpp \
+    argparser.cpp
 
 HEADERS   += mainwindow.h \
              registrynode.h \
@@ -87,7 +90,8 @@ HEADERS   += mainwindow.h \
              dlgsearch.h \
              threadsearch.h \
              searchresultwidget.h \
-             tabwidget.h
+             tabwidget.h \
+    argparser.h
 
 FORMS     += mainwindow.ui \
              dlgabout.ui \

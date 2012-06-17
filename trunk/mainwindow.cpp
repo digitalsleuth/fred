@@ -1,5 +1,5 @@
 /*******************************************************************************
-* fred Copyright (c) 2011 by Gillen Daniel <gillen.dan@pinguin.lu>             *
+* fred Copyright (c) 2011-2012 by Gillen Daniel <gillen.dan@pinguin.lu>        *
 *                                                                              *
 * Forensic Registry EDitor (fred) is a cross-platform M$ registry hive editor  *
 * with special feautures useful during forensic analysis.                      *
@@ -42,12 +42,13 @@
 
 #include "compileinfo.h"
 
-MainWindow::MainWindow(QWidget *parent) :
-  QMainWindow(parent), ui(new Ui::MainWindow)
+MainWindow::MainWindow(ArgParser *p_arg_parser) :
+  QMainWindow(0), ui(new Ui::MainWindow)
 {
   ui->setupUi(this);
 
   // Initialize private vars
+  this->p_args=p_arg_parser;
   this->p_hive=new RegistryHive(this);
   this->is_hive_open=false;
   this->p_reg_node_tree_model=NULL;
@@ -209,8 +210,10 @@ MainWindow::MainWindow(QWidget *parent) :
                                                .append("report_templates"));
   this->UpdateDataReporterMenu();
 
-  // Finally, parse command line arguments
-  this->ParseCommandLineArgs();
+  // Finally, react on some command line arguments
+  if(this->p_args->IsSet("hive-file")) {
+    this->OpenHive(this->p_args->GetArgVal("hive-file"));
+  }
 }
 
 MainWindow::~MainWindow() {
@@ -693,13 +696,4 @@ void MainWindow::OpenHive(QString hive_file) {
   this->ui->ActionSearch->setEnabled(true);
   this->ui->MenuReports->setEnabled(true);
   this->UpdateWindowTitle(hive_file);
-}
-
-void MainWindow::ParseCommandLineArgs() {
-  QStringList args=qApp->arguments();
-
-  // If exactly 1 argument was specified, it should be a hive to open
-  if(args.count()==2) {
-    this->OpenHive(args.at(1));
-  }
 }
