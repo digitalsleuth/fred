@@ -123,49 +123,78 @@ QString DataReporter::GenerateReport(RegistryHive *p_hive,
 {
   int i=0;
   ReportTemplate *p_report;
-  DataReporterEngine engine(p_hive);
-  QString report_code;
-  //ReportData report_data;
 
+  // Search report template
   for(i=0;i<this->report_templates.count();i++) {
     p_report=this->report_templates.value(i);
     if(p_report->Category()!=report_category || p_report->Name()!=report_name) {
       continue;
     }
+    // Report template was found, now generate report and return result
+    return this->GenerateReport(p_hive,p_report->File());
+  }
 
-    QScriptValue hive_value=engine.newQObject(p_hive);
-    engine.globalObject().setProperty("RegistryHive",hive_value);
-    //QScriptValue return_value=engine.newQObject(&report_data);
-    //engine.globalObject().setProperty("ReportData",return_value);
+  // Report template couldn't be found
+  QMessageBox::critical(0,
+                        "Report engine error",
+                        QString("Unable to find report with name '%1' in category '%2'!")
+                          .arg(report_name)
+                          .arg(report_category));
+  return QString();
+}
 
-    // Open report template
-    QFile template_file(p_report->File());
-    if(!template_file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-      qDebug("Couldn't open file '%s'",p_report->File().toAscii().constData());
-      return QString();
+QString DataReporter::GenerateReport(RegistryHive *p_hive,
+                                     QString report_template,
+                                     bool console_mode)
+{
+  QString report_code;
+
+  // Init data reporter engine
+  DataReporterEngine engine(p_hive);
+  QScriptValue hive_value=engine.newQObject(p_hive);
+  engine.globalObject().setProperty("RegistryHive",hive_value);
+
+  // Open report template
+  QFile template_file(report_template);
+  if(!template_file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+    if(!console_mode) {
+      QMessageBox::critical(0,
+                            "Report engine error",
+                            QString("Couldn't open report template file '%1'!")
+                                   .arg(report_template));
+    } else {
+      printf("ERROR: Couldn't open report template file '%s'!\n",
+             report_template.toAscii().constData());
     }
-    // Read template file
-    QTextStream in(&template_file);
-    while(!in.atEnd()) {
-      report_code.append(in.readLine()).append("\n");
-    }
-    // Close report template file
-    template_file.close();
+    return QString();
+  }
 
-    QScriptValue report_result=engine.evaluate(report_code,p_report->File());
+  // Read template file
+  QTextStream in(&template_file);
+  while(!in.atEnd()) report_code.append(in.readLine()).append("\n");
 
-    if (report_result.isError() || engine.hasUncaughtException()) {
+  // Close report template file
+  template_file.close();
+
+  // Execute report template script
+  QScriptValue report_result=engine.evaluate(report_code,report_template);
+  if (report_result.isError() || engine.hasUncaughtException()) {
+    if(!console_mode) {
       QMessageBox::critical(0,
                             "Report engine error",
                             QString::fromLatin1("%0:%1: %2")
-                                   .arg(p_report->File())
-                                   .arg(report_result.property("lineNumber").toInt32())
+                                   .arg(report_template)
+                                   .arg(report_result.property("lineNumber")
+                                        .toInt32())
                                    .arg(report_result.toString()));
-      return QString();
+    } else {
+      printf("ERROR: %s:%u: %s\n",
+             report_template.toAscii().constData(),
+             report_result.property("lineNumber").toInt32(),
+             report_result.toString().toAscii().constData());
     }
-
-    return engine.report_content;
+    return QString();
   }
 
-  return QString();
+  return engine.report_content;
 }

@@ -39,6 +39,9 @@ class DataReporter {
     QString GenerateReport(RegistryHive *p_hive,
                            QString report_category,
                            QString report_name);
+    QString GenerateReport(RegistryHive *p_hive,
+                           QString report_template,
+                           bool console_mode=false);
 
   private:
     QList<ReportTemplate*> report_templates;

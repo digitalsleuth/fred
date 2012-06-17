@@ -26,7 +26,14 @@
 #include "mainwindow.h"
 #include "argparser.h"
 #include "compileinfo.h"
+#include "datareporter.h"
+#include "registryhive.h"
 
+// Forward declarations
+void PrintUsage();
+void DumpReport(QString report_template, QString hive_file);
+
+// Main entry point
 int main(int argc, char *argv[]) {
   // Disable output buffering
   setbuf(stdout,NULL);
@@ -39,13 +46,13 @@ int main(int argc, char *argv[]) {
 }
 #define PRINT_HEADER_AND_USAGE { \
   PRINT_HEADER;                  \
-  args.PrintUsage();             \
+  PrintUsage();                  \
 }
 #define PRINT_VERSION printf("%s\n",APP_VERSION);
 #define PRINT_UNKNOWN_ARG_ERROR(s) {                          \
   PRINT_HEADER;                                               \
   printf("ERROR: Unknown command line argument '%s'!\n\n",s); \
-  args.PrintUsage();                                          \
+  PrintUsage();                                               \
 }
 
   // Parse command line args
@@ -53,7 +60,7 @@ int main(int argc, char *argv[]) {
   if(!args.ParseArgs()) {
     PRINT_HEADER;
     printf("ERROR: %s\n\n",args.GetErrorMsg().toAscii().constData());
-    args.PrintUsage();
+    PrintUsage();
     exit(1);
   }
 
@@ -62,13 +69,13 @@ int main(int argc, char *argv[]) {
     if(args.GetArgVal("dump-report")=="") {
       PRINT_HEADER;
       printf("ERROR: --dump-report specified without a report file!\n\n");
-      args.PrintUsage();
+      PrintUsage();
       exit(1);
     }
     if(!args.IsSet("hive-file")) {
       PRINT_HEADER;
       printf("ERROR: --dump-report specified without a hive file!\n\n");
-      args.PrintUsage();
+      PrintUsage();
       exit(1);
     }
   }
@@ -83,12 +90,8 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
   if(args.IsSet("dump-report")) {
-    printf("Dumping report '%s' using hive '%s'\n",
-           args.GetArgVal("dump-report").toAscii().constData(),
-           args.GetArgVal("hive-file").toAscii().constData());
-
-    // TODO: Open hive and dump report
-
+    // Dump report to stdout
+    DumpReport(args.GetArgVal("dump-report"),args.GetArgVal("hive-file"));
     exit(0);
   }
 
@@ -102,4 +105,44 @@ int main(int argc, char *argv[]) {
   w.show();
 
   return a.exec();
+}
+
+void PrintUsage() {
+  printf("Usage:\n");
+  printf("  %s [opts] [hive]\n\n",
+         qApp->arguments().at(0).toAscii().constData());
+  printf("Options:\n");
+  printf("  opts:\n");
+  printf("    -?, -h, --help : Display this help message.\n");
+  printf("    -v, --version : Display version info.\n");
+
+  printf("    --dump-report=FILE : Dump the specified report to stdout.\n");
+
+  printf("  hive:\n");
+  printf("    Use the specified hive file.\n");
+
+  printf("\n");
+}
+
+void DumpReport(QString report_template, QString hive_file) {
+  RegistryHive *p_hive=new RegistryHive();
+  DataReporter *p_data_reporter=new DataReporter();
+
+  // Open hive
+  if(!p_hive->Open(hive_file,true)) {
+    printf("ERROR: Unable to open hive file '%s'!\n",
+           hive_file.toAscii().constData());
+    exit(1);
+  }
+
+  // Generate report
+  QString result=p_data_reporter->GenerateReport(p_hive,report_template,true);
+
+  // Close hive and free DataReporter and RegistryHive
+  p_hive->Close();
+  delete p_data_reporter;
+  delete p_hive;
+
+  // Print result to stdout
+  printf("%s",result.toAscii().constData());
 }

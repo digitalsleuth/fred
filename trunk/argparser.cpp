@@ -18,8 +18,6 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#include <stdio.h>
-
 #include "argparser.h"
 
 ArgParser::ArgParser(QStringList args) {
@@ -123,36 +121,6 @@ QString ArgParser::GetArgVal(QString arg) {
   // docs.
   return this->parsed_args[arg];
 }
-
-
-
-
-
-
-void ArgParser::PrintUsage() {
-  printf("Usage:\n");
-  printf("  %s [opts] [hive]\n\n",this->argv.at(0).toAscii().constData());
-  printf("Options:\n");
-  printf("  opts:\n");
-  printf("    -?, -h, --help : Display this help message.\n");
-  printf("    -v, --version : Display version info.\n");
-
-  printf("    --dump-report=FILE : Dump the specified report to stdout.\n");
-
-
-  printf("  hive:\n");
-  printf("    Use the specified hive file.\n");
-
-  printf("\n");
-}
-
-
-
-
-
-
-
-
 
 void ArgParser::SetError(QString msg) {
   this->error_msg=msg;

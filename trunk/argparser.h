@@ -28,15 +28,10 @@
 class ArgParser {
   public:
     ArgParser(QStringList args);
-
     QString GetErrorMsg();
-
     bool ParseArgs();
-
     bool IsSet(QString arg);
     QString GetArgVal(QString arg);
-
-    void PrintUsage();
 
   private:
     QStringList argv;
