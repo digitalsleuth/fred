@@ -100,7 +100,25 @@ MainWindow::MainWindow(ArgParser *p_arg_parser) :
   this->p_hex_edit->setReadOnly(true);
   this->p_hex_edit_status_bar=new QLabel();
 
-  this->p_data_interpreter=new DataInterpreter(this->p_horizontal_splitter2);
+  this->p_data_interpreter_widget=new QWidget(this->p_horizontal_splitter2);
+  this->p_data_interpreter_layout=
+      new QVBoxLayout(this->p_data_interpreter_widget);
+  this->p_data_interpreter_layout->setContentsMargins(0,0,0,0);
+  this->p_data_interpreter=new DataInterpreter();
+
+  this->p_data_interpreter_endianes_widget=new QWidget();
+  this->p_data_interpreter_endianes_layout=
+      new QHBoxLayout(this->p_data_interpreter_endianes_widget);
+  this->p_data_interpreter_endianes_layout->setContentsMargins(0,0,0,0);
+  this->p_data_interpreter_endianes_be=new QRadioButton(tr("Big endian"));
+  this->p_data_interpreter_endianes_le=new QRadioButton(tr("Little endian"));
+
+  // Little endian is default
+  this->p_data_interpreter_endianes_le->setChecked(true);
+
+  // Disable radio buttons until a hive is opened
+  this->p_data_interpreter_endianes_be->setEnabled(false);
+  this->p_data_interpreter_endianes_le->setEnabled(false);
 
   // Make sure hex viewer font is monospaced.
   QFont mono_font("Monospace");
@@ -114,8 +132,17 @@ MainWindow::MainWindow(ArgParser *p_arg_parser) :
   this->p_hex_edit_layout->addWidget(this->p_hex_edit);
   this->p_hex_edit_layout->addWidget(this->p_hex_edit_status_bar);
 
+  this->p_data_interpreter_endianes_layout->
+      addWidget(this->p_data_interpreter_endianes_be);
+  this->p_data_interpreter_endianes_layout->
+      addWidget(this->p_data_interpreter_endianes_le);
+
+  this->p_data_interpreter_layout->addWidget(this->p_data_interpreter);
+  this->p_data_interpreter_layout->
+      addWidget(this->p_data_interpreter_endianes_widget);
+
   this->p_horizontal_splitter2->addWidget(this->p_hex_edit_widget);
-  this->p_horizontal_splitter2->addWidget(this->p_data_interpreter);
+  this->p_horizontal_splitter2->addWidget(this->p_data_interpreter_widget);
 
   this->p_vertical_splitter->addWidget(this->p_key_table);
   this->p_vertical_splitter->addWidget(this->p_tab_widget);
@@ -149,10 +176,12 @@ MainWindow::MainWindow(ArgParser *p_arg_parser) :
   hex_edit_widget_policy.setHorizontalStretch(200);
   this->p_hex_edit_widget->setSizePolicy(hex_edit_widget_policy);
 
-  QSizePolicy data_interpreter_policy=this->p_data_interpreter->sizePolicy();
-  data_interpreter_policy.setVerticalStretch(2);
-  data_interpreter_policy.setHorizontalStretch(0);
-  this->p_data_interpreter->setSizePolicy(data_interpreter_policy);
+  QSizePolicy data_interpreter_widget_policy=
+      this->p_data_interpreter_widget->sizePolicy();
+  data_interpreter_widget_policy.setVerticalStretch(2);
+  data_interpreter_widget_policy.setHorizontalStretch(0);
+  this->p_data_interpreter_widget->
+      setSizePolicy(data_interpreter_widget_policy);
 
   // Connect signals
   this->connect(this->p_node_tree,
@@ -264,6 +293,9 @@ void MainWindow::on_action_Close_hive_triggered() {
     this->p_hex_edit->setData(QByteArray());
     this->p_hex_edit_status_bar->setText("");
     this->p_data_interpreter->ClearValues();
+    // Disable radio buttons
+    this->p_data_interpreter_endianes_be->setEnabled(false);
+    this->p_data_interpreter_endianes_le->setEnabled(false);
 
     // Close hive
     this->p_hive->Close();
@@ -556,6 +588,7 @@ void MainWindow::UpdateWindowTitle(QString filename) {
 void MainWindow::UpdateDataInterpreter(int hex_offset) {
   const char *p_data;
   int remaining_data_len;
+  bool little_endian=this->p_data_interpreter_endianes_le->isChecked();
 
   // Remove all old values from data interpreter
   this->p_data_interpreter->ClearValues();
@@ -570,11 +603,6 @@ void MainWindow::UpdateDataInterpreter(int hex_offset) {
   // Get pointer to data at current offset
   p_data=this->selected_key_value.constData();
   p_data+=hex_offset;
-
-  //#define rotl32(x,n)   (((x) << n) | ((x) >> (32 - n)))
-  //#define rotr32(x,n)   (((x) >> n) | ((x) << (32 - n)))
-  //#define rotl64(x,n)   (((x) << n) | ((x) >> (64 - n)))
-  //#define rotr64(x,n)   (((x) >> n) | ((x) << (64 - n)))
 
   if(remaining_data_len>=1) {
     this->p_data_interpreter->AddValue("int8:",
@@ -593,41 +621,55 @@ void MainWindow::UpdateDataInterpreter(int hex_offset) {
                                        RegistryHive::KeyValueToString(
                                          this->selected_key_value,
                                          "int16",
-                                         hex_offset));
+                                         hex_offset,
+                                         0,
+                                         little_endian));
     this->p_data_interpreter->AddValue("uint16:",
                                        RegistryHive::KeyValueToString(
                                          this->selected_key_value,
                                          "uint16",
-                                         hex_offset));
+                                         hex_offset,
+                                         0,
+                                         little_endian));
   }
   if(remaining_data_len>=4) {
     this->p_data_interpreter->AddValue("int32:",
                                        RegistryHive::KeyValueToString(
                                          this->selected_key_value,
                                          "int32",
-                                         hex_offset));
+                                         hex_offset,
+                                         0,
+                                         little_endian));
     this->p_data_interpreter->AddValue("uint32:",
                                        RegistryHive::KeyValueToString(
                                          this->selected_key_value,
                                          "uint32",
-                                         hex_offset));
+                                         hex_offset,
+                                         0,
+                                         little_endian));
     this->p_data_interpreter->AddValue("unixtime:",
                                        RegistryHive::KeyValueToString(
                                          this->selected_key_value,
                                          "unixtime",
-                                         hex_offset));
+                                         hex_offset,
+                                         0,
+                                         little_endian));
   }
   if(remaining_data_len>=8) {
     this->p_data_interpreter->AddValue("int64:",
                                        RegistryHive::KeyValueToString(
                                          this->selected_key_value,
                                          "int64",
-                                         hex_offset));
+                                         hex_offset,
+                                         0,
+                                         little_endian));
     this->p_data_interpreter->AddValue("uint64:",
                                        RegistryHive::KeyValueToString(
                                          this->selected_key_value,
                                          "uint64",
-                                         hex_offset));
+                                         hex_offset,
+                                         0,
+                                         little_endian));
 /*
   TODO: Check one could implement this
     this->p_data_interpreter->AddValue("unixtime64:",
@@ -640,11 +682,10 @@ void MainWindow::UpdateDataInterpreter(int hex_offset) {
                                        RegistryHive::KeyValueToString(
                                          this->selected_key_value,
                                          "filetime",
-                                         hex_offset));
+                                         hex_offset,
+                                         0,
+                                         little_endian));
   }
-
-  //#undef rotl32
-  //#undef rotl64
 }
 
 void MainWindow::UpdateDataReporterMenu() {
@@ -695,5 +736,10 @@ void MainWindow::OpenHive(QString hive_file) {
   this->ui->action_Close_hive->setEnabled(true);
   this->ui->ActionSearch->setEnabled(true);
   this->ui->MenuReports->setEnabled(true);
+
+  // Enable radio buttons for endianes selection
+  this->p_data_interpreter_endianes_be->setEnabled(true);
+  this->p_data_interpreter_endianes_le->setEnabled(true);
+
   this->UpdateWindowTitle(hive_file);
 }

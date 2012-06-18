@@ -56,7 +56,8 @@ class RegistryHive : public QObject {
     static QString KeyValueToString(QByteArray value,
                                     QString format,
                                     int offset=0,
-                                    int length=0);
+                                    int length=0,
+                                    bool little_endian=true);
     static QString KeyTypeToString(int value_type);
 
   private:

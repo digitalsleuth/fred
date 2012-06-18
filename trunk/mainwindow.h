@@ -89,11 +89,21 @@ private:
     RegistryNodeTree *p_node_tree;
     RegistryKeyTable *p_key_table;
     TabWidget *p_tab_widget;
+
     QWidget *p_hex_edit_widget;
+    QVBoxLayout *p_hex_edit_layout;
     QHexEdit *p_hex_edit;
     QLabel *p_hex_edit_status_bar;
+
+    QWidget *p_data_interpreter_widget;
+    QVBoxLayout *p_data_interpreter_layout;
     DataInterpreter *p_data_interpreter;
-    QVBoxLayout *p_hex_edit_layout;
+
+    QWidget *p_data_interpreter_endianes_widget;
+    QHBoxLayout *p_data_interpreter_endianes_layout;
+    QRadioButton *p_data_interpreter_endianes_be;
+    QRadioButton *p_data_interpreter_endianes_le;
+
     QSplitter *p_horizontal_splitter;
     QSplitter *p_horizontal_splitter2;
     QSplitter *p_vertical_splitter;

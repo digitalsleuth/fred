@@ -296,7 +296,8 @@ QString RegistryHive::KeyValueToString(QByteArray value, int value_type) {
 QString RegistryHive::KeyValueToString(QByteArray key_value,
                                        QString format,
                                        int offset,
-                                       int length)
+                                       int length,
+                                       bool little_endian)
 {
   int remaining_data_len;
   const char *p_data;
@@ -313,32 +314,55 @@ QString RegistryHive::KeyValueToString(QByteArray key_value,
   p_data=key_value.constData();
   p_data+=offset;
 
+  // TODO: This will fail on platforms with different endianes!
+#define bswap_16(value) ((((value) & 0xff) << 8) | ((value) >> 8))
+#define bswap_32(value)                                       \
+  (((uint32_t)bswap_16((uint16_t)((value) & 0xffff)) << 16) | \
+  (uint32_t)bswap_16((uint16_t)((value) >> 16)))
+#define bswap_64(value)                                           \
+  (((uint64_t)bswap_32((uint32_t)((value) & 0xffffffff)) << 32) | \
+  (uint64_t)bswap_32((uint32_t)((value) >> 32)))                  \
+
   // ConvertFull name
   if(format=="int8" && remaining_data_len>=1) {
     ret=QString().sprintf("%d",*(int8_t*)p_data);
   } else if(format=="uint8" && remaining_data_len>=1) {
     ret=QString().sprintf("%u",*(uint8_t*)p_data);
   } else if(format=="int16" && remaining_data_len>=2) {
-    ret=QString().sprintf("%d",*(int16_t*)p_data);
+    int16_t val=*(int16_t*)p_data;
+    if(little_endian) ret=QString().sprintf("%d",val);
+    else ret=QString().sprintf("%d",bswap_16(val));
   } else if(format=="uint16" && remaining_data_len>=2) {
-    ret=QString().sprintf("%u",*(uint16_t*)p_data);
+    uint16_t val=*(uint16_t*)p_data;
+    if(little_endian) ret=QString().sprintf("%u",val);
+    else ret=QString().sprintf("%u",bswap_16(val));
   } else if(format=="int32" && remaining_data_len>=4) {
-    ret=QString().sprintf("%d",*(int32_t*)p_data);
+    int32_t val=*(int32_t*)p_data;
+    if(little_endian) ret=QString().sprintf("%d",val);
+    else ret=QString().sprintf("%d",bswap_32(val));
   } else if(format=="uint32" && remaining_data_len>=4) {
-    ret=QString().sprintf("%u",*(uint32_t*)p_data);
+    uint32_t val=*(uint32_t*)p_data;
+    if(little_endian) ret=QString().sprintf("%u",val);
+    else ret=QString().sprintf("%u",bswap_32(val));
   } else if(format=="unixtime" && remaining_data_len>=4) {
-    if(*(uint32_t*)p_data==0) {
+    uint32_t val=*(uint32_t*)p_data;
+    if(!little_endian) val=bswap_32(val);
+    if(val==0) {
       ret="n/a";
     } else {
       QDateTime date_time;
       date_time.setTimeSpec(Qt::UTC);
-      date_time.setTime_t(*(uint32_t*)p_data);
+      date_time.setTime_t(val);
       ret=date_time.toString("yyyy/MM/dd hh:mm:ss");
     }
   } else if(format=="int64" && remaining_data_len>=8) {
-    ret=QString("%1").arg(*(int64_t*)p_data);
+    int64_t val=*(int64_t*)p_data;
+    if(little_endian) ret=QString("%1").arg(val);
+    else ret=QString("%1").arg(bswap_64(val));
   } else if(format=="uint64" && remaining_data_len>=8) {
-    ret=QString("%1").arg(*(uint64_t*)p_data);
+    uint64_t val=*(uint64_t*)p_data;
+    if(little_endian) ret=QString("%1").arg(val);
+    else ret=QString("%1").arg(bswap_64(val));
 /*
   // TODO: Check how one could implement this
   } else if(format=="unixtime64" && remaining_data_len>=8) {
@@ -356,13 +380,15 @@ QString RegistryHive::KeyValueToString(QByteArray key_value,
     }
 */
   } else if(format=="filetime" && remaining_data_len>=8) {
-    if(*(uint64_t*)p_data==0) {
+    uint64_t val=*(uint64_t*)p_data;
+    if(!little_endian) val=bswap_64(val);
+    if(val==0) {
       ret="n/a";
     } else {
       // TODO: Warn if >32bit
       QDateTime date_time;
       date_time.setTimeSpec(Qt::UTC);
-      date_time.setTime_t((*(uint64_t*)p_data-EPOCH_DIFF)/10000000);
+      date_time.setTime_t((val-EPOCH_DIFF)/10000000);
       ret=date_time.toString("yyyy/MM/dd hh:mm:ss");
     }
   } else if(format=="ascii") {
