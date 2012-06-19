@@ -18,7 +18,7 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#include "datainterpreter.h"
+#include "datainterpretertable.h"
 
 #include <QHeaderView>
 #include <QFontMetrics>
@@ -26,7 +26,7 @@
 #include <QApplication>
 #include <QClipboard>
 
-DataInterpreter::DataInterpreter(QWidget *p_parent)
+DataInterpreterTable::DataInterpreterTable(QWidget *p_parent)
   : QTableWidget(p_parent)
 {
   this->setColumnCount(2);
@@ -44,7 +44,7 @@ DataInterpreter::DataInterpreter(QWidget *p_parent)
                 SLOT(SlotCopyValue()));
 }
 
-DataInterpreter::~DataInterpreter() {
+DataInterpreterTable::~DataInterpreterTable() {
   // Free table widget items
   this->ClearValues();
 
@@ -52,7 +52,7 @@ DataInterpreter::~DataInterpreter() {
   delete this->p_action_copy_value;
 }
 
-void DataInterpreter::AddValue(QString name, QString value) {
+void DataInterpreterTable::AddValue(QString name, QString value) {
   QTableWidgetItem *p_name_item=new QTableWidgetItem(name);
   p_name_item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
   QTableWidgetItem *p_value_item=new QTableWidgetItem(value);
@@ -64,7 +64,7 @@ void DataInterpreter::AddValue(QString name, QString value) {
   this->resizeRowsToContents();
 }
 
-void DataInterpreter::ClearValues() {
+void DataInterpreterTable::ClearValues() {
   // Free all items
   while(this->rowCount()>0) {
     delete this->item(0,0);
@@ -73,7 +73,7 @@ void DataInterpreter::ClearValues() {
   }
 }
 
-int DataInterpreter::sizeHintForColumn(int column) const {
+int DataInterpreterTable::sizeHintForColumn(int column) const {
   int size_hint=0;
   int i=0;
   int item_width=0;
@@ -88,7 +88,7 @@ int DataInterpreter::sizeHintForColumn(int column) const {
   return size_hint;
 }
 
-void DataInterpreter::contextMenuEvent(QContextMenuEvent *p_event) {
+void DataInterpreterTable::contextMenuEvent(QContextMenuEvent *p_event) {
   // Only show context menu when a node is selected
   if(this->selectedIndexes().count()!=2) return;
   // Only show context menu when user clicked on selected row
@@ -104,7 +104,7 @@ void DataInterpreter::contextMenuEvent(QContextMenuEvent *p_event) {
   context_menu.exec(p_event->globalPos());
 }
 
-void DataInterpreter::SlotCopyValue() {
+void DataInterpreterTable::SlotCopyValue() {
   QApplication::clipboard()->
     setText(this->selectedIndexes().at(1).data().toString(),
             QClipboard::Clipboard);

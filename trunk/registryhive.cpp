@@ -314,7 +314,7 @@ QString RegistryHive::KeyValueToString(QByteArray key_value,
   p_data=key_value.constData();
   p_data+=offset;
 
-  // TODO: This will fail on platforms with different endianes!
+  // TODO: This will fail on platforms with different endianness!
 #define bswap_16(value) ((((value) & 0xff) << 8) | ((value) >> 8))
 #define bswap_32(value)                                       \
   (((uint32_t)bswap_16((uint16_t)((value) & 0xffff)) << 16) | \
@@ -358,7 +358,7 @@ QString RegistryHive::KeyValueToString(QByteArray key_value,
   } else if(format=="int64" && remaining_data_len>=8) {
     int64_t val=*(int64_t*)p_data;
     if(little_endian) ret=QString("%1").arg(val);
-    else ret=QString("%1").arg(bswap_64(val));
+    else ret=QString("%1").arg((int64_t)bswap_64(val));
   } else if(format=="uint64" && remaining_data_len>=8) {
     uint64_t val=*(uint64_t*)p_data;
     if(little_endian) ret=QString("%1").arg(val);

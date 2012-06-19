@@ -1,5 +1,5 @@
 /*******************************************************************************
-* fred Copyright (c) 2011-2012 by Gillen Daniel <gillen.dan@pinguin.lu>        *
+* fred Copyright (c) 2011 by Gillen Daniel <gillen.dan@pinguin.lu>             *
 *                                                                              *
 * Forensic Registry EDitor (fred) is a cross-platform M$ registry hive editor  *
 * with special feautures useful during forensic analysis.                      *
@@ -18,51 +18,55 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#ifndef DATAINTERPRETER_H
-#define DATAINTERPRETER_H
+#ifndef DATAINTERPRETERWIDGET_H
+#define DATAINTERPRETERWIDGET_H
 
 #include <QWidget>
-#include <QTableWidget>
-#include <QContextMenuEvent>
-#include <QAction>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QRadioButton>
+#include <QString>
+#include <QByteArray>
 
-class DataInterpreter : public QTableWidget {
+#include "datainterpretertable.h"
+
+class DataInterpreterWidget : public QWidget {
   Q_OBJECT
 
   public:
-    DataInterpreter(QWidget *p_parent=0);
-    ~DataInterpreter();
+    enum Endianness {
+      Endianness_LittleEndian=0,
+      Endianness_BigEndian
+    };
+
+    explicit DataInterpreterWidget(QWidget *p_parent=0);
+    ~DataInterpreterWidget();
 
     /*
-     * AddValue
+     * SetData
      *
-     * Add a value pair (name,value) to data interprter.
+     * Set data to be interpreted (will also interpret it).
      */
-    void AddValue(QString name, QString value);
-    /*
-     * ClearValues
-     *
-     * Remove all value pairs from table
-     */
-    void ClearValues();
-
-  protected:
-    /*
-     * sizeHintForColumn
-     *
-     * Needed reimplementation in order to allow resizeColumnsToContent
-     * to resize hidden columns too.
-     */
-    int sizeHintForColumn(int column) const;
-    void contextMenuEvent(QContextMenuEvent *p_event);
+    void SetData(QByteArray new_data);
 
   private:
-    QAction *p_action_copy_value;
+    // Widget layout
+    QVBoxLayout *p_widget_layout;
+    // Sub-widgets
+    DataInterpreterTable *p_data_interpreter_table;
+    QHBoxLayout *p_endianness_selector_layout;
+    QRadioButton *p_endianness_selector_le;
+    QRadioButton *p_endianness_selector_be;
+    // Vars
+    QByteArray data;
+    int endianness;
+
+    void InterpretData();
 
   private slots:
-    void SlotCopyValue();
-
+    void SlotEndiannessSelectorLeClicked(bool checked);
+    void SlotEndiannessSelectorBeClicked(bool checked);
 
 };
 
-#endif // DATAINTERPRETER_H
+#endif // DATAINTERPRETERWIDGET_H

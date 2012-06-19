@@ -40,7 +40,7 @@
 #include "registrykeytable.h"
 #include "registrykeytablemodel.h"
 #include "qhexedit/qhexedit.h"
-#include "datainterpreter.h"
+#include "datainterpreterwidget.h"
 #include "datareporter.h"
 #include "threadsearch.h"
 #include "searchresultwidget.h"
@@ -73,6 +73,10 @@ class MainWindow : public QMainWindow {
     void SlotSearchFinished();
     void SlotSearchResultWidgetDoubleClicked(QModelIndex index);
     void SlotTabCloseButtonClicked(int index);
+/*
+    void SlotDataInterpreterEndiannessBe(bool checked);
+    void SlotDataInterpreterEndiannessLe(bool checked);
+*/
 
 private:
     Ui::MainWindow *ui;
@@ -95,14 +99,17 @@ private:
     QHexEdit *p_hex_edit;
     QLabel *p_hex_edit_status_bar;
 
+/*
     QWidget *p_data_interpreter_widget;
     QVBoxLayout *p_data_interpreter_layout;
     DataInterpreter *p_data_interpreter;
 
-    QWidget *p_data_interpreter_endianes_widget;
-    QHBoxLayout *p_data_interpreter_endianes_layout;
-    QRadioButton *p_data_interpreter_endianes_be;
-    QRadioButton *p_data_interpreter_endianes_le;
+    QWidget *p_data_interpreter_endianness_widget;
+    QHBoxLayout *p_data_interpreter_endianness_layout;
+    QRadioButton *p_data_interpreter_endianness_be;
+    QRadioButton *p_data_interpreter_endianness_le;
+*/
+    DataInterpreterWidget *p_data_interpreter_widget;
 
     QSplitter *p_horizontal_splitter;
     QSplitter *p_horizontal_splitter2;

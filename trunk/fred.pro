@@ -50,7 +50,6 @@ SOURCES   += main.cpp\
              dlgkeydetails.cpp \
              qhexedit/qhexedit_p.cpp \
              qhexedit/qhexedit.cpp \
-             datainterpreter.cpp \
              reporttemplate.cpp \
              datareporter.cpp \
              datareporterengine.cpp \
@@ -65,7 +64,9 @@ SOURCES   += main.cpp\
              threadsearch.cpp \
              searchresultwidget.cpp \
              tabwidget.cpp \
-    argparser.cpp
+    argparser.cpp \
+    datainterpretertable.cpp \
+    datainterpreterwidget.cpp
 
 HEADERS   += mainwindow.h \
              registrynode.h \
@@ -76,7 +77,6 @@ HEADERS   += mainwindow.h \
              dlgkeydetails.h \
              qhexedit/qhexedit_p.h \
              qhexedit/qhexedit.h \
-             datainterpreter.h \
              reporttemplate.h \
              datareporter.h \
              datareporterengine.h \
@@ -91,7 +91,9 @@ HEADERS   += mainwindow.h \
              threadsearch.h \
              searchresultwidget.h \
              tabwidget.h \
-    argparser.h
+    argparser.h \
+    datainterpretertable.h \
+    datainterpreterwidget.h
 
 FORMS     += mainwindow.ui \
              dlgabout.ui \
