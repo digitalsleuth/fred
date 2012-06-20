@@ -18,55 +18,47 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#ifndef DATAINTERPRETERWIDGET_H
-#define DATAINTERPRETERWIDGET_H
+#ifndef HEXEDITWIDGET_H
+#define HEXEDITWIDGET_H
 
 #include <QWidget>
+#include <QSplitter>
 #include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QRadioButton>
-#include <QString>
+#include <QLabel>
 #include <QByteArray>
 
-#include "datainterpretertable.h"
+#include "qhexedit/qhexedit.h"
+#include "datainterpreterwidget.h"
 
-class DataInterpreterWidget : public QWidget {
+class HexEditWidget : public QWidget {
   Q_OBJECT
 
   public:
-    enum Endianness {
-      Endianness_LittleEndian=0,
-      Endianness_BigEndian
-    };
+    explicit HexEditWidget(QWidget *p_parent=0);
+    ~HexEditWidget();
 
-    explicit DataInterpreterWidget(QWidget *p_parent=0);
-    ~DataInterpreterWidget();
+    void SetData(QByteArray const &data);
 
-    /*
-     * SetData
-     *
-     * Set data to be interpreted (will also interpret it).
-     */
-    void SetData(QByteArray new_data);
+  signals:
+
+  public slots:
 
   private:
     // Widget layout
     QVBoxLayout *p_widget_layout;
+    QSplitter *p_widget_splitter;
     // Sub-widgets
-    DataInterpreterTable *p_data_interpreter_table;
-    QHBoxLayout *p_endianness_selector_layout;
-    QRadioButton *p_endianness_selector_le;
-    QRadioButton *p_endianness_selector_be;
+    QWidget *p_hex_edit_layout_widget;
+    QVBoxLayout *p_hex_edit_layout;
+    QHexEdit *p_hex_edit;
+    QLabel *p_hex_edit_status_bar;
+    DataInterpreterWidget *p_data_interpreter_widget;
     // Vars
     QByteArray data;
-    int endianness;
-
-    void InterpretData();
+    bool read_only;
 
   private slots:
-    void SlotEndiannessSelectorLeClicked(bool checked);
-    void SlotEndiannessSelectorBeClicked(bool checked);
-
+    void SlotHexEditOffsetChanged(int offset);
 };
 
-#endif // DATAINTERPRETERWIDGET_H
+#endif // HEXEDITWIDGET_H

@@ -90,34 +90,12 @@ MainWindow::MainWindow(ArgParser *p_arg_parser) :
 
   this->p_tab_widget=new TabWidget(this->p_vertical_splitter);
 
-  this->p_horizontal_splitter2=new QSplitter();
-  this->p_horizontal_splitter2->setOrientation(Qt::Horizontal);
-
-  this->p_hex_edit_widget=new QWidget(this->p_horizontal_splitter2);
-  this->p_hex_edit_layout=new QVBoxLayout(this->p_hex_edit_widget);
-  this->p_hex_edit_layout->setContentsMargins(0,0,0,0);
-  this->p_hex_edit=new QHexEdit();
-  this->p_hex_edit->setReadOnly(true);
-  this->p_hex_edit_status_bar=new QLabel();
-
-  this->p_data_interpreter_widget=
-    new DataInterpreterWidget(this->p_horizontal_splitter2);
-
-  // Make sure hex viewer font is monospaced.
-  QFont mono_font("Monospace");
-  mono_font.setStyleHint(QFont::TypeWriter);
-  this->p_hex_edit->setFont(mono_font);
+  this->p_hex_edit_widget=new HexEditWidget();
 
   // Add hexedit page to tab_widget
-  this->p_tab_widget->addTab(this->p_horizontal_splitter2,tr("Hex viewer"));
+  this->p_tab_widget->addTab(this->p_hex_edit_widget,tr("Hex viewer"));
 
-  // Lay out widgets
-  this->p_hex_edit_layout->addWidget(this->p_hex_edit);
-  this->p_hex_edit_layout->addWidget(this->p_hex_edit_status_bar);
-
-  this->p_horizontal_splitter2->addWidget(this->p_hex_edit_widget);
-  this->p_horizontal_splitter2->addWidget(this->p_data_interpreter_widget);
-
+  // Add widgets to their splitters
   this->p_vertical_splitter->addWidget(this->p_key_table);
   this->p_vertical_splitter->addWidget(this->p_tab_widget);
 
@@ -145,18 +123,6 @@ MainWindow::MainWindow(ArgParser *p_arg_parser) :
   tab_widget_policy.setHorizontalStretch(200);
   this->p_tab_widget->setSizePolicy(tab_widget_policy);
 
-  QSizePolicy hex_edit_widget_policy=this->p_hex_edit_widget->sizePolicy();
-  hex_edit_widget_policy.setVerticalStretch(2);
-  hex_edit_widget_policy.setHorizontalStretch(200);
-  this->p_hex_edit_widget->setSizePolicy(hex_edit_widget_policy);
-
-  QSizePolicy data_interpreter_widget_policy=
-      this->p_data_interpreter_widget->sizePolicy();
-  data_interpreter_widget_policy.setVerticalStretch(2);
-  data_interpreter_widget_policy.setHorizontalStretch(0);
-  this->p_data_interpreter_widget->
-      setSizePolicy(data_interpreter_widget_policy);
-
   // Connect signals
   this->connect(this->p_node_tree,
                 SIGNAL(clicked(QModelIndex)),
@@ -182,10 +148,6 @@ MainWindow::MainWindow(ArgParser *p_arg_parser) :
                 SIGNAL(CurrentItemChanged(QModelIndex)),
                 this,
                 SLOT(SlotKeyTableClicked(QModelIndex)));
-  this->connect(this->p_hex_edit,
-                SIGNAL(currentAddressChanged(int)),
-                this,
-                SLOT(SlotHexEditAddressChanged(int)));
   this->connect(this->p_tab_widget,
                 SIGNAL(tabCloseRequested(int)),
                 this,
@@ -214,6 +176,12 @@ MainWindow::MainWindow(ArgParser *p_arg_parser) :
   this->UpdateDataReporterMenu();
 
   // Finally, react on some command line arguments
+  if(this->p_args->IsSet("maximized")) {
+    this->setWindowState(Qt::WindowMaximized);
+  }
+  if(this->p_args->IsSet("fullscreen")) {
+    this->setWindowState(Qt::WindowFullScreen);
+  }
   if(this->p_args->IsSet("hive-file")) {
     this->OpenHive(this->p_args->GetArgVal("hive-file"));
   }
@@ -264,10 +232,8 @@ void MainWindow::on_action_Close_hive_triggered() {
     }
 
     // Remove any data from hex edit and data interpreter
-    this->p_hex_edit->setData(QByteArray());
-    this->p_hex_edit_status_bar->setText("");
-    this->p_data_interpreter_widget->SetData(QByteArray());
-    this->p_data_interpreter_widget->setEnabled(false);
+    this->p_hex_edit_widget->SetData(QByteArray());
+    this->p_hex_edit_widget->setEnabled(false);
 
     // Close hive
     this->p_hive->Close();
@@ -350,9 +316,7 @@ void MainWindow::SlotNodeTreeClicked(QModelIndex index) {
     // If a previous model was set, delete it and clear hexedit etc...
     this->p_key_table->setModel(NULL);
     delete this->p_reg_key_table_model;
-    this->p_hex_edit->setData(QByteArray());
-    this->p_hex_edit_status_bar->setText("");
-    this->p_data_interpreter_widget->SetData(QByteArray());
+    this->p_hex_edit_widget->SetData(QByteArray());
   }
   this->p_reg_key_table_model=new RegistryKeyTableModel(this->p_hive,node_path);
   this->p_key_table->setModel(this->p_reg_key_table_model);
@@ -415,21 +379,9 @@ void MainWindow::SlotKeyTableClicked(QModelIndex index) {
                                       RegistryKeyTableModel::
                                         AdditionalRoles_GetRawData)
                                           .toByteArray();
-  this->p_hex_edit->setData(this->selected_key_value);
+  this->p_hex_edit_widget->SetData(this->selected_key_value);
   // Set focus back to nodetree to be able to navigate with keyboard
   this->p_key_table->setFocus();
-}
-
-void MainWindow::SlotHexEditAddressChanged(int hex_offset) {
-  if(!this->is_hive_open || this->selected_key_value.isEmpty()) return;
-
-  // Update hex edit status bar
-  this->p_hex_edit_status_bar->
-    setText(QString("Byte offset: 0x%1 (%2)")
-              .arg((uint16_t)hex_offset,4,16,QChar('0'))
-              .arg(hex_offset));
-  // Update data interpreter
-  this->UpdateDataInterpreter(hex_offset);
 }
 
 void MainWindow::SlotReportClicked() {
@@ -558,13 +510,6 @@ void MainWindow::UpdateWindowTitle(QString filename) {
   }
 }
 
-void MainWindow::UpdateDataInterpreter(int hex_offset) {
-  // Update data interpreter. There is currently no interpretition that uses
-  // more then 8 bytes, so only pass 8 bytes at max.
-  this->p_data_interpreter_widget->SetData(
-    this->selected_key_value.mid(hex_offset,8));
-}
-
 void MainWindow::UpdateDataReporterMenu() {
   int i=0,ii=0;
   QMenu *p_category_entry;
@@ -615,7 +560,7 @@ void MainWindow::OpenHive(QString hive_file) {
   this->ui->MenuReports->setEnabled(true);
 
   // Enable data interpreter
-  this->p_data_interpreter_widget->setEnabled(true);
+  this->p_hex_edit_widget->setEnabled(true);
 
   this->UpdateWindowTitle(hive_file);
 }

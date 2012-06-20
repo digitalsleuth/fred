@@ -77,14 +77,20 @@ bool ArgParser::ParseArgs() {
           // considered to be a hive to open
           i++;
           break;
+        } else if(cur_arg=="--dump-report") {
+          this->parsed_args.insert(cur_arg.mid(2),cur_arg_param);
+          continue;
+        } else if(cur_arg=="--fullscreen") {
+          this->parsed_args.insert(cur_arg.mid(2),cur_arg_param);
+          continue;
         } else if(cur_arg=="--help") {
           this->parsed_args.insert(cur_arg.mid(2),QString());
           continue;
+        } else if(cur_arg=="--maximized") {
+          this->parsed_args.insert(cur_arg.mid(2),cur_arg_param);
+          continue;
         } else if(cur_arg=="--version") {
           this->parsed_args.insert(cur_arg.mid(2),QString());
-          continue;
-        } else if(cur_arg=="--dump-report") {
-          this->parsed_args.insert(cur_arg.mid(2),cur_arg_param);
           continue;
         } else {
           // Unknown argument

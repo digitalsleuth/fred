@@ -57,6 +57,9 @@
         </item>
         <item>
          <widget class="QCheckBox" name="CbHex">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="text">
            <string>Hexadecimal</string>
           </property>

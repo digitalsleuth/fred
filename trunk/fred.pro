@@ -66,7 +66,8 @@ SOURCES   += main.cpp\
              tabwidget.cpp \
     argparser.cpp \
     datainterpretertable.cpp \
-    datainterpreterwidget.cpp
+    datainterpreterwidget.cpp \
+    hexeditwidget.cpp
 
 HEADERS   += mainwindow.h \
              registrynode.h \
@@ -93,7 +94,8 @@ HEADERS   += mainwindow.h \
              tabwidget.h \
     argparser.h \
     datainterpretertable.h \
-    datainterpreterwidget.h
+    datainterpreterwidget.h \
+    hexeditwidget.h
 
 FORMS     += mainwindow.ui \
              dlgabout.ui \

@@ -1,5 +1,5 @@
 /*******************************************************************************
-* fred Copyright (c) 2011 by Gillen Daniel <gillen.dan@pinguin.lu>             *
+* fred Copyright (c) 2011-2012 by Gillen Daniel <gillen.dan@pinguin.lu>        *
 *                                                                              *
 * Forensic Registry EDitor (fred) is a cross-platform M$ registry hive editor  *
 * with special feautures useful during forensic analysis.                      *
@@ -52,7 +52,6 @@ DataInterpreterWidget::DataInterpreterWidget(QWidget *p_parent) :
   this->p_endianness_selector_layout->setContentsMargins(0,0,0,0);
   this->p_endianness_selector_le->setContentsMargins(0,0,0,0);
   this->p_endianness_selector_be->setContentsMargins(0,0,0,0);
-  this->setEnabled(false);
 
   // Set initial endianness selector state
   this->p_endianness_selector_le->setChecked(

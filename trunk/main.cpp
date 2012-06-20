@@ -79,8 +79,14 @@ int main(int argc, char *argv[]) {
       exit(1);
     }
   }
+  if(args.IsSet("fullscreen") && args.IsSet("maximized")) {
+    PRINT_HEADER;
+    printf("ERROR: --fullscreen and --maximized cannot be specified both!\n\n");
+    PrintUsage();
+    exit(1);
+  }
 
-  // React on some command line args
+  // React on some command line args early
   if(args.IsSet("?") || args.IsSet("h") || args.IsSet("help")) {
     PRINT_HEADER_AND_USAGE;
     exit(0);
@@ -113,13 +119,13 @@ void PrintUsage() {
          qApp->arguments().at(0).toAscii().constData());
   printf("Options:\n");
   printf("  opts:\n");
-  printf("    -?, -h, --help : Display this help message.\n");
-  printf("    -v, --version : Display version info.\n");
-
   printf("    --dump-report=FILE : Dump the specified report to stdout.\n");
-
+  printf("    --fullscreen : Display main window in fullscreen mode.\n");
+  printf("    -h, -?, --help : Display this help message.\n");
+  printf("    --maximized : Display main window in maximized mode.\n");
+  printf("    -v, --version : Display version info.\n");
   printf("  hive:\n");
-  printf("    Use the specified hive file.\n");
+  printf("    Open / Use the specified hive file.\n");
 
   printf("\n");
 }

@@ -39,8 +39,7 @@
 #include "registrynodetreemodel.h"
 #include "registrykeytable.h"
 #include "registrykeytablemodel.h"
-#include "qhexedit/qhexedit.h"
-#include "datainterpreterwidget.h"
+#include "hexeditwidget.h"
 #include "datareporter.h"
 #include "threadsearch.h"
 #include "searchresultwidget.h"
@@ -68,15 +67,10 @@ class MainWindow : public QMainWindow {
     void SlotNodeTreeClicked(QModelIndex index);
     void SlotKeyTableClicked(QModelIndex index);
     void SlotKeyTableDoubleClicked(QModelIndex index);
-    void SlotHexEditAddressChanged(int hex_offset);
     void SlotReportClicked();
     void SlotSearchFinished();
     void SlotSearchResultWidgetDoubleClicked(QModelIndex index);
     void SlotTabCloseButtonClicked(int index);
-/*
-    void SlotDataInterpreterEndiannessBe(bool checked);
-    void SlotDataInterpreterEndiannessLe(bool checked);
-*/
 
 private:
     Ui::MainWindow *ui;
@@ -94,25 +88,9 @@ private:
     RegistryKeyTable *p_key_table;
     TabWidget *p_tab_widget;
 
-    QWidget *p_hex_edit_widget;
-    QVBoxLayout *p_hex_edit_layout;
-    QHexEdit *p_hex_edit;
-    QLabel *p_hex_edit_status_bar;
-
-/*
-    QWidget *p_data_interpreter_widget;
-    QVBoxLayout *p_data_interpreter_layout;
-    DataInterpreter *p_data_interpreter;
-
-    QWidget *p_data_interpreter_endianness_widget;
-    QHBoxLayout *p_data_interpreter_endianness_layout;
-    QRadioButton *p_data_interpreter_endianness_be;
-    QRadioButton *p_data_interpreter_endianness_le;
-*/
-    DataInterpreterWidget *p_data_interpreter_widget;
+    HexEditWidget *p_hex_edit_widget;
 
     QSplitter *p_horizontal_splitter;
-    QSplitter *p_horizontal_splitter2;
     QSplitter *p_vertical_splitter;
     DataReporter *p_data_reporter;
     ThreadSearch *p_search_thread;
@@ -129,12 +107,6 @@ private:
      * Updates the window title
      */
     void UpdateWindowTitle(QString filename="");
-    /*
-     * UpdateDataInterpreter
-     *
-     * Update data interpreter
-     */
-    void UpdateDataInterpreter(int hex_offset);
     /*
      * UpdateDataReporterMenu
      *
