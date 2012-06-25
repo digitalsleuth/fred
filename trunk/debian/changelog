@@ -1,8 +1,11 @@
 fred (0.1.0beta4) unstable; urgency=low
 
   * Fixed some minor UI bugs
+  * Massive code cleanup in mainwindow.cpp
+  * Added ability to switch data interpreter's endianness
+  * Added ability in hex editor to select and copy selected bytes / text
 
- -- Daniel Gillen <gillen.dan@pinguin.lu>  Mon, 21 May 2012 00:00:00 +0200
+ -- Daniel Gillen <gillen.dan@pinguin.lu>  Mon, 25 Jun 2012 00:00:00 +0200
 
 fred (0.1.0beta3) unstable; urgency=low
 

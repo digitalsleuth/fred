@@ -13,7 +13,7 @@ Depends: ${shlibs:Depends}
 Recommends: fred-reports
 Description: Forensic Registry EDitor
  Forensic Registry EDitor (fred) is a cross-platform M$ registry
- hive editor with special feautures useful during forensic
+ hive editor with special features useful during forensic
  analysis.
 
 Package: fred-reports
@@ -21,7 +21,7 @@ Architecture: any
 Depends: ${shlibs:Depends}
 Description: Forensic Registry EDitor
  Forensic Registry EDitor (fred) is a cross-platform M$ registry
- hive editor with special feautures useful during forensic
+ hive editor with special features useful during forensic
  analysis.
  .
  This package contains the report-templates for fred.
