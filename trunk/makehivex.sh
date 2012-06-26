@@ -8,6 +8,7 @@ fi
 
 cd hivex
 make clean
+autoreconf
 ./configure --disable-ocaml --disable-perl --disable-python --disable-ruby && make
 cd ..
 
