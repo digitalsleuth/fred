@@ -4,6 +4,12 @@ function print_table_row(cell01,cell02) {
   println("      <tr><td>",cell01,"</td><td>",cell02,"</td></tr>");
 }
 
+function ZeroPad(number,padlen) {
+  var ret=number.toString(10);
+  if(!padlen || ret.length>=padlen) return ret;
+  return Math.pow(10,padlen-ret.length).toString().slice(1)+ret;
+}
+
 // Global vars
 var val;
 
@@ -19,8 +25,8 @@ for(var i=0;i<mnt_keys.length;i++) {
 var cur_controlset=GetRegistryKeyValue("\\Select","Current");
 cur_controlset=RegistryKeyValueToString(cur_controlset.value,cur_controlset.type);
 // Current holds a DWORD value, thus we get a string like 0x00000000, but
-// control sets are referenced only with the last 3 digits.
-cur_controlset="ControlSet"+String(cur_controlset).substr(7,3);
+// control sets are referenced by its decimal representation.
+cur_controlset="ControlSet"+ZeroPad(parseInt(String(cur_controlset).substr(2,8),16),3)
 
 println("<html>");
 println("  <head><title>USB Storage Devices</title></head>");
