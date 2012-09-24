@@ -41,7 +41,7 @@ uint64_t RegistryKey::RowCount() {
 }
 
 QVariant RegistryKey::Data(uint64_t column) const {
-  if(column>=0 && column<3) {
+  if(column>=0 && column<4) {
     return this->key_data.value(column);
   } else {
     return QVariant();

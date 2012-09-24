@@ -216,6 +216,19 @@ QByteArray RegistryHive::GetKeyValue(int hive_key,
 }
 
 /*
+ * GetKeyModTime
+ */
+int64_t RegistryHive::GetKeyModTime(int hive_key) {
+    if(hive_key==0) {
+      this->SetError(tr("Invalid key handle specified!"));
+      return 0;
+    }
+
+    // Get and return key last modification timestamp
+    return hivex_node_timestamp(this->p_hive,hive_key);
+}
+
+/*
  * KeyValueToString
  */
 QString RegistryHive::KeyValueToString(QByteArray value, int value_type) {
@@ -388,7 +401,7 @@ QString RegistryHive::KeyValueToString(QByteArray key_value,
       // TODO: Warn if >32bit
       QDateTime date_time;
       date_time.setTimeSpec(Qt::UTC);
-      date_time.setTime_t((val-EPOCH_DIFF)/10000000);
+      date_time.setTime_t(RegistryHive::FiletimeToUnixtime(val));
       ret=date_time.toString("yyyy/MM/dd hh:mm:ss");
     }
   } else if(format=="ascii") {
@@ -453,6 +466,13 @@ QString RegistryHive::KeyTypeToString(int value_type) {
   }
 
   return ret;
+}
+
+/*
+ * FiletimeToUnixtime
+ */
+uint64_t RegistryHive::FiletimeToUnixtime(int64_t filetime) {
+  return (unsigned)((filetime-EPOCH_DIFF)/10000000);
 }
 
 /*

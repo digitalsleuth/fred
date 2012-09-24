@@ -52,6 +52,7 @@ class RegistryHive : public QObject {
     QByteArray GetKeyValue(int hive_key,
                            int *p_value_type,
                            size_t *p_value_len);
+    int64_t GetKeyModTime(int hive_key);
     static QString KeyValueToString(QByteArray value, int value_type);
     static QString KeyValueToString(QByteArray value,
                                     QString format,
@@ -59,6 +60,7 @@ class RegistryHive : public QObject {
                                     int length=0,
                                     bool little_endian=true);
     static QString KeyTypeToString(int value_type);
+    static uint64_t FiletimeToUnixtime(int64_t filetime);
 
   private:
     QString erro_msg;
