@@ -67,6 +67,8 @@ class DataReporterEngine : public QScriptEngine {
                                                   QScriptEngine *engine);
     static QScriptValue RegistryKeyTypeToString(QScriptContext *context,
                                                 QScriptEngine *engine);
+    static QScriptValue GetRegistryKeyModTime(QScriptContext *context,
+                                              QScriptEngine *engine);
 };
 
 Q_DECLARE_METATYPE(DataReporterEngine::s_RegistryKeyValue)

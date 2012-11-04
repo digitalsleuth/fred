@@ -218,14 +218,40 @@ QByteArray RegistryHive::GetKeyValue(int hive_key,
 /*
  * GetKeyModTime
  */
-int64_t RegistryHive::GetKeyModTime(int hive_key) {
-    if(hive_key==0) {
-      this->SetError(tr("Invalid key handle specified!"));
-      return 0;
-    }
+int64_t RegistryHive::GetKeyModTime(QString path,QString key) {
+  hive_node_h parent_node;
+  hive_value_h hive_key;
 
-    // Get and return key last modification timestamp
-    return hivex_node_timestamp(this->p_hive,hive_key);
+  // Get handle to last node in path
+  if(!this->GetNodeHandle(path,&parent_node)) {
+    this->SetError(tr("Unable to get node handle!"));
+    return 0;
+  }
+
+  // Get key handle
+  hive_key=hivex_node_get_value(this->p_hive,
+                                parent_node,
+                                key.toAscii().constData());
+  if(hive_key==0) {
+    this->SetError(tr("Unable to get key handle!"));
+    return 0;
+  }
+
+  // Get and return key's last modification timestamp
+  return this->GetKeyModTime(hive_key);
+}
+
+/*
+ * GetKeyModTime
+ */
+int64_t RegistryHive::GetKeyModTime(int hive_key) {
+  if(hive_key==0) {
+    this->SetError(tr("Invalid key handle specified!"));
+    return 0;
+  }
+
+  // Get and return key's last modification timestamp
+  return hivex_node_timestamp(this->p_hive,hive_key);
 }
 
 /*

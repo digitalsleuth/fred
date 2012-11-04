@@ -182,7 +182,7 @@ QString DataReporter::GenerateReport(RegistryHive *p_hive,
     if(!console_mode) {
       QMessageBox::critical(0,
                             "Report engine error",
-                            QString::fromLatin1("%0:%1: %2")
+                            QString::fromLatin1("File: %0\n Line: %1\nError: %2")
                                    .arg(report_template)
                                    .arg(report_result.property("lineNumber")
                                         .toInt32())

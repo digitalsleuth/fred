@@ -103,11 +103,12 @@ int RegistryKeyTable::sizeHintForColumn(int column) const {
 
 void RegistryKeyTable::contextMenuEvent(QContextMenuEvent *p_event) {
   // Only show context menu when a row is selected
-  if(this->selectedIndexes().count()!=3) return;
+  if(this->selectedIndexes().count()!=4) return;
   // Only show context menu when user clicked on selected row
   if(!(this->indexAt(p_event->pos())==this->selectedIndexes().at(0) ||
        this->indexAt(p_event->pos())==this->selectedIndexes().at(1) ||
-       this->indexAt(p_event->pos())==this->selectedIndexes().at(2)))
+       this->indexAt(p_event->pos())==this->selectedIndexes().at(2) ||
+       this->indexAt(p_event->pos())==this->selectedIndexes().at(3)))
   {
     return;
   }

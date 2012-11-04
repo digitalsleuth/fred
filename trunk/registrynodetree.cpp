@@ -31,14 +31,14 @@ RegistryNodeTree::RegistryNodeTree(QWidget *p_parent) : QTreeView(p_parent) {
 
   // Create context menu
   this->p_menu_copy=new QMenu(tr("Copy"),this);
-  this->p_action_copy_node_name=new QAction(tr("Copy node name"),
+  this->p_action_copy_node_name=new QAction(tr("Node name"),
                                             this->p_menu_copy);
   this->p_menu_copy->addAction(this->p_action_copy_node_name);
   this->connect(this->p_action_copy_node_name,
                 SIGNAL(triggered()),
                 this,
                 SLOT(SlotCopyNodeName()));
-  this->p_action_copy_node_path=new QAction(tr("Copy node path"),
+  this->p_action_copy_node_path=new QAction(tr("Node path"),
                                             this->p_menu_copy);
   this->p_menu_copy->addAction(this->p_action_copy_node_path);
   this->connect(this->p_action_copy_node_path,

@@ -24,6 +24,7 @@
 #include <QMap>
 #include <QMapIterator>
 #include <QStringList>
+#include <QDateTime>
 
 #include <stdio.h>
 
@@ -60,6 +61,11 @@ DataReporterEngine::DataReporterEngine(RegistryHive *p_hive) : QScriptEngine() {
                                                     2);
   func_get_key_value.setData(this->newQObject(this->p_registry_hive));
   this->globalObject().setProperty("GetRegistryKeyValue",func_get_key_value);
+  // GetRegistryKeyModTime
+  QScriptValue func_get_key_modt=this->newFunction(this->GetRegistryKeyModTime,
+                                                    2);
+  func_get_key_modt.setData(this->newQObject(this->p_registry_hive));
+  this->globalObject().setProperty("GetRegistryKeyModTime",func_get_key_modt);
   // RegistryKeyValueToString
   QScriptValue func_value_to_string=
     this->newFunction(this->RegistryKeyValueToString,2);
@@ -322,4 +328,34 @@ QScriptValue DataReporterEngine::RegistryKeyTypeToString(
   ret=RegistryHive::KeyTypeToString(context->argument(0).toInt32());
 
   return engine->newVariant(ret);
+}
+
+QScriptValue DataReporterEngine::GetRegistryKeyModTime(
+  QScriptContext *context,
+  QScriptEngine *engine)
+{
+  QScriptValue calleeData;
+  RegistryHive *p_hive;
+  int64_t mod_time=0;
+
+  // This function needs two argument, key path and key name
+  if(context->argumentCount()!=2) return engine->undefinedValue();
+
+  // Get calle data (Pointer to RegistryHive class)
+  calleeData=context->callee().data();
+  p_hive=qobject_cast<RegistryHive*>(calleeData.toQObject());
+
+  mod_time=p_hive->GetKeyModTime(context->argument(0).toString(),
+                                 context->argument(1).toString());
+  if(p_hive->Error()) {
+    // Get error message to clear error state
+    p_hive->GetErrorMsg();
+    return engine->undefinedValue();
+  }
+
+  QDateTime date_time;
+  date_time.setTimeSpec(Qt::UTC);
+  date_time.setTime_t(RegistryHive::FiletimeToUnixtime(mod_time));
+
+  return engine->newVariant(date_time.toString("yyyy/MM/dd hh:mm:ss"));
 }
