@@ -3,7 +3,7 @@
  <class>DlgReportViewer</class>
  <widget class="QMainWindow" name="DlgReportViewer">
   <property name="windowModality">
-   <enum>Qt::WindowModal</enum>
+   <enum>Qt::NonModal</enum>
   </property>
   <property name="geometry">
    <rect>
@@ -39,7 +39,7 @@
      <x>0</x>
      <y>0</y>
      <width>605</width>
-     <height>25</height>
+     <height>27</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">

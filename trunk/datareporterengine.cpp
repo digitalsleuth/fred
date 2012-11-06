@@ -190,6 +190,8 @@ QScriptValue DataReporterEngine::GetRegistryKeys(QScriptContext *context,
     return engine->undefinedValue();
   }
 
+  qDebug(QString("P: %1 A: %2").arg(context->argument(0).toString()).arg(keys.count()).toAscii().constData());
+
   // Build script array
   ret_keys=engine->newArray(keys.count());
   QMapIterator<QString,int> i(keys);
