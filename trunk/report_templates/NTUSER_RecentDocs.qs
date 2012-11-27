@@ -13,15 +13,14 @@ var recent_docs=GetRegistryKeyValue("\\Software\\Microsoft\\Windows\\CurrentVers
 if(IsValid(recent_docs)) {
   println("  <p style=\"font-size:12\">");
   println("    <table style=\"margin-left:20px; font-size:12\">");
-  println("      <tr><td><b>Document</b></td><td>&nbsp;&nbsp;<b>Last modified</b></td></tr>");
+  println("      <tr><td><b>Document</b></td></tr>");
 
   // Iterate over all recent docs
   var i=0;
   var runlist=RegistryKeyValueToVariant(recent_docs.value,"uint32",i);
   while(Number(runlist)!=0xffffffff) {
     var entry=GetRegistryKeyValue("\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RecentDocs",runlist.toString(10));
-    var mod_time=GetRegistryKeyModTime("\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RecentDocs",runlist.toString(10));
-    println("      <tr><td>",RegistryKeyValueToVariant(entry.value,"utf16",0),"</td><td>&nbsp;&nbsp;",mod_time,"</td></tr>");
+    println("      <tr><td>",RegistryKeyValueToVariant(entry.value,"utf16",0),"</td></tr>");
     i+=4;
     runlist=RegistryKeyValueToVariant(recent_docs.value,"uint32",i);
   }

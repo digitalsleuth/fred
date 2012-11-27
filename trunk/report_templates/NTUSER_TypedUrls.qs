@@ -13,12 +13,11 @@ var typed_urls=GetRegistryKeys("\\Software\\Microsoft\\Internet Explorer\\TypedU
 if(IsValid(typed_urls)) {
   println("  <p style=\"font-size:12\">");
   println("    <table style=\"margin-left:20px; font-size:12\">");
-  println("      <tr><td><b>Url</b></td><td>&nbsp;&nbsp;<b>Last modified</b></td></tr>");
+  println("      <tr><td><b>Url</b></td></tr>");
 
   for(var i=0;i<typed_urls.length;i++) {
     var val=GetRegistryKeyValue("\\Software\\Microsoft\\Internet Explorer\\TypedURLs",typed_urls[i]);
-    var mod_time=GetRegistryKeyModTime("\\Software\\Microsoft\\Internet Explorer\\TypedURLs",typed_urls[i]);
-    println("      <tr><td>",RegistryKeyValueToString(val.value,val.type),"</td><td>&nbsp;&nbsp;",mod_time,"</td></tr>");
+    println("      <tr><td>",RegistryKeyValueToString(val.value,val.type),"</td></tr>");
   }
 
   println("    </table>");
