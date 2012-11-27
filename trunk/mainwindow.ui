@@ -36,7 +36,7 @@
      <x>0</x>
      <y>0</y>
      <width>508</width>
-     <height>25</height>
+     <height>27</height>
     </rect>
    </property>
    <widget class="QMenu" name="MenuFile">
@@ -81,18 +81,24 @@
    <property name="text">
     <string>&amp;Open hive</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
   </action>
   <action name="action_Close_hive">
    <property name="enabled">
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>&amp;Close hive</string>
+    <string>Close hive</string>
    </property>
   </action>
   <action name="action_Quit">
    <property name="text">
     <string>&amp;Quit</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
    </property>
   </action>
   <action name="actionAbout_Qt">
@@ -111,6 +117,9 @@
    </property>
    <property name="text">
     <string>&amp;Search</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
    </property>
   </action>
   <action name="ActionPreferences">

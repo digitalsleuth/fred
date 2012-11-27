@@ -9,14 +9,17 @@ function ZeroPad(number,padlen) {
   return Math.pow(10,padlen-ret.length).toString().slice(1)+ret;
 }
 
-function PrintTableRow(cell01,cell02,cell03) {
-  println("      <tr><td style=\"padding:2px\">",cell01,"</td><td style=\"padding:2px\">",cell02,"</td><td style=\"padding:2px\">",cell03,"</td></tr>");
+function PrintTableRow(cell01,cell02,cell03,cell04,cell05) {
+  println("      <tr><td style=\"padding:2px\">",cell01,"</td><td style=\"padding:2px\">",cell02,"</td><td style=\"padding:2px\">",cell03,"</td><td style=\"padding:2px\">",cell04,"</td><td style=\"padding:2px\">",cell05,"</td></tr>");
 }
 
 function ListService(service_node) {
   // Service name
   var name=GetRegistryKeyValue(service_node,"DisplayName");
   name=(IsValid(name)) ? RegistryKeyValueToString(name.value,name.type) : "Unknwon";
+  // Service group
+  var group=GetRegistryKeyValue(service_node,"Group");
+  group=(IsValid(group)) ? RegistryKeyValueToString(group.value,group.type) : "";
   // Service exe
   var image=GetRegistryKeyValue(service_node,"ImagePath");
   image=(IsValid(image)) ? RegistryKeyValueToString(image.value,image.type) : "Unknwon";
@@ -42,9 +45,11 @@ function ListService(service_node) {
     default:
       start="Unknown";
   }
-  // Description??
+  // Description
+  var desc=GetRegistryKeyValue(service_node,"Description");
+  desc=(IsValid(desc)) ? RegistryKeyValueToString(desc.value,desc.type) : "";
   
-  PrintTableRow(name,start,image)
+  PrintTableRow(name,group,start,image,desc)
 }
 
 // Global vars
@@ -68,7 +73,7 @@ if(IsValid(cur_controlset)) {
   if(IsValid(services)) {
     println("  <p style=\"font-size:12; white-space:nowrap\">");
     println("    <table style=\"margin-left:20px; font-size:12; white-space:nowrap\">");
-    println("      <tr><td style=\"padding:2px\"><b>Name</b></td style=\"padding:2px\"><td><b>Startup</b></td><td style=\"padding:2px\"><b>Image path</b></td></tr>");
+    println("      <tr><td style=\"padding:2px\"><b>Name</b></td><td style=\"padding:2px\"><b>Group</b></td><td><b>Startup</b></td><td style=\"padding:2px\"><b>Image path</b></td><td style=\"padding:2px\"><b>Description</b></td></tr>");
     for(var i=0;i<services.length;i++) {
       // Get service type
       val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+services[i],"Type");

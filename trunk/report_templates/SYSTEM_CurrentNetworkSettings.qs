@@ -1,3 +1,6 @@
+// See Appendix A: TCP/IP Configuration Parameters:
+// http://technet.microsoft.com/de-de/library/cc739819%28v=WS.10%29.aspx
+
 function IsValid(val) {
   if(typeof val !== 'undefined') return true;
   else return false;
@@ -43,13 +46,22 @@ if(IsValid(cur_controlset)) {
   // Iterate over all available network adapters
   var adapters=GetRegistryNodes(cur_controlset+"\\Services\\Tcpip\\Parameters\\Adapters");
   for(var i=0;i<adapters.length;i++) {
-    // TODO: Try to get a human readable name
-    println("    ",adapters[i]);
+    // Try to get a human readable name
+    // According to http://technet.microsoft.com/de-de/library/cc780532%28v=ws.10%29.aspx
+    // the {4D36E972-E325-11CE-BFC1-08002BE10318} key name might be (and hopefully is) static :)
+    val=GetRegistryKeyValue(cur_controlset+"\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\"+adapters[i]+"\\Connection","Name");
+    if(IsValid(val)) {
+      println("    ",RegistryKeyValueToString(val.value,val.type));
+    } else {
+      println("    ",adapters[i]);
+    }
+
     // Get settings node
     var adapter_settings_node=GetRegistryKeyValue(cur_controlset+"\\Services\\Tcpip\\Parameters\\Adapters\\"+adapters[i],"IpConfig");
     adapter_settings_node=RegistryKeyValueToVariant(adapter_settings_node.value,"utf16",0);
 
     println("    <table style=\"margin-left:20px; font-size:12; white-space:nowrap\">");
+    //print_table_row("Adapter id:",adapters[i]);
 
     // Get configuration mode
     val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"EnableDHCP");
@@ -69,6 +81,9 @@ if(IsValid(cur_controlset)) {
       // Nameserver(s)
       val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"DhcpNameServer");
       print_table_row("Nameserver(s):",(IsValid(val)) ? RegistryKeyValueToString(val.value,val.type) : "");
+      // Domain
+      val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"DhcpDomain");
+      print_table_row("Domain:",(IsValid(val)) ? RegistryKeyValueToString(val.value,val.type) : "");
       // Default gw
       val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"DhcpDefaultGateway");
       print_table_row("Default gateway:",(IsValid(val)) ? RegistryKeyValueToVariant(val.value,"utf16",0) : "");
@@ -87,16 +102,22 @@ if(IsValid(cur_controlset)) {
       val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"SubnetMask");
       print_table_row("Subnet mask:",(IsValid(val)) ? RegistryKeyValueToVariant(val.value,"utf16",0) : "");
       // Nameserver
-      // TODO: Has to be validated
       val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"NameServer");
       print_table_row("Nameserver:",(IsValid(val)) ? RegistryKeyValueToVariant(val.value,"utf16",0) : "");
+      // Domain
+      val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"Domain");
+      print_table_row("Domain:",(IsValid(val)) ? RegistryKeyValueToString(val.value,val.type) : "");
       // Default gw
       val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"DefaultGateway");
       print_table_row("Default gateway:",(IsValid(val)) ? RegistryKeyValueToVariant(val.value,"utf16",0) : "");
     }
 
+    // TODO: Check for EnableSecurityFilters, TCPAllowedPorts and UDPAllowedPorts to get firewall status.
+
     println("    </table>");
     println("    <br />");
+
+    // TODO: Get persistent routes from \ControlSet001\Services\Tcpip\Parameters\PersistentRoutes
   }
   println("  </p>");
 } else {
