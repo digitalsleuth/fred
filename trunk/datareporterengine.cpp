@@ -292,13 +292,14 @@ QScriptValue DataReporterEngine::RegistryKeyValueToVariant(
 {
   int offset=0;
   int length=-1;
+  bool little_endian=true;
   QByteArray key_value;
   QString format="";
   QString ret="";
 
   // This function needs at least two arguments, key value and variant type,
-  // and may have two optional arguments, offset and length
-  if(context->argumentCount()<2 || context->argumentCount()>4) {
+  // and may have three optional arguments, offset, length and little_endian
+  if(context->argumentCount()<2 || context->argumentCount()>5) {
     return engine->undefinedValue();
   }
   if(context->argumentCount()==3) {
@@ -308,12 +309,17 @@ QScriptValue DataReporterEngine::RegistryKeyValueToVariant(
     offset=context->argument(2).toInt32();
     length=context->argument(3).toInt32();
   }
+  if(context->argumentCount()==5) {
+    offset=context->argument(2).toInt32();
+    length=context->argument(3).toInt32();
+    little_endian=(context->argument(4).toInt32()==1);
+  }
 
   // Cast ByteArray argument to QByteArray
   key_value=qvariant_cast<QByteArray>(context->argument(0).data().toVariant());
   format=context->argument(1).toString();
 
-  ret=RegistryHive::KeyValueToString(key_value,format,offset,length);
+  ret=RegistryHive::KeyValueToString(key_value,format,offset,length,little_endian);
 
   return engine->newVariant(ret);
 }
@@ -324,7 +330,7 @@ QScriptValue DataReporterEngine::RegistryKeyTypeToString(
 {
   QString ret="";
 
-  // This function needs one arguments, key type
+  // This function needs one argument, key type
   if(context->argumentCount()!=1) return engine->undefinedValue();
 
   ret=RegistryHive::KeyTypeToString(context->argument(0).toInt32());
