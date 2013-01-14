@@ -260,8 +260,6 @@ void MainWindow::on_ActionSearch_triggered() {
   if(dlg_search.exec()==QDialog::Accepted) {
     // Create search thread and connect needed signals/slots
     this->p_search_thread=new ThreadSearch(this);
-    QList<QByteArray> keywords;
-    keywords.append(QByteArray(QString("Windows").toAscii()));
 
     // Add new search widget to tabwidget and to internal widget list
     SearchResultWidget *p_search_widget=
