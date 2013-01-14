@@ -88,9 +88,10 @@ void RegistryNodeTree::keyPressEvent(QKeyEvent *p_event) {
   {
     QModelIndex cur_index=this->selectedIndexes().at(0);
 
-    if(this->model()->hasChildren(cur_index)) {
-      // Collapse current node
+    if(this->model()->hasChildren(cur_index) && this->isExpanded(cur_index)) {
+      // Current node is expanded. Only collapse this one
       this->collapse(cur_index);
+      return;
     }
     if(!cur_index.parent().isValid()) {
       // Do no try to collapse anything above root node
