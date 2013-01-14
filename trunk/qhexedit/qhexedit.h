@@ -1,5 +1,5 @@
 /*******************************************************************************
-* qhexedit Copyright (c) 2011-2012 by Gillen Daniel <gillen.dan@pinguin.lu>    *
+* qhexedit Copyright (c) 2011-2013 by Gillen Daniel <gillen.dan@pinguin.lu>    *
 *                                                                              *
 * Simple hex editor widget for Qt.                                             *
 *                                                                              *
