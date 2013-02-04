@@ -1,3 +1,5 @@
+fred (0.1.0) stable; urgency=low
+
 fred (0.1.0beta4) unstable; urgency=low
 
   * Fixed some minor UI bugs
@@ -36,7 +38,7 @@ fred (0.1.0alpha3) unstable; urgency=low
 
 fred (0.1.0alpha2) unstable; urgency=low
 
-  * Integrated hexeditor into main windows.
+  * Integrated hexeditor into main window.
   * Added data interpreters
 
  -- Daniel Gillen <gillen.dan@pinguin.lu>  Tue, 09 Aug 2011 17:00:00 +0200

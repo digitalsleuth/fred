@@ -64,10 +64,11 @@ SOURCES   += main.cpp\
              threadsearch.cpp \
              searchresultwidget.cpp \
              tabwidget.cpp \
-    argparser.cpp \
-    datainterpretertable.cpp \
-    datainterpreterwidget.cpp \
-    hexeditwidget.cpp
+             argparser.cpp \
+             datainterpretertable.cpp \
+             datainterpreterwidget.cpp \
+             hexeditwidget.cpp \
+             settings.cpp
 
 HEADERS   += mainwindow.h \
              registrynode.h \
@@ -92,10 +93,11 @@ HEADERS   += mainwindow.h \
              threadsearch.h \
              searchresultwidget.h \
              tabwidget.h \
-    argparser.h \
-    datainterpretertable.h \
-    datainterpreterwidget.h \
-    hexeditwidget.h
+             argparser.h \
+             datainterpretertable.h \
+             datainterpreterwidget.h \
+             hexeditwidget.h \
+             settings.h
 
 FORMS     += mainwindow.ui \
              dlgabout.ui \
@@ -104,7 +106,7 @@ FORMS     += mainwindow.ui \
              dlgsearch.ui
 
 #LIBS      += -lhivex
-LIBS      += $$PWD/hivex/lib/.libs/libhivex.a \
+LIBS      += $$PWD/hivex/lib/.libs/libhivex.a
 
 #DEFINES   += __STDC_FORMAT_MACROS
 
