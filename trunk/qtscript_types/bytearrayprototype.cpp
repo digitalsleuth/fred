@@ -55,6 +55,11 @@ QScriptValue ByteArrayPrototype::remove(int pos, int len) {
   return thisObject();
 }
 
+QScriptValue ByteArrayPrototype::append(const QByteArray &ba) {
+  thisByteArray()->append(ba);
+  return thisObject();
+}
+
 QScriptValue ByteArrayPrototype::appendByte(char byte) const {
   thisByteArray()->append(byte);
   return thisObject();

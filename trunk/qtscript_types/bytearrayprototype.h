@@ -42,6 +42,7 @@ class ByteArrayPrototype : public QObject, public QScriptable {
     QByteArray left(int len) const;
     QByteArray mid(int pos, int len = -1) const;
     QScriptValue remove(int pos, int len);
+    QScriptValue append(const QByteArray &ba);
     QScriptValue appendByte(char byte) const;
     QByteArray right(int len) const;
     QByteArray simplified() const;
