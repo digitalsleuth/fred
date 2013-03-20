@@ -31,6 +31,8 @@ if(IsValid(profile_list) && profile_list.length>0) {
     var loadtime_high=GetRegistryKeyValue("\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList\\"+profile_list[i],"ProfileLoadTimeHigh");
     print_table_row("Profile load time:",(IsValid(loadtime_low) && IsValid(loadtime_high)) ? RegistryKeyValueToVariant(loadtime_low.value.append(loadtime_high.value),"filetime",0) : "n/a");
 
+    // TODO: There is more to decode under \\Microsoft\\Windows NT\\CurrentVersion\\ProfileList
+
     println("    </table>");
     println("  </p>");
   }
