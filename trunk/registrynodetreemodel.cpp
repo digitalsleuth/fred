@@ -121,14 +121,13 @@ QList<QModelIndex> RegistryNodeTreeModel::GetIndexListOf(QString path) const {
   RegistryNode *p_parent_node=this->p_root_node;
   QList<QModelIndex> ret;
   QStringList nodes=path.split("\\",QString::SkipEmptyParts);
-  int i,ii;
   bool found=false;
 
   // Create a list of all index's that form the supplied path
   ret.clear();
-  for(i=0;i<nodes.count();i++) {
+  for(int i=0;i<nodes.count();i++) {
     found=false;
-    for(ii=0;ii<p_parent_node->childCount();ii++) {
+    for(uint64_t ii=0;ii<p_parent_node->childCount();ii++) {
       if(p_parent_node->child(ii)->data()==nodes.at(i)) {
         ret.append(this->createIndex(ii,0,p_parent_node->child(ii)));
         p_parent_node=p_parent_node->child(ii);
