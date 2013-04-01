@@ -25,6 +25,7 @@
 #include <QStringList>
 #include <QTableWidgetItem>
 #include <QFontMetrics>
+//#include <QTextEdit>
 
 SearchResultWidget::SearchResultWidget(QWidget *p_parent)
   : QTableWidget(p_parent)
@@ -47,6 +48,7 @@ void SearchResultWidget::SlotFoundMatch(ThreadSearch::eMatchType match_type,
                                         QString value)
 {
   QTableWidgetItem *p_item;
+//  QTextEdit* p_te;
 
   QString full_path;
   QString type;
@@ -66,6 +68,10 @@ void SearchResultWidget::SlotFoundMatch(ThreadSearch::eMatchType match_type,
     case ThreadSearch::eMatchType_KeyValue:
       type=tr("Key value");
       full_path=path+"\\"+key;
+      //if(value.length()<6934) match=value;
+      //else
+      //match=value.left(5610);
+      //match=QString(value);
       match=value;
       break;
   }
@@ -83,6 +89,9 @@ void SearchResultWidget::SlotFoundMatch(ThreadSearch::eMatchType match_type,
   p_item=new QTableWidgetItem(match);
   p_item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
   this->setItem(rows,2,p_item);
+//  p_te=new QTextEdit(match);
+//  p_te->setReadOnly(true);
+//  this->setCellWidget(rows,2,p_te);
 }
 
 int SearchResultWidget::sizeHintForColumn(int column) const {
@@ -91,11 +100,22 @@ int SearchResultWidget::sizeHintForColumn(int column) const {
   int item_width=0;
   QFontMetrics fm(this->fontMetrics());
 
+//  if(column<0 || column>=this->columnCount()) return -1;
+
   // Find string that needs the most amount of space
   for(i=0;i<this->rowCount();i++) {
-    item_width=fm.width(this->item(i,column)->text())+10;
+//    if(column!=2) {
+      item_width=fm.width(this->item(i,column)->text())+10;
+      //item_width=this->item(i,column)->sizeHint().width();
+//    } else {
+//      // Column 2 has special cell widgets
+//      item_width=fm.width(((QTextEdit*)(this->cellWidget(i,column)))->toPlainText())+10;
+//    }
     if(item_width>size_hint) size_hint=item_width;
   }
+
+  // Qt seems to be very unhappy with size hints bigger then 30000.
+  if(size_hint>30000) size_hint=30000;
 
   return size_hint;
 }
