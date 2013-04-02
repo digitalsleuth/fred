@@ -18,45 +18,25 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#ifndef REGISTRYNODETREE_H
-#define REGISTRYNODETREE_H
-
-#include <QTreeView>
-#include <QAbstractItemModel>
-#include <QContextMenuEvent>
-#include <QMenu>
-#include <QAction>
-
 #include "registrynodetreemodelproxy.h"
 
-class RegistryNodeTree : public QTreeView {
-  Q_OBJECT
+RegistryNodeTreeModelProxy::RegistryNodeTreeModelProxy(QObject *p_parent) :
+  QSortFilterProxyModel(p_parent)
+{
+}
 
-  public:
-    RegistryNodeTree(QWidget *p_parent=0);
-    ~RegistryNodeTree();
+bool RegistryNodeTreeModelProxy::lessThan(const QModelIndex &left,
+                                          const QModelIndex &right) const
+{
+  QVariant leftData=this->sourceModel()->data(left);
+  QVariant rightData=this->sourceModel()->data(right);
 
-    void setModel(QAbstractItemModel *p_model);
-
-  Q_SIGNALS:
-    void CurrentItemChanged(QModelIndex current);
-
-  protected:
-  //  int sizeHintForColumn(int column) const;
-    void contextMenuEvent(QContextMenuEvent *p_event);
-    void keyPressEvent(QKeyEvent *p_event);
-
-  private:
-    RegistryNodeTreeModelProxy *p_model_proxy;
-    QMenu *p_menu_copy;
-    QAction *p_action_copy_node_name;
-    QAction *p_action_copy_node_path;
-    void currentChanged(const QModelIndex &current,
-                        const QModelIndex &previous);
-
-  private slots:
-    void SlotCopyNodeName();
-    void SlotCopyNodePath();
-};
-
-#endif // REGISTRYNODETREE_H
+  if(leftData.type()==QVariant::String && rightData.type()==QVariant::String) {
+    // Sort strings case insensitive
+//    return QString::localeAwareCompare(leftData.toString().toLower(),
+//                                       rightData.toString().toLower());
+    return QSortFilterProxyModel::lessThan(left,right);
+  } else {
+    return QSortFilterProxyModel::lessThan(left,right);
+  }
+}

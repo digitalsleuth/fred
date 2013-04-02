@@ -1,5 +1,5 @@
 /*******************************************************************************
-* fred Copyright (c) 2011-2013 by Gillen Daniel <gillen.dan@pinguin.lu>        *
+* fred Copyright (c) 2011 by Gillen Daniel <gillen.dan@pinguin.lu>             *
 *                                                                              *
 * Forensic Registry EDitor (fred) is a cross-platform M$ registry hive editor  *
 * with special feautures useful during forensic analysis.                      *
@@ -18,45 +18,19 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#ifndef REGISTRYNODETREE_H
-#define REGISTRYNODETREE_H
+#ifndef SEARCHRESULTTABLEDELEGATE_H
+#define SEARCHRESULTTABLEDELEGATE_H
 
-#include <QTreeView>
-#include <QAbstractItemModel>
-#include <QContextMenuEvent>
-#include <QMenu>
-#include <QAction>
+#include <QStyledItemDelegate>
 
-#include "registrynodetreemodelproxy.h"
-
-class RegistryNodeTree : public QTreeView {
+class SearchResultTableDelegate : public QStyledItemDelegate {
   Q_OBJECT
 
   public:
-    RegistryNodeTree(QWidget *p_parent=0);
-    ~RegistryNodeTree();
-
-    void setModel(QAbstractItemModel *p_model);
-
-  Q_SIGNALS:
-    void CurrentItemChanged(QModelIndex current);
-
-  protected:
-  //  int sizeHintForColumn(int column) const;
-    void contextMenuEvent(QContextMenuEvent *p_event);
-    void keyPressEvent(QKeyEvent *p_event);
-
-  private:
-    RegistryNodeTreeModelProxy *p_model_proxy;
-    QMenu *p_menu_copy;
-    QAction *p_action_copy_node_name;
-    QAction *p_action_copy_node_path;
-    void currentChanged(const QModelIndex &current,
-                        const QModelIndex &previous);
-
-  private slots:
-    void SlotCopyNodeName();
-    void SlotCopyNodePath();
+    explicit SearchResultTableDelegate(QObject *parent = 0);
+    void paint(QPainter *painter,
+               const QStyleOptionViewItem &option,
+               const QModelIndex &index) const;
 };
 
-#endif // REGISTRYNODETREE_H
+#endif // SEARCHRESULTTABLEDELEGATE_H

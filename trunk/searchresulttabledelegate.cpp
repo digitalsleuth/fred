@@ -18,45 +18,21 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#ifndef REGISTRYNODETREE_H
-#define REGISTRYNODETREE_H
+#include "searchresulttabledelegate.h"
 
-#include <QTreeView>
-#include <QAbstractItemModel>
-#include <QContextMenuEvent>
-#include <QMenu>
-#include <QAction>
+SearchResultTableDelegate::SearchResultTableDelegate(QObject *parent) :
+  QStyledItemDelegate(parent)
+{
+}
 
-#include "registrynodetreemodelproxy.h"
-
-class RegistryNodeTree : public QTreeView {
-  Q_OBJECT
-
-  public:
-    RegistryNodeTree(QWidget *p_parent=0);
-    ~RegistryNodeTree();
-
-    void setModel(QAbstractItemModel *p_model);
-
-  Q_SIGNALS:
-    void CurrentItemChanged(QModelIndex current);
-
-  protected:
-  //  int sizeHintForColumn(int column) const;
-    void contextMenuEvent(QContextMenuEvent *p_event);
-    void keyPressEvent(QKeyEvent *p_event);
-
-  private:
-    RegistryNodeTreeModelProxy *p_model_proxy;
-    QMenu *p_menu_copy;
-    QAction *p_action_copy_node_name;
-    QAction *p_action_copy_node_path;
-    void currentChanged(const QModelIndex &current,
-                        const QModelIndex &previous);
-
-  private slots:
-    void SlotCopyNodeName();
-    void SlotCopyNodePath();
-};
-
-#endif // REGISTRYNODETREE_H
+void SearchResultTableDelegate::paint(QPainter *painter,
+                                      const QStyleOptionViewItem &option,
+                                      const QModelIndex &index) const
+{
+  if(index.isValid() && index.column()==2) {
+    // TODO: Render match string different
+    QStyledItemDelegate::paint(painter,option,index);
+  } else {
+    QStyledItemDelegate::paint(painter,option,index);
+  }
+}

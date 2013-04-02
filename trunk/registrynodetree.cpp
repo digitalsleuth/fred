@@ -28,6 +28,11 @@
 RegistryNodeTree::RegistryNodeTree(QWidget *p_parent) : QTreeView(p_parent) {
   // Configure widget
   this->setTextElideMode(Qt::ElideNone);
+//  this->sortByColumn(0,Qt::AscendingOrder);
+//  this->setSortingEnabled(true);
+
+  // Create proxy model
+  this->p_model_proxy=new RegistryNodeTreeModelProxy(this);
 
   // Create context menu
   this->p_menu_copy=new QMenu(tr("Copy"),this);
@@ -48,6 +53,8 @@ RegistryNodeTree::RegistryNodeTree(QWidget *p_parent) : QTreeView(p_parent) {
 }
 
 RegistryNodeTree::~RegistryNodeTree() {
+  // Delete our proxy model
+  delete this->p_model_proxy;
   // Delete context menu
   delete this->p_action_copy_node_name;
   delete this->p_action_copy_node_path;
@@ -55,7 +62,14 @@ RegistryNodeTree::~RegistryNodeTree() {
 }
 
 void RegistryNodeTree::setModel(QAbstractItemModel *p_model) {
-  QTreeView::setModel(p_model);
+  if(p_model!=NULL) {
+    // Assign model to our proxy model
+    this->p_model_proxy->setSourceModel(p_model);
+    // Then assign proxy as our own model
+    QTreeView::setModel(p_model);
+  } else {
+    QTreeView::setModel(p_model);
+  }
   this->header()->setResizeMode(0,QHeaderView::ResizeToContents);
   this->header()->setStretchLastSection(false);
   if(p_model!=NULL && p_model->index(0,0).isValid()) {

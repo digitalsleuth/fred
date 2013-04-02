@@ -24,12 +24,14 @@
 #include <QTableWidget>
 
 #include "threadsearch.h"
+#include "searchresulttabledelegate.h"
 
 class SearchResultWidget : public QTableWidget {
   Q_OBJECT
 
   public:
     SearchResultWidget(QWidget *p_parent=0);
+    ~SearchResultWidget();
 
   public slots:
     void SlotFoundMatch(ThreadSearch::eMatchType match_type,
@@ -40,6 +42,7 @@ class SearchResultWidget : public QTableWidget {
 
   protected:
     int sizeHintForColumn(int column) const;
+    SearchResultTableDelegate *p_delegate;
 };
 
 #endif // SEARCHRESULTWIDGET_H

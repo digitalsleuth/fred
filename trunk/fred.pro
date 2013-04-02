@@ -68,7 +68,9 @@ SOURCES   += main.cpp\
              datainterpretertable.cpp \
              datainterpreterwidget.cpp \
              hexeditwidget.cpp \
-             settings.cpp
+             settings.cpp \
+    searchresulttabledelegate.cpp \
+    registrynodetreemodelproxy.cpp
 
 HEADERS   += mainwindow.h \
              registrynode.h \
@@ -97,7 +99,9 @@ HEADERS   += mainwindow.h \
              datainterpretertable.h \
              datainterpreterwidget.h \
              hexeditwidget.h \
-             settings.h
+             settings.h \
+    searchresulttabledelegate.h \
+    registrynodetreemodelproxy.h
 
 FORMS     += mainwindow.ui \
              dlgabout.ui \

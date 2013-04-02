@@ -30,6 +30,9 @@
 SearchResultWidget::SearchResultWidget(QWidget *p_parent)
   : QTableWidget(p_parent)
 {
+  // Create our delegate instance
+  this->p_delegate=new SearchResultTableDelegate();
+  this->setItemDelegate(this->p_delegate);
   this->setColumnCount(3);
   this->setRowCount(0);
   this->setTextElideMode(Qt::ElideNone);
@@ -40,6 +43,10 @@ SearchResultWidget::SearchResultWidget(QWidget *p_parent)
   this->setHorizontalHeaderLabels(QStringList()<<tr("Path")
                                                <<tr("Match type")
                                                <<tr("Match text"));
+}
+
+SearchResultWidget::~SearchResultWidget() {
+  delete this->p_delegate;
 }
 
 void SearchResultWidget::SlotFoundMatch(ThreadSearch::eMatchType match_type,
@@ -115,7 +122,7 @@ int SearchResultWidget::sizeHintForColumn(int column) const {
   }
 
   // Qt seems to be very unhappy with size hints bigger then 30000.
-  if(size_hint>30000) size_hint=30000;
+//  if(size_hint>30000) size_hint=30000;
 
   return size_hint;
 }
