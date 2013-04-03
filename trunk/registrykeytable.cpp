@@ -98,9 +98,6 @@ int RegistryKeyTable::sizeHintForColumn(int column) const {
     idx=this->model()->index(++i,column);
   }
 
-  // Qt seems to be very unhappy with size hints bigger then 30000.
-  if(size_hint>30000) size_hint=30000;
-
   return size_hint;
 }
 

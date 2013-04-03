@@ -111,18 +111,9 @@ int SearchResultWidget::sizeHintForColumn(int column) const {
 
   // Find string that needs the most amount of space
   for(i=0;i<this->rowCount();i++) {
-//    if(column!=2) {
       item_width=fm.width(this->item(i,column)->text())+10;
-      //item_width=this->item(i,column)->sizeHint().width();
-//    } else {
-//      // Column 2 has special cell widgets
-//      item_width=fm.width(((QTextEdit*)(this->cellWidget(i,column)))->toPlainText())+10;
-//    }
     if(item_width>size_hint) size_hint=item_width;
   }
-
-  // Qt seems to be very unhappy with size hints bigger then 30000.
-//  if(size_hint>30000) size_hint=30000;
 
   return size_hint;
 }

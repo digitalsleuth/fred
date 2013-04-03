@@ -27,8 +27,6 @@
 #include <QMenu>
 #include <QAction>
 
-#include "registrynodetreemodelproxy.h"
-
 class RegistryNodeTree : public QTreeView {
   Q_OBJECT
 
@@ -37,7 +35,6 @@ class RegistryNodeTree : public QTreeView {
     ~RegistryNodeTree();
 
     void setModel(QAbstractItemModel *p_model);
-    QModelIndex MapIndexToModel(const QModelIndex &index);
 
   Q_SIGNALS:
     void CurrentItemChanged(QModelIndex current);
@@ -48,7 +45,6 @@ class RegistryNodeTree : public QTreeView {
     void keyPressEvent(QKeyEvent *p_event);
 
   private:
-    RegistryNodeTreeModelProxy *p_model_proxy;
     QMenu *p_menu_copy;
     QAction *p_action_copy_node_name;
     QAction *p_action_copy_node_path;

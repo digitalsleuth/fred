@@ -31,10 +31,6 @@ RegistryNodeTree::RegistryNodeTree(QWidget *p_parent) : QTreeView(p_parent) {
   this->sortByColumn(0,Qt::AscendingOrder);
   this->setSortingEnabled(true);
 
-  // Create proxy model
-//  this->p_model_proxy=new RegistryNodeTreeModelProxy(this);
-//  this->p_model_proxy->setDynamicSortFilter(true);
-
   // Create context menu
   this->p_menu_copy=new QMenu(tr("Copy"),this);
   this->p_action_copy_node_name=new QAction(tr("Node name"),
@@ -54,8 +50,6 @@ RegistryNodeTree::RegistryNodeTree(QWidget *p_parent) : QTreeView(p_parent) {
 }
 
 RegistryNodeTree::~RegistryNodeTree() {
-  // Delete our proxy model
-//  delete this->p_model_proxy;
   // Delete context menu
   delete this->p_action_copy_node_name;
   delete this->p_action_copy_node_path;
@@ -63,10 +57,7 @@ RegistryNodeTree::~RegistryNodeTree() {
 }
 
 void RegistryNodeTree::setModel(QAbstractItemModel *p_model) {
-  // Assign model to our proxy model
-//  this->p_model_proxy->setSourceModel(p_model);
-  // Then assign proxy as our own model
-//  QTreeView::setModel(this->p_model_proxy);
+  // Assign model to view
   QTreeView::setModel(p_model);
 
   this->header()->setResizeMode(0,QHeaderView::ResizeToContents);
@@ -76,12 +67,7 @@ void RegistryNodeTree::setModel(QAbstractItemModel *p_model) {
     this->setCurrentIndex(p_model->index(0,0));
   }
 }
-/*
-QModelIndex RegistryNodeTree::MapIndexToModel(const QModelIndex &index) {
-  if(this->p_model_proxy==NULL) return QModelIndex();
-  else return this->p_model_proxy->mapToSource(index);
-}
-*/
+
 void RegistryNodeTree::contextMenuEvent(QContextMenuEvent *p_event) {
   // Only show context menu when a node is selected
   if(this->selectedIndexes().count()!=1) return;
