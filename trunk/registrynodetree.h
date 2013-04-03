@@ -37,6 +37,7 @@ class RegistryNodeTree : public QTreeView {
     ~RegistryNodeTree();
 
     void setModel(QAbstractItemModel *p_model);
+    QModelIndex MapIndexToModel(const QModelIndex &index);
 
   Q_SIGNALS:
     void CurrentItemChanged(QModelIndex current);

@@ -28,11 +28,12 @@
 RegistryNodeTree::RegistryNodeTree(QWidget *p_parent) : QTreeView(p_parent) {
   // Configure widget
   this->setTextElideMode(Qt::ElideNone);
-//  this->sortByColumn(0,Qt::AscendingOrder);
-//  this->setSortingEnabled(true);
+  this->sortByColumn(0,Qt::AscendingOrder);
+  this->setSortingEnabled(true);
 
   // Create proxy model
-  this->p_model_proxy=new RegistryNodeTreeModelProxy(this);
+//  this->p_model_proxy=new RegistryNodeTreeModelProxy(this);
+//  this->p_model_proxy->setDynamicSortFilter(true);
 
   // Create context menu
   this->p_menu_copy=new QMenu(tr("Copy"),this);
@@ -54,7 +55,7 @@ RegistryNodeTree::RegistryNodeTree(QWidget *p_parent) : QTreeView(p_parent) {
 
 RegistryNodeTree::~RegistryNodeTree() {
   // Delete our proxy model
-  delete this->p_model_proxy;
+//  delete this->p_model_proxy;
   // Delete context menu
   delete this->p_action_copy_node_name;
   delete this->p_action_copy_node_path;
@@ -62,14 +63,12 @@ RegistryNodeTree::~RegistryNodeTree() {
 }
 
 void RegistryNodeTree::setModel(QAbstractItemModel *p_model) {
-  if(p_model!=NULL) {
-    // Assign model to our proxy model
-    this->p_model_proxy->setSourceModel(p_model);
-    // Then assign proxy as our own model
-    QTreeView::setModel(p_model);
-  } else {
-    QTreeView::setModel(p_model);
-  }
+  // Assign model to our proxy model
+//  this->p_model_proxy->setSourceModel(p_model);
+  // Then assign proxy as our own model
+//  QTreeView::setModel(this->p_model_proxy);
+  QTreeView::setModel(p_model);
+
   this->header()->setResizeMode(0,QHeaderView::ResizeToContents);
   this->header()->setStretchLastSection(false);
   if(p_model!=NULL && p_model->index(0,0).isValid()) {
@@ -77,9 +76,12 @@ void RegistryNodeTree::setModel(QAbstractItemModel *p_model) {
     this->setCurrentIndex(p_model->index(0,0));
   }
 }
-
-//int RegistryNodeTree::sizeHintForColumn(int column) const {}
-
+/*
+QModelIndex RegistryNodeTree::MapIndexToModel(const QModelIndex &index) {
+  if(this->p_model_proxy==NULL) return QModelIndex();
+  else return this->p_model_proxy->mapToSource(index);
+}
+*/
 void RegistryNodeTree::contextMenuEvent(QContextMenuEvent *p_event) {
   // Only show context menu when a node is selected
   if(this->selectedIndexes().count()!=1) return;

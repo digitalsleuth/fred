@@ -37,6 +37,7 @@
 #include "registryhive.h"
 #include "registrynodetree.h"
 #include "registrynodetreemodel.h"
+#include "registrynodetreemodelproxy.h"
 #include "registrykeytable.h"
 #include "registrykeytablemodel.h"
 #include "hexeditwidget.h"
@@ -78,21 +79,24 @@ private:
     QString last_open_location;
     RegistryHive *p_hive;
     bool is_hive_open;
-    RegistryNodeTreeModel *p_reg_node_tree_model;
-    RegistryKeyTableModel *p_reg_key_table_model;
     QByteArray selected_key_value;
     QList<SearchResultWidget*> search_result_widgets;
+
+    // Models
+    RegistryNodeTreeModel *p_reg_node_tree_model;
+    RegistryNodeTreeModelProxy *p_reg_node_tree_model_proxy;
+    RegistryKeyTableModel *p_reg_key_table_model;
 
     // Widgets etc...
     RegistryNodeTree *p_node_tree;
     RegistryKeyTable *p_key_table;
     TabWidget *p_tab_widget;
-
     HexEditWidget *p_hex_edit_widget;
-
     QSplitter *p_horizontal_splitter;
     QSplitter *p_vertical_splitter;
     DataReporter *p_data_reporter;
+
+    // Threads
     ThreadSearch *p_search_thread;
 
     /*

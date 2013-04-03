@@ -33,9 +33,7 @@ bool RegistryNodeTreeModelProxy::lessThan(const QModelIndex &left,
 
   if(leftData.type()==QVariant::String && rightData.type()==QVariant::String) {
     // Sort strings case insensitive
-//    return QString::localeAwareCompare(leftData.toString().toLower(),
-//                                       rightData.toString().toLower());
-    return QSortFilterProxyModel::lessThan(left,right);
+    return leftData.toString().toLower()<rightData.toString().toLower();
   } else {
     return QSortFilterProxyModel::lessThan(left,right);
   }

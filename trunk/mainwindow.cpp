@@ -52,6 +52,7 @@ MainWindow::MainWindow(ArgParser *p_arg_parser) :
   this->p_hive=new RegistryHive(this);
   this->is_hive_open=false;
   this->p_reg_node_tree_model=NULL;
+  this->p_reg_node_tree_model_proxy=NULL;
   this->p_reg_key_table_model=NULL;
   this->p_search_thread=NULL;
   this->search_result_widgets.clear();
@@ -222,7 +223,9 @@ void MainWindow::on_action_Close_hive_triggered() {
     // Delete models
     if(this->p_reg_node_tree_model!=NULL) {
       this->p_node_tree->setModel(NULL);
+      delete this->p_reg_node_tree_model_proxy;
       delete this->p_reg_node_tree_model;
+      this->p_reg_node_tree_model_proxy=NULL;
       this->p_reg_node_tree_model=NULL;
     }
     if(this->p_reg_key_table_model!=NULL) {
@@ -305,6 +308,9 @@ void MainWindow::SlotNodeTreeClicked(QModelIndex index) {
   QString node_path;
 
   if(!index.isValid()) return;
+
+  // Map proxy index to tree model index
+  index=this->p_reg_node_tree_model_proxy->mapToSource(index);
 
   // Built node path
   node_path=this->p_reg_node_tree_model->GetNodePath(index);
@@ -447,6 +453,8 @@ void MainWindow::SlotSearchResultWidgetDoubleClicked(QModelIndex index) {
   QList<QModelIndex> indexes=
     this->p_reg_node_tree_model->GetIndexListOf(path);
   for(i=0;i<indexes.count();i++) {
+    indexes.replace(i,this->p_reg_node_tree_model_proxy->
+                        mapFromSource(indexes.at(i)));
     this->p_node_tree->expand(indexes.at(i));
   }
   if(indexes.count()>0) {
@@ -547,10 +555,13 @@ void MainWindow::OpenHive(QString hive_file) {
     return;
   }
 
-  // Create tree model
-  this->p_reg_node_tree_model=
-    new RegistryNodeTreeModel(this->p_hive);
-  this->p_node_tree->setModel(this->p_reg_node_tree_model);
+  // Create tree model & proxy
+  this->p_reg_node_tree_model=new RegistryNodeTreeModel(this->p_hive);
+  this->p_reg_node_tree_model_proxy=new RegistryNodeTreeModelProxy(this);
+  //this->p_reg_node_tree_model_proxy->setDynamicSortFilter(true);
+  this->p_reg_node_tree_model_proxy->
+    setSourceModel(this->p_reg_node_tree_model);
+  this->p_node_tree->setModel(this->p_reg_node_tree_model_proxy);
 
   this->is_hive_open=true;
   this->ui->action_Close_hive->setEnabled(true);
