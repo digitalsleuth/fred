@@ -23,6 +23,7 @@
 
 #include <QList>
 #include <QVariant>
+
 #include <inttypes.h>
 
 class RegistryKey {
@@ -33,7 +34,7 @@ class RegistryKey {
     void Append(RegistryKey *p_key);
     RegistryKey *Key(uint64_t row);
     uint64_t RowCount();
-    QVariant Data(uint64_t column) const;
+    QVariant Data(int column) const;
     uint64_t Row() const;
 
   private:

@@ -22,25 +22,26 @@
 #define REGISTRYNODE_H
 
 #include <QList>
-#include <QString>
+#include <QVariant>
 
 #include <inttypes.h>
 
 class RegistryNode {
   public:
-    RegistryNode(const QString name, RegistryNode *p_parent=0);
+    RegistryNode(const QList<QVariant> &data,
+                 RegistryNode *p_parent=0);
     ~RegistryNode();
 
     void AppendChild(RegistryNode *p_child);
-    RegistryNode *child(uint64_t row);
-    uint64_t childCount() const;
-    QString data() const;
-    uint64_t row() const;
-    RegistryNode *parent();
+    RegistryNode *Child(uint64_t row);
+    uint64_t ChildCount() const;
+    QVariant Data(int column) const;
+    uint64_t Row() const;
+    RegistryNode *Parent();
 
   private:
     QList<RegistryNode*> child_nodes;
-    QString node_name;
+    QList<QVariant> node_data;
     RegistryNode *p_parent_node;
 };
 

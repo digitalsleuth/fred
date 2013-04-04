@@ -20,11 +20,11 @@
 
 #include "registrynode.h"
 
-RegistryNode::RegistryNode(const QString name,
+RegistryNode::RegistryNode(const QList<QVariant> &data,
                            RegistryNode *p_parent)
 {
+  this->node_data=data;
   this->p_parent_node=p_parent;
-  this->node_name=name;
 }
 
 RegistryNode::~RegistryNode() {
@@ -35,19 +35,23 @@ void RegistryNode::AppendChild(RegistryNode *p_child) {
   this->child_nodes.append(p_child);
 }
 
-RegistryNode* RegistryNode::child(uint64_t row) {
+RegistryNode* RegistryNode::Child(uint64_t row) {
   return this->child_nodes.value(row);
 }
 
-uint64_t RegistryNode::childCount() const {
+uint64_t RegistryNode::ChildCount() const {
   return this->child_nodes.count();
 }
 
-QString RegistryNode::data() const {
-  return this->node_name;
+QVariant RegistryNode::Data(int column) const {
+  if(column>=0 && column<2) {
+    return this->node_data.value(column);
+  } else {
+    return QVariant();
+  }
 }
 
-uint64_t RegistryNode::row() const {
+uint64_t RegistryNode::Row() const {
   if(this->p_parent_node) {
     return this->p_parent_node->
       child_nodes.indexOf(const_cast<RegistryNode*>(this));
@@ -56,6 +60,6 @@ uint64_t RegistryNode::row() const {
   }
 }
 
-RegistryNode *RegistryNode::parent() {
+RegistryNode *RegistryNode::Parent() {
   return this->p_parent_node;
 }

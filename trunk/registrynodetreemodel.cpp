@@ -19,7 +19,9 @@
 *******************************************************************************/
 #include "registrynodetreemodel.h"
 
+#include <QList>
 #include <QStringList>
+#include <QVariant>
 
 #include <stdlib.h>
 
@@ -28,7 +30,7 @@ RegistryNodeTreeModel::RegistryNodeTreeModel(RegistryHive *p_hive,
   : QAbstractItemModel(p_parent)
 {
   // Create root node
-  this->p_root_node=new RegistryNode("ROOT");
+  this->p_root_node=new RegistryNode(QList<QVariant>()<<QString("ROOT")<<0);
   // Build node list
   this->SetupModelData(p_hive,this->p_root_node);
 }
@@ -44,7 +46,7 @@ QVariant RegistryNodeTreeModel::data(const QModelIndex &index, int role) const
 
   RegistryNode *p_node=static_cast<RegistryNode*>(index.internalPointer());
 
-  return p_node->data();
+  return p_node->Data();
 }
 
 Qt::ItemFlags RegistryNodeTreeModel::flags(const QModelIndex &index) const {
@@ -77,7 +79,7 @@ QModelIndex RegistryNodeTreeModel::index(int row,
     p_parent_node=static_cast<RegistryNode*>(parent.internalPointer());
   }
 
-  RegistryNode *p_child_node=p_parent_node->child(row);
+  RegistryNode *p_child_node=p_parent_node->Child(row);
   if(p_child_node) {
     return this->createIndex(row,column,p_child_node);
   } else {
@@ -90,12 +92,12 @@ QModelIndex RegistryNodeTreeModel::parent(const QModelIndex &index) const {
 
   RegistryNode *p_child_node=
     static_cast<RegistryNode*>(index.internalPointer());
-  RegistryNode *p_parent_node=p_child_node->parent();
+  RegistryNode *p_parent_node=p_child_node->Parent();
 
   if(p_parent_node==this->p_root_node) {
     return QModelIndex();
   } else {
-    return this->createIndex(p_parent_node->row(),0,p_parent_node);
+    return this->createIndex(p_parent_node->Row(),0,p_parent_node);
   }
 }
 
@@ -109,12 +111,12 @@ int RegistryNodeTreeModel::rowCount(const QModelIndex &parent) const {
     p_parent_node=static_cast<RegistryNode*>(parent.internalPointer());
   }
 
-  return p_parent_node->childCount();
+  return p_parent_node->ChildCount();
 }
 
 int RegistryNodeTreeModel::columnCount(const QModelIndex &parent) const {
   Q_UNUSED(parent);
-  return 1;
+  return 2;
 }
 
 QList<QModelIndex> RegistryNodeTreeModel::GetIndexListOf(QString path) const {
@@ -127,10 +129,10 @@ QList<QModelIndex> RegistryNodeTreeModel::GetIndexListOf(QString path) const {
   ret.clear();
   for(int i=0;i<nodes.count();i++) {
     found=false;
-    for(uint64_t ii=0;ii<p_parent_node->childCount();ii++) {
-      if(p_parent_node->child(ii)->data()==nodes.at(i)) {
-        ret.append(this->createIndex(ii,0,p_parent_node->child(ii)));
-        p_parent_node=p_parent_node->child(ii);
+    for(uint64_t ii=0;ii<p_parent_node->ChildCount();ii++) {
+      if(p_parent_node->Child(ii)->Data()==nodes.at(i)) {
+        ret.append(this->createIndex(ii,0,p_parent_node->Child(ii)));
+        p_parent_node=p_parent_node->Child(ii);
         found=true;
         break;
       }
@@ -176,7 +178,7 @@ void RegistryNodeTreeModel::SetupModelData(RegistryHive *p_hive,
   QMapIterator<QString, int> i(hive_children);
   while(i.hasNext()) {
     i.next();
-    p_node=new RegistryNode(i.key(),p_parent);
+    p_node=new RegistryNode(QList<QVariant>()<<i.key()<<0,p_parent);
     p_parent->AppendChild(p_node);
     this->SetupModelData(p_hive,p_node,i.value());
   }
