@@ -22,7 +22,6 @@
 #define REGISTRYKEYTABLEMODEL_H
 
 #include <QAbstractTableModel>
-#include <QDateTime>
 
 #include "registrykey.h"
 #include "registryhive.h"
@@ -57,8 +56,7 @@ class RegistryKeyTableModel : public QAbstractTableModel {
     enum ColumnContent {
       ColumnContent_KeyName=0,
       ColumnContent_KeyType,
-      ColumnContent_KeyValue,
-      ColumnContent_KeyModTime
+      ColumnContent_KeyValue
     };
 
     RegistryKey *p_keys;

@@ -51,6 +51,11 @@ class RegistryNodeTreeModel : public QAbstractItemModel {
     QString GetNodePath(QModelIndex child_index) const;
 
   private:
+    enum ColumnContent {
+      ColumnContent_NodeName=0,
+      ColumnContent_NodeModTime
+    };
+
     RegistryNode *p_root_node;
 
     void SetupModelData(RegistryHive *p_hive,

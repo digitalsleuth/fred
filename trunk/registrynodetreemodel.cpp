@@ -22,15 +22,17 @@
 #include <QList>
 #include <QStringList>
 #include <QVariant>
+#include <QDateTime>
 
-#include <stdlib.h>
+#include <inttypes.h>
 
 RegistryNodeTreeModel::RegistryNodeTreeModel(RegistryHive *p_hive,
                                              QObject *p_parent)
   : QAbstractItemModel(p_parent)
 {
-  // Create root node
-  this->p_root_node=new RegistryNode(QList<QVariant>()<<QString("ROOT")<<0);
+  // Create root node. It's values will be used as header values.
+  this->p_root_node=new RegistryNode(QList<QVariant>()<<tr("Node")
+                                                      <<tr("Last mod. time"));
   // Build node list
   this->SetupModelData(p_hive,this->p_root_node);
 }
@@ -46,7 +48,33 @@ QVariant RegistryNodeTreeModel::data(const QModelIndex &index, int role) const
 
   RegistryNode *p_node=static_cast<RegistryNode*>(index.internalPointer());
 
-  return p_node->Data();
+  switch(role) {
+    case Qt::DisplayRole: {
+      switch(index.column()) {
+        case RegistryNodeTreeModel::ColumnContent_NodeName: {
+          return p_node->Data(index.column());
+          break;
+        }
+        case RegistryNodeTreeModel::ColumnContent_NodeModTime: {
+          QDateTime date_time;
+          bool ok=false;
+          date_time.setTimeSpec(Qt::UTC);
+          date_time.setTime_t(RegistryHive::FiletimeToUnixtime(
+                                p_node->Data(index.column()).toLongLong(&ok)));
+          if(ok) return date_time.toString("yyyy/MM/dd hh:mm:ss");
+          else return tr("Unknown");
+          break;
+        }
+        default: {
+          return QVariant();
+        }
+      }
+      break;
+    }
+    default: {
+      return QVariant();
+    }
+  }
 }
 
 Qt::ItemFlags RegistryNodeTreeModel::flags(const QModelIndex &index) const {
@@ -58,11 +86,20 @@ QVariant RegistryNodeTreeModel::headerData(int section,
                                            Qt::Orientation orientation,
                                            int role) const
 {
-  Q_UNUSED(section);
-  if(orientation==Qt::Horizontal && role==Qt::DisplayRole) {
-    return QVariant("Registry key folders");
-  } else {
-    return QVariant();
+  // Only horizontal header is supported
+  if(orientation!=Qt::Horizontal) return QVariant();
+
+  switch(role) {
+    case Qt::TextAlignmentRole:
+      // Handle text alignment
+      return Qt::AlignCenter;
+      break;
+    case Qt::DisplayRole:
+      // Header text
+      return this->p_root_node->Data(section);
+      break;
+    default:
+      return QVariant();
   }
 }
 
@@ -130,7 +167,7 @@ QList<QModelIndex> RegistryNodeTreeModel::GetIndexListOf(QString path) const {
   for(int i=0;i<nodes.count();i++) {
     found=false;
     for(uint64_t ii=0;ii<p_parent_node->ChildCount();ii++) {
-      if(p_parent_node->Child(ii)->Data()==nodes.at(i)) {
+      if(p_parent_node->Child(ii)->Data(0)==nodes.at(i)) {
         ret.append(this->createIndex(ii,0,p_parent_node->Child(ii)));
         p_parent_node=p_parent_node->Child(ii);
         found=true;
@@ -168,6 +205,7 @@ void RegistryNodeTreeModel::SetupModelData(RegistryHive *p_hive,
 {
   QMap<QString,int> hive_children;
   RegistryNode *p_node;
+  int64_t key_mod_time;
 
   // Get all sub nodes of current hive node
   if(hive_node) hive_children=p_hive->GetNodes(hive_node);
@@ -178,7 +216,10 @@ void RegistryNodeTreeModel::SetupModelData(RegistryHive *p_hive,
   QMapIterator<QString, int> i(hive_children);
   while(i.hasNext()) {
     i.next();
-    p_node=new RegistryNode(QList<QVariant>()<<i.key()<<0,p_parent);
+    key_mod_time=p_hive->GetNodeModTime(i.value());
+    // TODO: Maybe we have to call GetErrorMsg in case an error occured
+    p_node=new RegistryNode(QList<QVariant>()<<i.key()<<
+                              QVariant((qlonglong)key_mod_time),p_parent);
     p_parent->AppendChild(p_node);
     this->SetupModelData(p_hive,p_node,i.value());
   }

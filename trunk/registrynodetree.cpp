@@ -28,6 +28,8 @@
 RegistryNodeTree::RegistryNodeTree(QWidget *p_parent) : QTreeView(p_parent) {
   // Configure widget
   this->setTextElideMode(Qt::ElideNone);
+  this->setSelectionMode(QAbstractItemView::SingleSelection);
+  this->setSelectionBehavior(QAbstractItemView::SelectRows);
   this->sortByColumn(0,Qt::AscendingOrder);
   this->setSortingEnabled(true);
 
@@ -61,7 +63,7 @@ void RegistryNodeTree::setModel(QAbstractItemModel *p_model) {
   QTreeView::setModel(p_model);
 
   this->header()->setResizeMode(0,QHeaderView::ResizeToContents);
-  this->header()->setStretchLastSection(false);
+  this->header()->setStretchLastSection(true);
   if(p_model!=NULL && p_model->index(0,0).isValid()) {
     // Select first tree item
     this->setCurrentIndex(p_model->index(0,0));

@@ -82,7 +82,6 @@ MainWindow::MainWindow(ArgParser *p_arg_parser) :
   this->p_horizontal_splitter->setOrientation(Qt::Horizontal);
 
   this->p_node_tree=new RegistryNodeTree(this->p_horizontal_splitter);
-  this->p_node_tree->setHeaderHidden(true);
 
   this->p_vertical_splitter=new QSplitter(this->p_horizontal_splitter);
   this->p_vertical_splitter->setOrientation(Qt::Vertical);

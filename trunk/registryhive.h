@@ -52,8 +52,8 @@ class RegistryHive : public QObject {
     QByteArray GetKeyValue(int hive_key,
                            int *p_value_type,
                            size_t *p_value_len);
-    int64_t GetKeyModTime(QString path,QString key);
-    int64_t GetKeyModTime(int hive_key);
+    int64_t GetNodeModTime(QString path);
+    int64_t GetNodeModTime(int node);
     static QString KeyValueToString(QByteArray value, int value_type);
     static QString KeyValueToString(QByteArray value,
                                     QString format,

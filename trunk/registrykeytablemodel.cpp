@@ -20,14 +20,12 @@
 
 #include "registrykeytablemodel.h"
 
-#include <stdlib.h>
-
 RegistryKeyTableModel::RegistryKeyTableModel(RegistryHive *p_hive,
                                              QString node_path,
                                              QObject *p_parent)
   : QAbstractTableModel(p_parent)
 {
-  // Create the "root" key. It's values will be used for as header values.
+  // Create the "root" key. It's values will be used as header values.
   this->p_keys=new RegistryKey(QList<QVariant>()<<
                                tr("Key")<<
                                tr("Type")<<
@@ -75,18 +73,6 @@ QVariant RegistryKeyTableModel::data(const QModelIndex &index, int role) const {
           return RegistryHive::KeyValueToString(value_array,value_type);
           break;
         }
-/*
-        case RegistryKeyTableModel::ColumnContent_KeyModTime: {
-          QDateTime date_time;
-          bool ok=false;
-          date_time.setTimeSpec(Qt::UTC);
-          date_time.setTime_t(RegistryHive::FiletimeToUnixtime(
-                                p_key->Data(index.column()).toLongLong(&ok)));
-          if(ok) return date_time.toString("yyyy/MM/dd hh:mm:ss");
-          else return tr("Unknown");
-          break;
-        }
-*/
         default:
           return QVariant();
       }
@@ -175,7 +161,6 @@ void RegistryKeyTableModel::SetupModelData(RegistryHive *p_hive,
   RegistryKey *p_key;
   QByteArray key_value;
   int key_value_type;
-//  int64_t key_mod_time;
   size_t key_value_len;
 
   // Get all keys for current node
@@ -190,13 +175,10 @@ void RegistryKeyTableModel::SetupModelData(RegistryHive *p_hive,
                                   &key_value_type,
                                   &key_value_len);
     if(p_hive->GetErrorMsg()!="") continue;
-//    key_mod_time=p_hive->GetKeyModTime(i.value());
-    // TODO: Maybe we have to call GetErrorMsg in case an error occured
     p_key=new RegistryKey(QList<QVariant>()<<
                             QString(i.key().length() ? i.key() : "(default)")<<
                             QVariant(key_value_type)<<
-                            key_value); //<<
-//                            QVariant((qlonglong)key_mod_time));
+                            key_value);
     this->p_keys->Append(p_key);
   }
 }

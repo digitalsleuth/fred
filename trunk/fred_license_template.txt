@@ -1,5 +1,5 @@
 /*******************************************************************************
-* fred Copyright (c) 2011 by Gillen Daniel <gillen.dan@pinguin.lu>             *
+* fred Copyright (c) 2011-2013 by Gillen Daniel <gillen.dan@pinguin.lu>        *
 *                                                                              *
 * Forensic Registry EDitor (fred) is a cross-platform M$ registry hive editor  *
 * with special feautures useful during forensic analysis.                      *

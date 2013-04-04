@@ -61,11 +61,11 @@ DataReporterEngine::DataReporterEngine(RegistryHive *p_hive) : QScriptEngine() {
                                                     2);
   func_get_key_value.setData(this->newQObject(this->p_registry_hive));
   this->globalObject().setProperty("GetRegistryKeyValue",func_get_key_value);
-  // GetRegistryKeyModTime
-  QScriptValue func_get_key_modt=this->newFunction(this->GetRegistryKeyModTime,
-                                                    2);
-  func_get_key_modt.setData(this->newQObject(this->p_registry_hive));
-  this->globalObject().setProperty("GetRegistryKeyModTime",func_get_key_modt);
+  // GetRegistryNodeModTime
+  QScriptValue func_get_node_modt=
+    this->newFunction(this->GetRegistryNodeModTime,1);
+  func_get_node_modt.setData(this->newQObject(this->p_registry_hive));
+  this->globalObject().setProperty("GetRegistryNodeModTime",func_get_node_modt);
   // RegistryKeyValueToString
   QScriptValue func_value_to_string=
     this->newFunction(this->RegistryKeyValueToString,2);
@@ -338,7 +338,7 @@ QScriptValue DataReporterEngine::RegistryKeyTypeToString(
   return engine->newVariant(ret);
 }
 
-QScriptValue DataReporterEngine::GetRegistryKeyModTime(
+QScriptValue DataReporterEngine::GetRegistryNodeModTime(
   QScriptContext *context,
   QScriptEngine *engine)
 {
@@ -346,15 +346,14 @@ QScriptValue DataReporterEngine::GetRegistryKeyModTime(
   RegistryHive *p_hive;
   int64_t mod_time=0;
 
-  // This function needs two argument, key path and key name
-  if(context->argumentCount()!=2) return engine->undefinedValue();
+  // This function needs one argument, node path
+  if(context->argumentCount()!=1) return engine->undefinedValue();
 
   // Get calle data (Pointer to RegistryHive class)
   calleeData=context->callee().data();
   p_hive=qobject_cast<RegistryHive*>(calleeData.toQObject());
 
-  mod_time=p_hive->GetKeyModTime(context->argument(0).toString(),
-                                 context->argument(1).toString());
+  mod_time=p_hive->GetNodeModTime(context->argument(0).toString());
   if(p_hive->Error()) {
     // Get error message to clear error state
     p_hive->GetErrorMsg();
