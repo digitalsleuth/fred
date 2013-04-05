@@ -45,7 +45,8 @@ class ByteArrayPrototype : public QObject, public QScriptable {
     QScriptValue append(const QByteArray &ba);
     QScriptValue appendByte(char byte) const;
     QByteArray right(int len) const;
-    QByteArray simplified() const;
+    //QByteArray simplified() const;
+    int size() const;
     QByteArray toBase64() const;
     QByteArray toLower() const;
     QByteArray toUpper() const;

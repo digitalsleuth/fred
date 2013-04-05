@@ -69,8 +69,14 @@ QByteArray ByteArrayPrototype::right(int len) const {
   return thisByteArray()->right(len);
 }
 
+/*
 QByteArray ByteArrayPrototype::simplified() const {
   return thisByteArray()->simplified();
+}
+*/
+
+int ByteArrayPrototype::size() const {
+  return thisByteArray()->size();
 }
 
 QByteArray ByteArrayPrototype::toBase64() const {
