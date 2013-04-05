@@ -30,6 +30,8 @@
 #include "registryhive.h"
 #include "qtscript_types/bytearray.h"
 
+#define FRED_DATAREPORTERENGINE_API_VERSION 2
+
 class DataReporterEngine : public QScriptEngine {
   Q_OBJECT
 
@@ -47,6 +49,7 @@ class DataReporterEngine : public QScriptEngine {
     ~DataReporterEngine();
 
   private:
+    static const int api_version=2;
     ByteArray *p_type_byte_array;
 
     static QScriptValue Print(QScriptContext *context, QScriptEngine *engine);

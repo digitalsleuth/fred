@@ -33,6 +33,12 @@ DataReporterEngine::DataReporterEngine(RegistryHive *p_hive) : QScriptEngine() {
   this->p_registry_hive=p_hive;
   this->report_content="";
 
+  // Add our constants
+  this->globalObject().setProperty("ENGINE_API_VERSION",
+                                   this->api_version,
+                                   QScriptValue::ReadOnly|
+                                     QScriptValue::Undeletable);
+
   // Add our types to engine
   qScriptRegisterMetaType<s_RegistryKeyValue>(this,
                                               this->RegistryKeyValueToScript,
