@@ -1,3 +1,14 @@
+function fred_report_info() {
+  var info={report_cat    : "SYSTEM",
+            report_name   : "Services",
+            report_author : "Gillen Daniel",
+            report_desc   : "Dump services",
+            fred_api      : 2,
+            hive          : "SYSTEM"
+  };
+  return info;
+}
+
 function IsValid(val) {
   if(typeof val !== 'undefined') return true;
   else return false;
@@ -52,48 +63,49 @@ function ListService(service_node) {
   PrintTableRow(name,group,start,image,desc)
 }
 
-// Global vars
-var val;
+function fred_report_html() {
+  var val;
 
-println("<html>");
-println("  <head><title>Services</title></head>");
-println("  <body style=\"font-size:12\">");
-println("  <h2>Services</h2>");
+  println("<html>");
+  println("  <head><title>Services</title></head>");
+  println("  <body style=\"font-size:12\">");
+  println("  <h2>Services</h2>");
 
-// Get current controlset
-var cur_controlset=GetRegistryKeyValue("\\Select","Current");
-if(IsValid(cur_controlset)) {
-  cur_controlset=RegistryKeyValueToString(cur_controlset.value,cur_controlset.type);
-  // Current holds a DWORD value, thus we get a string like 0x00000000, but
-  // control sets are referenced by its decimal representation.
-  cur_controlset="ControlSet"+ZeroPad(parseInt(String(cur_controlset).substr(2,8),16),3)
+  // Get current controlset
+  var cur_controlset=GetRegistryKeyValue("\\Select","Current");
+  if(IsValid(cur_controlset)) {
+    cur_controlset=RegistryKeyValueToString(cur_controlset.value,cur_controlset.type);
+    // Current holds a DWORD value, thus we get a string like 0x00000000, but
+    // control sets are referenced by its decimal representation.
+    cur_controlset="ControlSet"+ZeroPad(parseInt(String(cur_controlset).substr(2,8),16),3)
 
-  // Get list of possible services
-  var services=GetRegistryNodes(cur_controlset+"\\Services");
-  if(IsValid(services)) {
-    println("  <p style=\"font-size:12; white-space:nowrap\">");
-    println("    <table style=\"margin-left:20px; font-size:12; white-space:nowrap\">");
-    println("      <tr><td style=\"padding:2px\"><b>Name</b></td><td style=\"padding:2px\"><b>Group</b></td><td><b>Startup</b></td><td style=\"padding:2px\"><b>Image path</b></td><td style=\"padding:2px\"><b>Description</b></td></tr>");
-    for(var i=0;i<services.length;i++) {
-      // Get service type
-      val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+services[i],"Type");
-      if(!IsValid(val)) continue;
-      val=RegistryKeyValueToString(val.value,val.type);
-      if(Number(val)!=16 && Number(val)!=32) continue;
-      ListService(cur_controlset+"\\Services\\"+services[i]);
+    // Get list of possible services
+    var services=GetRegistryNodes(cur_controlset+"\\Services");
+    if(IsValid(services)) {
+      println("  <p style=\"font-size:12; white-space:nowrap\">");
+      println("    <table style=\"margin-left:20px; font-size:12; white-space:nowrap\">");
+      println("      <tr><td style=\"padding:2px\"><b>Name</b></td><td style=\"padding:2px\"><b>Group</b></td><td><b>Startup</b></td><td style=\"padding:2px\"><b>Image path</b></td><td style=\"padding:2px\"><b>Description</b></td></tr>");
+      for(var i=0;i<services.length;i++) {
+        // Get service type
+        val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+services[i],"Type");
+        if(!IsValid(val)) continue;
+        val=RegistryKeyValueToString(val.value,val.type);
+        if(Number(val)!=16 && Number(val)!=32) continue;
+        ListService(cur_controlset+"\\Services\\"+services[i]);
+      }
+      println("    </table>");
+      println("  </p>");
+    } else {
+      println("  <p><font color='red'>");
+      println("    This registry hive does not contain any services!<br />");
+      println("  </font></p>");
     }
-    println("    </table>");
-    println("  </p>");
   } else {
     println("  <p><font color='red'>");
-    println("    This registry hive does not contain any services!<br />");
+    println("    Unable to determine current control set!<br />");
+    println("    Are you sure you are running this report against the correct registry hive?");
     println("  </font></p>");
   }
-} else {
-  println("  <p><font color='red'>");
-  println("    Unable to determine current control set!<br />");
-  println("    Are you sure you are running this report against the correct registry hive?");
-  println("  </font></p>");
-}
 
-println("</html>");
+  println("</html>");
+}

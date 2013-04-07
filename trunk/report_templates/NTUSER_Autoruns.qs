@@ -1,3 +1,14 @@
+function fred_report_info() {
+  var info={report_cat    : "NTUSER",
+            report_name   : "Autoruns",
+            report_author : "Gillen Daniel",
+            report_desc   : "Dump autorun keys",
+            fred_api      : 2,
+            hive          : "NTUSER"
+  };
+  return info;
+}
+
 function IsValid(val) {
   if(typeof val !== 'undefined') return true;
   else return false;
@@ -27,23 +38,24 @@ function ListAutoruns(autorun_path,autorun_key) {
   println("  </p>");
 }
 
-// Global vars
-var val;
+function fred_report_html() {
+  var val;
 
-println("<html>");
-println("  <head><title>User Autoruns</title></head>");
-println("  <body style=\"font-size:12\">");
-println("  <h2>User Autoruns</h2>");
+  println("<html>");
+  println("  <head><title>User Autoruns</title></head>");
+  println("  <body style=\"font-size:12\">");
+  println("  <h2>User Autoruns</h2>");
 
-// Run
-ListAutoruns("\\Microsoft\\Windows\\CurrentVersion\\","Run");
+  // Run
+  ListAutoruns("\\Microsoft\\Windows\\CurrentVersion\\","Run");
 
-// RunOnce
-ListAutoruns("\\Microsoft\\Windows\\CurrentVersion\\","RunOnce");
+  // RunOnce
+  ListAutoruns("\\Microsoft\\Windows\\CurrentVersion\\","RunOnce");
 
-// RunOnceEx
-ListAutoruns("\\Microsoft\\Windows\\CurrentVersion\\","RunOnceEx");
+  // RunOnceEx
+  ListAutoruns("\\Microsoft\\Windows\\CurrentVersion\\","RunOnceEx");
 
-// TODO: There might be a Run under WindowsNT\CurrentVersion\Run too!
+  // TODO: There might be a Run under WindowsNT\CurrentVersion\Run too!
 
-println("</html>");
+  println("</html>");
+}

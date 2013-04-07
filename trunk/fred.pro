@@ -70,7 +70,10 @@ SOURCES   += main.cpp\
              hexeditwidget.cpp \
              settings.cpp \
              searchresulttabledelegate.cpp \
-             registrynodetreemodelproxy.cpp
+             registrynodetreemodelproxy.cpp \
+    reports.cpp \
+    reportengine.cpp \
+    dlgreportchooser.cpp
 
 HEADERS   += mainwindow.h \
              registrynode.h \
@@ -101,13 +104,17 @@ HEADERS   += mainwindow.h \
              hexeditwidget.h \
              settings.h \
              searchresulttabledelegate.h \
-             registrynodetreemodelproxy.h
+             registrynodetreemodelproxy.h \
+    reports.h \
+    reportengine.h \
+    dlgreportchooser.h
 
 FORMS     += mainwindow.ui \
              dlgabout.ui \
              dlgkeydetails.ui \
              dlgreportviewer.ui \
-             dlgsearch.ui
+             dlgsearch.ui \
+    dlgreportchooser.ui
 
 #LIBS      += -lhivex
 LIBS      += $$PWD/hivex/lib/.libs/libhivex.a

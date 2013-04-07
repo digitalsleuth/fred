@@ -1,3 +1,14 @@
+function fred_report_info() {
+  var info={report_cat    : "NTUSER",
+            report_name   : "Launched applications",
+            report_author : "Gillen Daniel",
+            report_desc   : "Dump IE launched applications",
+            fred_api      : 2,
+            hive          : "NTUSER"
+  };
+  return info;
+}
+
 function IsValid(val) {
   if(typeof val !== 'undefined') return true;
   else return false;
@@ -49,53 +60,52 @@ function PrintUserAssistEntry(key,val,os) {
   PrintTableRow(key,run_count,last_run);
 }
 
-println("<html>");
-println("  <head><title>Launched Applications</title></head>");
-println("  <body style=\"font-size:12\">");
-println("  <h2>Launched applications</h2>");
+function fred_report_html() {
+  println("<html>");
+  println("  <head><title>Launched Applications</title></head>");
+  println("  <body style=\"font-size:12\">");
+  println("  <h2>Launched applications</h2>");
 
-// First, we need to find the correct GUID for the current Windows version
-var path;
-var apps;
-var os;
+  // First, we need to find the correct GUID for the current Windows version
+  var path;
+  var apps;
+  var os;
 
-// Windows XP
-os="winxp";
-path="\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist\\{5E6AB780-7743-11CF-A12B-00AA004AE837}\\Count";
-apps=GetRegistryKeys(path);
-
-// TODO: Determine GUIDs for Vista / Win8
-
-if(!IsValid(apps)) {
-  // Windows 7
-  os="win7";
-  path="\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist\\{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}\\Count";
+  // Windows XP
+  os="winxp";
+  path="\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist\\{5E6AB780-7743-11CF-A12B-00AA004AE837}\\Count";
   apps=GetRegistryKeys(path);
-}
 
+  // TODO: Determine GUIDs for Vista / Win8
 
+  if(!IsValid(apps)) {
+    // Windows 7
+    os="win7";
+    path="\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist\\{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}\\Count";
+    apps=GetRegistryKeys(path);
+  }
 
+  if(IsValid(apps)) {
+    if(apps.length!=0) {
+      println("  <p style=\"font-size:12\">");
+      println("    <table style=\"margin-left:20px; font-size:12\">");
+      println("      <tr><td><b>Application</b></td><td style=\"padding:2px\"><b>Run count</b></td><td style=\"padding:2px\"><b>Last run</b></td></tr>");
 
-if(IsValid(apps)) {
-  if(apps.length!=0) {
-    println("  <p style=\"font-size:12\">");
-    println("    <table style=\"margin-left:20px; font-size:12\">");
-    println("      <tr><td><b>Application</b></td><td style=\"padding:2px\"><b>Run count</b></td><td style=\"padding:2px\"><b>Last run</b></td></tr>");
+      for(var i=0;i<apps.length;i++) {
+        var val=GetRegistryKeyValue(path,apps[i]);
+        PrintUserAssistEntry(Rot13Decode(apps[i]),val,os);
+      }
 
-    for(var i=0;i<apps.length;i++) {
-      var val=GetRegistryKeyValue(path,apps[i]);
-      PrintUserAssistEntry(Rot13Decode(apps[i]),val,os);
+      println("    </table>");
+      println("  </p>");
+    } else {
+      println("  <p><font color='red'>");
+      println("    The list of launched applications is empty.");
+      println("  </font></p>");
     }
-
-    println("    </table>");
-    println("  </p>");
   } else {
     println("  <p><font color='red'>");
-    println("    The list of launched applications is empty.");
+    println("    This registry hive does not contain a list of launched applications!");
     println("  </font></p>");
   }
-} else {
-  println("  <p><font color='red'>");
-  println("    This registry hive does not contain a list of launched applications!");
-  println("  </font></p>");
 }

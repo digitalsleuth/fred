@@ -37,6 +37,7 @@
 #include "ui_mainwindow.h"
 #include "dlgabout.h"
 #include "dlgkeydetails.h"
+#include "dlgreportchooser.h"
 #include "dlgreportviewer.h"
 #include "dlgsearch.h"
 
@@ -163,7 +164,8 @@ MainWindow::MainWindow(ArgParser *p_arg_parser) :
   // Set last open location to home dir
   this->last_open_location=QDir::homePath();
 
-  // Load report templates and update menu
+/*
+  // Load report templates
   this->p_data_reporter=new DataReporter();
   // Load reports from system wide include dir
   this->p_data_reporter->LoadReportTemplates(FRED_REPORT_TEMPLATE_DIR);
@@ -174,6 +176,18 @@ MainWindow::MainWindow(ArgParser *p_arg_parser) :
                                                .append(QDir::separator())
                                                .append("report_templates"));
   this->UpdateDataReporterMenu();
+*/
+
+  // Load report templates
+  this->p_reports=new Reports();
+  // Load reports from system wide include dir
+  this->p_reports->LoadReportTemplates(FRED_REPORT_TEMPLATE_DIR);
+  // Load user's report templates
+  this->p_reports->LoadReportTemplates(QDir::homePath()
+                                         .append(QDir::separator())
+                                         .append(".fred")
+                                         .append(QDir::separator())
+                                         .append("report_templates"));
 
   // Finally, react on some command line arguments
   if(this->p_args->IsSet("maximized")) {
@@ -387,6 +401,7 @@ void MainWindow::SlotKeyTableClicked(QModelIndex index) {
   this->p_key_table->setFocus();
 }
 
+/*
 void MainWindow::SlotReportClicked() {
   // Get report category and name from sender and it's parent
   QString category=((QMenu*)((QAction*)QObject::sender())->parent())->title();
@@ -406,6 +421,7 @@ void MainWindow::SlotReportClicked() {
     // TODO: Something went wrong!
   }
 }
+*/
 
 void MainWindow::SlotSearchFinished() {
   delete this->p_search_thread;
@@ -515,6 +531,7 @@ void MainWindow::UpdateWindowTitle(QString filename) {
   }
 }
 
+/*
 void MainWindow::UpdateDataReporterMenu() {
   int i=0,ii=0;
   QMenu *p_category_entry;
@@ -537,6 +554,7 @@ void MainWindow::UpdateDataReporterMenu() {
     }
   }
 }
+*/
 
 void MainWindow::OpenHive(QString hive_file) {
   // Update last open location
@@ -571,4 +589,11 @@ void MainWindow::OpenHive(QString hive_file) {
   this->p_hex_edit_widget->setEnabled(true);
 
   this->UpdateWindowTitle(hive_file);
+}
+
+void MainWindow::on_ActionGenerateReport_triggered() {
+  DlgReportChooser dlg_repchooser(this->p_reports,this);
+  if(dlg_repchooser.exec()==QDialog::Accepted) {
+
+  }
 }

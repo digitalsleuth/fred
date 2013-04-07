@@ -75,9 +75,10 @@ void DataReporter::LoadReportTemplates(QString dir) {
 
     if(!found) {
       // Add report to list
-      p_report=new ReportTemplate(report_category,
+      p_report=new ReportTemplate(report_template,
+                                  report_category,
                                   report_name,
-                                  report_template);
+                                  "","","");
       this->report_templates.append(p_report);
     } else {
       // Update report entry

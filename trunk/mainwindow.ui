@@ -62,6 +62,8 @@
     <property name="title">
      <string>&amp;Reports</string>
     </property>
+    <addaction name="ActionGenerateReport"/>
+    <addaction name="ActionReloadReportTemplates"/>
    </widget>
    <widget class="QMenu" name="MenuEdit">
     <property name="title">
@@ -128,6 +130,19 @@
    </property>
    <property name="text">
     <string>&amp;Preferences</string>
+   </property>
+  </action>
+  <action name="ActionGenerateReport">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Generate report</string>
+   </property>
+  </action>
+  <action name="ActionReloadReportTemplates">
+   <property name="text">
+    <string>Reload report templates</string>
    </property>
   </action>
  </widget>

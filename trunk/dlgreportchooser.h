@@ -18,41 +18,36 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#ifndef REPORTTEMPLATE_H
-#define REPORTTEMPLATE_H
+#ifndef DLGREPORTCHOOSER_H
+#define DLGREPORTCHOOSER_H
 
-#include <QString>
+#include "reports.h"
 
-class ReportTemplate {
+#include <QDialog>
+#include <QTreeWidgetItem>
+
+namespace Ui {
+  class DlgReportChooser;
+}
+
+class DlgReportChooser : public QDialog {
+  Q_OBJECT
+
   public:
-    ReportTemplate(QString report_template_file,
-                   QString report_category,
-                   QString report_name,
-                   QString report_author,
-                   QString report_desc,
-                   QString report_hive);
+    explicit DlgReportChooser(Reports *p_reps, QWidget *p_parent=0);
+    ~DlgReportChooser();
 
-    void SetFile(QString new_file);
-    void SetCategory(QString new_category);
-    void SetName(QString new_name);
-    void SetAuthor(QString new_author);
-    void SetDescription(QString new_desc);
-    void SetHive(QString new_hive);
+  protected:
+    void changeEvent(QEvent *e);
 
-    QString File();
-    QString Category();
-    QString Name();
-    QString Author();
-    QString Description();
-    QString Hive();
+  private slots:
+    void on_BtnCancel_clicked();
+
+    void on_TrReports_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
 
   private:
-    QString template_file;
-    QString category;
-    QString name;
-    QString author;
-    QString description;
-    QString hive;
+    Ui::DlgReportChooser *ui;
+    Reports *p_reports;
 };
 
-#endif // REPORTTEMPLATE_H
+#endif // DLGREPORTCHOOSER_H

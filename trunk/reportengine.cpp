@@ -18,31 +18,34 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#include "datareporterengine.h"
+#include "reportengine.h"
 
-#include <QString>
-#include <QMap>
-#include <QMapIterator>
-#include <QStringList>
+#include <QFile>
+#include <QTextStream>
 #include <QDateTime>
 
-#include <stdio.h>
+#include <QtDebug>
 
-DataReporterEngine::DataReporterEngine(RegistryHive *p_hive) : QScriptEngine() {
+/*******************************************************************************
+ * Public
+ ******************************************************************************/
+
+ReportEngine::ReportEngine(RegistryHive *p_hive) : QScriptEngine() {
   // Init vars
   this->p_registry_hive=p_hive;
   this->report_content="";
 
   // Add our constants
   this->globalObject().setProperty("ENGINE_API_VERSION",
-                                   this->api_version,
+                                   FRED_REPORTENGINE_API_VERSION,
                                    QScriptValue::ReadOnly|
                                      QScriptValue::Undeletable);
+/*
   this->globalObject().setProperty("HIVE_FILE",
                                    this->p_registry_hive->Filename(),
                                    QScriptValue::ReadOnly|
                                      QScriptValue::Undeletable);
-
+*/
   // Add our types to engine
   qScriptRegisterMetaType<s_RegistryKeyValue>(this,
                                               this->RegistryKeyValueToScript,
@@ -93,12 +96,70 @@ DataReporterEngine::DataReporterEngine(RegistryHive *p_hive) : QScriptEngine() {
                                    func_type_to_string);
 }
 
-DataReporterEngine::~DataReporterEngine() {
+ReportEngine::~ReportEngine() {
   delete this->p_type_byte_array;
 }
 
-QScriptValue DataReporterEngine::Print(QScriptContext *context,
-                                       QScriptEngine *engine)
+/*
+ * GetReportTemplateInfo
+ */
+QMap<QString,QVariant> ReportEngine::GetReportTemplateInfo(QString file) {
+  // Open report template file
+  QFile template_file(file);
+  if(!template_file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+    QMap<QString,QVariant> error_msg;
+    error_msg["error"]=QString("Couldn't open report template file '%1'!")
+                         .arg(file);
+    return error_msg;
+  }
+
+  // Read template file and close it
+  QString report_code;
+  QTextStream in(&template_file);
+  while(!in.atEnd()) report_code.append(in.readLine()).append("\n");
+  template_file.close();
+
+  // Evaluate report template script
+  QScriptValue report_result=this->evaluate(report_code,file);
+  if (report_result.isError() || this->hasUncaughtException()) {
+    QMap<QString,QVariant> error_msg;
+    error_msg["error"]=QString("File: %1\n Line: %2\nError: %3")
+                         .arg(file)
+                         .arg(report_result.property("lineNumber").toInt32())
+                         .arg(report_result.toString());
+    return error_msg;
+  }
+
+  // Try to call the fred_report_info script function and return result
+  QScriptValue fred_report_info_func=
+    this->globalObject().property("fred_report_info");
+  if(!fred_report_info_func.isFunction()) {
+    QMap<QString,QVariant> error_msg;
+    error_msg["error"]=
+      QString("Report template '%1' does not have a fred_report_info function!")
+        .arg(file)
+        .arg(report_result.property("lineNumber").toInt32())
+        .arg(report_result.toString());
+    return error_msg;
+  }
+  QScriptValue fred_report_info_res=fred_report_info_func.call();
+  // TODO: Maybe do more checking on return value
+  return fred_report_info_res.toVariant().toMap();
+}
+
+/*******************************************************************************
+ * Public Slots
+ ******************************************************************************/
+
+/*******************************************************************************
+ * Private
+ ******************************************************************************/
+
+/*
+ * Print
+ */
+QScriptValue ReportEngine::Print(QScriptContext *context,
+                                 QScriptEngine *engine)
 {
   int i;
   QString content;
@@ -109,16 +170,16 @@ QScriptValue DataReporterEngine::Print(QScriptContext *context,
     content.append(context->argument(i).toString());
   }
 
-  //QScriptValue calleeData=context->callee().data();
-  //DataReporterEngine *engine=
-  //  qobject_cast<DataReporterEngine*>(calleeData.toQObject());
-  qobject_cast<DataReporterEngine*>(engine)->report_content.append(content);
+  qobject_cast<ReportEngine*>(engine)->report_content.append(content);
 
   return engine->undefinedValue();
 }
 
-QScriptValue DataReporterEngine::PrintLn(QScriptContext *context,
-                                         QScriptEngine *engine)
+/*
+ * PrintLn
+ */
+QScriptValue ReportEngine::PrintLn(QScriptContext *context,
+                                   QScriptEngine *engine)
 {
   int i;
   QString content;
@@ -129,7 +190,7 @@ QScriptValue DataReporterEngine::PrintLn(QScriptContext *context,
     content.append(context->argument(i).toString());
   }
 
-  qobject_cast<DataReporterEngine*>(engine)->
+  qobject_cast<ReportEngine*>(engine)->
     report_content.append(content).append("\n");
 
   return engine->undefinedValue();
@@ -138,8 +199,8 @@ QScriptValue DataReporterEngine::PrintLn(QScriptContext *context,
 /*
  * GetRegistryNodes
  */
-QScriptValue DataReporterEngine::GetRegistryNodes(QScriptContext *context,
-                                                  QScriptEngine *engine)
+QScriptValue ReportEngine::GetRegistryNodes(QScriptContext *context,
+                                            QScriptEngine *engine)
 {
   QScriptValue calleeData;
   RegistryHive *p_hive;
@@ -176,8 +237,8 @@ QScriptValue DataReporterEngine::GetRegistryNodes(QScriptContext *context,
 /*
  * GetRegistryKeys
  */
-QScriptValue DataReporterEngine::GetRegistryKeys(QScriptContext *context,
-                                                 QScriptEngine *engine)
+QScriptValue ReportEngine::GetRegistryKeys(QScriptContext *context,
+                                           QScriptEngine *engine)
 {
   QScriptValue calleeData;
   RegistryHive *p_hive;
@@ -200,8 +261,6 @@ QScriptValue DataReporterEngine::GetRegistryKeys(QScriptContext *context,
     return engine->undefinedValue();
   }
 
-  //qDebug(QString("P: %1 A: %2").arg(context->argument(0).toString()).arg(keys.count()).toAscii().constData());
-
   // Build script array
   ret_keys=engine->newArray(keys.count());
   QMapIterator<QString,int> i(keys);
@@ -216,10 +275,8 @@ QScriptValue DataReporterEngine::GetRegistryKeys(QScriptContext *context,
 /*
  * RegistryKeyValueToScript
  */
-QScriptValue DataReporterEngine::RegistryKeyValueToScript(QScriptEngine *engine,
-                                                          const
-                                                            s_RegistryKeyValue
-                                                              &s)
+QScriptValue ReportEngine::RegistryKeyValueToScript(QScriptEngine *engine,
+                                                    const s_RegistryKeyValue &s)
 {
   QScriptValue obj=engine->newObject();
   obj.setProperty("type",s.type);
@@ -232,8 +289,8 @@ QScriptValue DataReporterEngine::RegistryKeyValueToScript(QScriptEngine *engine,
 /*
  * RegistryKeyValueFromScriptValue
  */
-void DataReporterEngine::RegistryKeyValueFromScript(const QScriptValue &obj,
-                                                    s_RegistryKeyValue &s)
+void ReportEngine::RegistryKeyValueFromScript(const QScriptValue &obj,
+                                              s_RegistryKeyValue &s)
 {
   s.type=obj.property("type").toInt32();
   s.length=obj.property("length").toInt32();
@@ -241,8 +298,11 @@ void DataReporterEngine::RegistryKeyValueFromScript(const QScriptValue &obj,
   s.value=qvariant_cast<QByteArray>(obj.property("value").data().toVariant());
 }
 
-QScriptValue DataReporterEngine::GetRegistryKeyValue(QScriptContext *context,
-                                                     QScriptEngine *engine)
+/*
+ * GetRegistryKeyValue
+ */
+QScriptValue ReportEngine::GetRegistryKeyValue(QScriptContext *context,
+                                               QScriptEngine *engine)
 {
   QScriptValue calleeData;
   RegistryHive *p_hive;
@@ -275,12 +335,14 @@ QScriptValue DataReporterEngine::GetRegistryKeyValue(QScriptContext *context,
   script_key_value.length=key_length;
   script_key_value.value=key_value;
 
-  return DataReporterEngine::RegistryKeyValueToScript(engine,script_key_value);
+  return ReportEngine::RegistryKeyValueToScript(engine,script_key_value);
 }
 
-QScriptValue DataReporterEngine::RegistryKeyValueToString(
-  QScriptContext *context,
-  QScriptEngine *engine)
+/*
+ * RegistryKeyValueToString
+ */
+QScriptValue ReportEngine::RegistryKeyValueToString(QScriptContext *context,
+                                                    QScriptEngine *engine)
 {
   QByteArray key_value;
   QString ret="";
@@ -296,9 +358,11 @@ QScriptValue DataReporterEngine::RegistryKeyValueToString(
   return engine->newVariant(ret);
 }
 
-QScriptValue DataReporterEngine::RegistryKeyValueToVariant(
-  QScriptContext *context,
-  QScriptEngine *engine)
+/*
+ * RegistryKeyValueToVariant
+ */
+QScriptValue ReportEngine::RegistryKeyValueToVariant(QScriptContext *context,
+                                                     QScriptEngine *engine)
 {
   int offset=0;
   int length=-1;
@@ -334,9 +398,11 @@ QScriptValue DataReporterEngine::RegistryKeyValueToVariant(
   return engine->newVariant(ret);
 }
 
-QScriptValue DataReporterEngine::RegistryKeyTypeToString(
-  QScriptContext *context,
-  QScriptEngine *engine)
+/*
+ * RegistryKeyTypeToString
+ */
+QScriptValue ReportEngine::RegistryKeyTypeToString(QScriptContext *context,
+                                                   QScriptEngine *engine)
 {
   QString ret="";
 
@@ -348,9 +414,11 @@ QScriptValue DataReporterEngine::RegistryKeyTypeToString(
   return engine->newVariant(ret);
 }
 
-QScriptValue DataReporterEngine::GetRegistryNodeModTime(
-  QScriptContext *context,
-  QScriptEngine *engine)
+/*
+ * GetRegistryNodeModTime
+ */
+QScriptValue ReportEngine::GetRegistryNodeModTime(QScriptContext *context,
+                                                  QScriptEngine *engine)
 {
   QScriptValue calleeData;
   RegistryHive *p_hive;
