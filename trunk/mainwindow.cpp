@@ -33,6 +33,8 @@
 #include <QDir>
 #include <QSplitter>
 
+#include <QDebug>
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "dlgabout.h"
@@ -42,6 +44,10 @@
 #include "dlgsearch.h"
 
 #include "compileinfo.h"
+
+/*******************************************************************************
+ * Public
+ ******************************************************************************/
 
 MainWindow::MainWindow(ArgParser *p_arg_parser) :
   QMainWindow(0), ui(new Ui::MainWindow)
@@ -208,6 +214,10 @@ MainWindow::~MainWindow() {
   delete ui;
 }
 
+/*******************************************************************************
+ * Private slots
+ ******************************************************************************/
+
 void MainWindow::on_action_Quit_triggered() {
   qApp->exit();
 }
@@ -317,6 +327,37 @@ void MainWindow::on_ActionSearch_triggered() {
   }
 }
 
+void MainWindow::on_ActionGenerateReport_triggered() {
+  DlgReportChooser dlg_repchooser(this->p_reports,
+                                  this->p_hive->HiveTypeToString(
+                                    this->p_hive->HiveType()),
+                                  this);
+  if(dlg_repchooser.exec()==QDialog::Accepted) {
+    QList<ReportTemplate*> selected_reports;
+
+    // Get selected report
+    selected_reports=dlg_repchooser.GetSelectedReports();
+    if(selected_reports.isEmpty()) return;
+
+    // Generate report(s)
+    QString report_result="";
+    if(this->p_reports->GenerateReport(this->p_hive,
+                                       selected_reports,
+                                       report_result,
+                                       false))
+    {
+      // Report generation was successfull, show reports
+      DlgReportViewer *p_dlg_report_view=new DlgReportViewer(report_result,
+                                                             this);
+      p_dlg_report_view->exec();
+      delete p_dlg_report_view;
+    } else {
+      // TODO: Inform user
+      qDebug()<<"ERROR: "<<report_result;
+    }
+  }
+}
+
 void MainWindow::SlotNodeTreeClicked(QModelIndex index) {
   QString node_path;
 
@@ -339,6 +380,20 @@ void MainWindow::SlotNodeTreeClicked(QModelIndex index) {
   this->p_key_table->setModel(this->p_reg_key_table_model);
   // Set focus back to nodetree to be able to navigate with keyboard
   this->p_node_tree->setFocus();
+}
+
+void MainWindow::SlotKeyTableClicked(QModelIndex index) {
+  if(!index.isValid()) return;
+
+  this->selected_key_value=
+    this->p_reg_key_table_model->data(this->p_reg_key_table_model->
+                                        index(index.row(),2),
+                                      RegistryKeyTableModel::
+                                        AdditionalRoles_GetRawData)
+                                          .toByteArray();
+  this->p_hex_edit_widget->SetData(this->selected_key_value);
+  // Set focus back to nodetree to be able to navigate with keyboard
+  this->p_key_table->setFocus();
 }
 
 void MainWindow::SlotKeyTableDoubleClicked(QModelIndex index) {
@@ -385,20 +440,6 @@ void MainWindow::SlotKeyTableDoubleClicked(QModelIndex index) {
   dlg_key_details.SetValues(nodes,key_name,key_type,key_value);
   dlg_key_details.exec();
   */
-}
-
-void MainWindow::SlotKeyTableClicked(QModelIndex index) {
-  if(!index.isValid()) return;
-
-  this->selected_key_value=
-    this->p_reg_key_table_model->data(this->p_reg_key_table_model->
-                                        index(index.row(),2),
-                                      RegistryKeyTableModel::
-                                        AdditionalRoles_GetRawData)
-                                          .toByteArray();
-  this->p_hex_edit_widget->SetData(this->selected_key_value);
-  // Set focus back to nodetree to be able to navigate with keyboard
-  this->p_key_table->setFocus();
 }
 
 /*
@@ -502,6 +543,10 @@ void MainWindow::SlotTabCloseButtonClicked(int index) {
   this->search_result_widgets.removeAt(index-1);
 }
 
+/*******************************************************************************
+ * Private
+ ******************************************************************************/
+
 void MainWindow::CheckUserConfigDir() {
   QString user_config_dir=QDir::homePath()
                             .append(QDir::separator())
@@ -589,11 +634,4 @@ void MainWindow::OpenHive(QString hive_file) {
   this->p_hex_edit_widget->setEnabled(true);
 
   this->UpdateWindowTitle(hive_file);
-}
-
-void MainWindow::on_ActionGenerateReport_triggered() {
-  DlgReportChooser dlg_repchooser(this->p_reports,this);
-  if(dlg_repchooser.exec()==QDialog::Accepted) {
-
-  }
 }

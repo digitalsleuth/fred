@@ -114,9 +114,62 @@ bool RegistryHive::Close(bool commit_changes) {
   return true;
 }
 
+/*
+ * Filename
+ */
 QString RegistryHive::Filename() {
   if(this->is_hive_open) return this->hive_file;
   return QString();
+}
+
+/*
+ * HiveType
+ */
+RegistryHive::teHiveType RegistryHive::HiveType() {
+  // Check for SYSTEM hive
+  if(this->PathExists("\\Select") && this->PathExists("\\MountedDevices"))
+    return RegistryHive::eHiveType_SYSTEM;
+  // Check for SOFTWARE hive
+  if(this->PathExists("\\Microsoft\\Windows\\CurrentVersion") &&
+     this->PathExists("\\Microsoft\\Windows NT\\CurrentVersion"))
+    return RegistryHive::eHiveType_SOFTWARE;
+  // Check for SAM
+  if(this->PathExists("SAM\\Domains\\Account\\Users"))
+    return RegistryHive::eHiveType_SAM;
+  // Check for SECURITY
+  if(this->PathExists("\\Policy\\Accounts") &&
+     this->PathExists("\\Policy\\PolAdtEv"))
+    return RegistryHive::eHiveType_SECURITY;
+  // Check for NTUSER.DAT
+  if(this->PathExists("\\Software\\Microsoft\\Windows\\CurrentVersion"))
+    return RegistryHive::eHiveType_NTUSER;
+  // Unknown hive
+  return RegistryHive::eHiveType_UNKNOWN;
+}
+
+/*
+ * HiveTypeToString
+ */
+QString RegistryHive::HiveTypeToString(teHiveType hive_type) {
+  switch(hive_type) {
+    case RegistryHive::eHiveType_SYSTEM:
+      return "SYSTEM";
+      break;
+    case RegistryHive::eHiveType_SOFTWARE:
+      return "SOFTWARE";
+      break;
+    case RegistryHive::eHiveType_SAM:
+      return "SAM";
+      break;
+    case RegistryHive::eHiveType_SECURITY:
+      return "SECURITY";
+      break;
+    case RegistryHive::eHiveType_NTUSER:
+      return "NTUSER";
+      break;
+    default:
+      return "UNKNOWN";
+  }
 }
 
 /*
@@ -603,6 +656,9 @@ QMap<QString,int> RegistryHive::GetKeysHelper(hive_node_h parent_node) {
   return keys;
 }
 
+/*
+ * GetKeyValueHelper
+ */
 QByteArray RegistryHive::GetKeyValueHelper(hive_value_h hive_key,
                                            int *p_value_type,
                                            size_t *p_value_len)
@@ -625,4 +681,21 @@ QByteArray RegistryHive::GetKeyValueHelper(hive_value_h hive_key,
   free(p_key_value);
 
   return key_value;
+}
+
+/*
+ * PathExists
+ */
+bool RegistryHive::PathExists(QString path) {
+  bool ret;
+  hive_node_h node;
+
+  ret=this->GetNodeHandle(path,&node);
+  if(!ret || this->Error()) {
+    // Clear error and return false
+    this->GetErrorMsg();
+    return false;
+  }
+
+  return true;
 }

@@ -26,6 +26,10 @@
 
 #include <QDebug>
 
+/*******************************************************************************
+ * Public
+ ******************************************************************************/
+
 Reports::Reports() {
   this->p_engine=new ReportEngine(NULL);
   this->report_templates.clear();
@@ -78,7 +82,7 @@ void Reports::LoadReportTemplates(QString dir) {
     report_name=report_info.value("report_name").toString();
     report_author=report_info.value("report_author").toString();
     report_desc=report_info.value("report_desc").toString();
-    report_hive=report_info.value("report_hive").toString();
+    report_hive=report_info.value("hive").toString().toUpper();
 
     // Check if a report with the same category and name was already added
     found=false;
@@ -127,35 +131,53 @@ QStringList Reports::GetAvailableReportCategories() {
 }
 
 
-QStringList Reports::GetAvailableReports(QString category) {
-  QStringList ret;
+QList<ReportTemplate*> Reports::GetAvailableReports(QString category) {
+  QList<ReportTemplate*> ret;
   QString cat;
   int i=0;
 
   ret.clear();
   for(i=0;i<this->report_templates.count();i++) {
     cat=this->report_templates.value(i)->Category();
-    if(cat==category) ret.append(this->report_templates.value(i)->Name());
-  }
-  ret.sort();
-
-  return ret;
-}
-
-QMap<QString,QString> Reports::GetReportInfo(QString category, QString name) {
-  QMap<QString,QString> ret;
-  int i=0;
-
-  // Search requested report
-  for(i=0;i<this->report_templates.count();i++) {
-    if(this->report_templates.value(i)->Category()==category &&
-       this->report_templates.value(i)->Name()==name)
-    {
-      ret["report_author"]=this->report_templates.value(i)->Author();
-      ret["report_desc"]=this->report_templates.value(i)->Description();
-      break;
-    }
+    if(cat==category) ret.append(this->report_templates.value(i));
   }
 
   return ret;
 }
+
+bool Reports::GenerateReport(RegistryHive *p_hive,
+                             QString report_file,
+                             QString &report_result,
+                             bool console_mode)
+{
+  return this->p_engine->GenerateReport(p_hive,
+                                        report_file,
+                                        report_result,
+                                        console_mode);
+}
+
+bool Reports::GenerateReport(RegistryHive *p_hive,
+                             QList<ReportTemplate*> report_list,
+                             QString &report_result,
+                             bool console_mode)
+{
+  bool ret;
+  QString res;
+
+  QListIterator<ReportTemplate*> rep_it(report_list);
+  while(rep_it.hasNext()) {
+    res="";
+    ret=this->GenerateReport(p_hive,
+                             rep_it.next()->File(),
+                             res,
+                             console_mode);
+    if(ret) report_result.append(res);
+    // TODO: Inform user something didn't work
+  }
+
+  return true;
+}
+
+/*******************************************************************************
+ * Private
+ ******************************************************************************/

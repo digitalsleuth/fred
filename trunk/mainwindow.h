@@ -65,6 +65,7 @@ class MainWindow : public QMainWindow {
     void on_actionAbout_Qt_triggered();
     void on_actionAbout_fred_triggered();
     void on_ActionSearch_triggered();
+    void on_ActionGenerateReport_triggered();
 
     void SlotNodeTreeClicked(QModelIndex index);
     void SlotKeyTableClicked(QModelIndex index);
@@ -73,8 +74,6 @@ class MainWindow : public QMainWindow {
     void SlotSearchFinished();
     void SlotSearchResultWidgetDoubleClicked(QModelIndex index);
     void SlotTabCloseButtonClicked(int index);
-
-    void on_ActionGenerateReport_triggered();
 
   private:
     Ui::MainWindow *ui;

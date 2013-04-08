@@ -24,6 +24,7 @@
 #include "reports.h"
 
 #include <QDialog>
+#include <QList>
 #include <QTreeWidgetItem>
 
 namespace Ui {
@@ -34,20 +35,28 @@ class DlgReportChooser : public QDialog {
   Q_OBJECT
 
   public:
-    explicit DlgReportChooser(Reports *p_reps, QWidget *p_parent=0);
+    explicit DlgReportChooser(Reports *p_reps,
+                              QString hive_type_string,
+                              QWidget *p_parent=0);
     ~DlgReportChooser();
+
+    QList<ReportTemplate*> GetSelectedReports();
 
   protected:
     void changeEvent(QEvent *e);
 
   private slots:
     void on_BtnCancel_clicked();
-
-    void on_TrReports_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
+    void on_TrReports_currentItemChanged(QTreeWidgetItem *p_current,
+                                         QTreeWidgetItem *p_previous);
+    void on_BtnGenerate_clicked();
 
   private:
     Ui::DlgReportChooser *ui;
     Reports *p_reports;
+    QString hive_type;
+    QList<QTreeWidgetItem*> tree_category_items;
+    QList<ReportTemplate*> selected_reports;
 };
 
 #endif // DLGREPORTCHOOSER_H

@@ -61,24 +61,7 @@ ReportEngine::ReportEngine(RegistryHive *p_hive) : QScriptEngine() {
   // println
   QScriptValue func_println=this->newFunction(this->PrintLn);
   this->globalObject().setProperty("println",func_println);
-  // GetRegistryNodes
-  QScriptValue func_get_nodes=this->newFunction(this->GetRegistryNodes,1);
-  func_get_nodes.setData(this->newQObject(this->p_registry_hive));
-  this->globalObject().setProperty("GetRegistryNodes",func_get_nodes);
-  // GetRegistryKeys
-  QScriptValue func_get_keys=this->newFunction(this->GetRegistryKeys,1);
-  func_get_keys.setData(this->newQObject(this->p_registry_hive));
-  this->globalObject().setProperty("GetRegistryKeys",func_get_keys);
-  // GetRegistryKeyValue
-  QScriptValue func_get_key_value=this->newFunction(this->GetRegistryKeyValue,
-                                                    2);
-  func_get_key_value.setData(this->newQObject(this->p_registry_hive));
-  this->globalObject().setProperty("GetRegistryKeyValue",func_get_key_value);
-  // GetRegistryNodeModTime
-  QScriptValue func_get_node_modt=
-    this->newFunction(this->GetRegistryNodeModTime,1);
-  func_get_node_modt.setData(this->newQObject(this->p_registry_hive));
-  this->globalObject().setProperty("GetRegistryNodeModTime",func_get_node_modt);
+
   // RegistryKeyValueToString
   QScriptValue func_value_to_string=
     this->newFunction(this->RegistryKeyValueToString,2);
@@ -104,20 +87,13 @@ ReportEngine::~ReportEngine() {
  * GetReportTemplateInfo
  */
 QMap<QString,QVariant> ReportEngine::GetReportTemplateInfo(QString file) {
-  // Open report template file
-  QFile template_file(file);
-  if(!template_file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+  // Read template file
+  QString report_code;
+  if(!this->GetReportTemplateFileContents(file,report_code)) {
     QMap<QString,QVariant> error_msg;
-    error_msg["error"]=QString("Couldn't open report template file '%1'!")
-                         .arg(file);
+    error_msg["error"]=report_code;
     return error_msg;
   }
-
-  // Read template file and close it
-  QString report_code;
-  QTextStream in(&template_file);
-  while(!in.atEnd()) report_code.append(in.readLine()).append("\n");
-  template_file.close();
 
   // Evaluate report template script
   QScriptValue report_result=this->evaluate(report_code,file);
@@ -145,6 +121,55 @@ QMap<QString,QVariant> ReportEngine::GetReportTemplateInfo(QString file) {
   QScriptValue fred_report_info_res=fred_report_info_func.call();
   // TODO: Maybe do more checking on return value
   return fred_report_info_res.toVariant().toMap();
+}
+
+/*
+ * GenerateReport
+ */
+bool ReportEngine::GenerateReport(RegistryHive *p_hive,
+                                  QString report_file,
+                                  QString &report_result,
+                                  bool console_mode)
+{
+  // Clear internal buffer
+  this->report_content.clear();
+
+  // Update exported functions
+  this->UpdateExportedFunctions(p_hive);
+
+  // Read template file
+  QString report_code;
+  if(!this->GetReportTemplateFileContents(report_file,report_code)) {
+    report_result=report_code;
+    return false;
+  }
+
+  // Evaluate report template script
+  QScriptValue script_result=this->evaluate(report_code,report_file);
+  if (script_result.isError() || this->hasUncaughtException()) {
+    script_result=QString("File: %1\n Line: %2\nError: %3")
+                    .arg(report_file)
+                    .arg(script_result.property("lineNumber").toInt32())
+                    .arg(script_result.toString());
+    return false;
+  }
+
+  // Try to call the fred_report_html script function and return result
+  QScriptValue fred_report_html_func=
+    this->globalObject().property("fred_report_html");
+  if(!fred_report_html_func.isFunction()) {
+    report_result=
+      QString("Report template '%1' does not have a fred_report_info function!")
+        .arg(report_file)
+        .arg(script_result.property("lineNumber").toInt32())
+        .arg(script_result.toString());
+    return false;
+  }
+  QScriptValue fred_report_html_res=fred_report_html_func.call();
+
+  // TODO: Maybe do more checking on return value
+  report_result=this->report_content;
+  return true;
 }
 
 /*******************************************************************************
@@ -443,4 +468,51 @@ QScriptValue ReportEngine::GetRegistryNodeModTime(QScriptContext *context,
   date_time.setTime_t(RegistryHive::FiletimeToUnixtime(mod_time));
 
   return engine->newVariant(date_time.toString("yyyy/MM/dd hh:mm:ss"));
+}
+
+/*
+ * GetReportTemplateFileContents
+ */
+bool ReportEngine::GetReportTemplateFileContents(QString file,
+                                                 QString &contents)
+{
+  // Open report template file
+  QFile template_file(file);
+  if(!template_file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+    contents=QString("Couldn't open report template file '%1'!").arg(file);
+    return false;
+  }
+
+  // Read template file and close it
+  contents.clear();
+  QTextStream in(&template_file);
+  while(!in.atEnd()) contents.append(in.readLine()).append("\n");
+  template_file.close();
+
+  return true;
+}
+
+/*
+ * UpdateExportedFunctions
+ */
+void ReportEngine::UpdateExportedFunctions(RegistryHive *p_hive) {
+  this->p_registry_hive=p_hive;
+  // GetRegistryNodes
+  QScriptValue func_get_nodes=this->newFunction(this->GetRegistryNodes,1);
+  func_get_nodes.setData(this->newQObject(this->p_registry_hive));
+  this->globalObject().setProperty("GetRegistryNodes",func_get_nodes);
+  // GetRegistryKeys
+  QScriptValue func_get_keys=this->newFunction(this->GetRegistryKeys,1);
+  func_get_keys.setData(this->newQObject(this->p_registry_hive));
+  this->globalObject().setProperty("GetRegistryKeys",func_get_keys);
+  // GetRegistryKeyValue
+  QScriptValue func_get_key_value=this->newFunction(this->GetRegistryKeyValue,
+                                                    2);
+  func_get_key_value.setData(this->newQObject(this->p_registry_hive));
+  this->globalObject().setProperty("GetRegistryKeyValue",func_get_key_value);
+  // GetRegistryNodeModTime
+  QScriptValue func_get_node_modt=
+    this->newFunction(this->GetRegistryNodeModTime,1);
+  func_get_node_modt.setData(this->newQObject(this->p_registry_hive));
+  this->globalObject().setProperty("GetRegistryNodeModTime",func_get_node_modt);
 }

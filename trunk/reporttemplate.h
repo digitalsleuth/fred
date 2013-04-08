@@ -21,6 +21,7 @@
 #ifndef REPORTTEMPLATE_H
 #define REPORTTEMPLATE_H
 
+#include <QMetaType>
 #include <QString>
 
 class ReportTemplate {
@@ -54,5 +55,7 @@ class ReportTemplate {
     QString description;
     QString hive;
 };
+
+Q_DECLARE_METATYPE(ReportTemplate*)
 
 #endif // REPORTTEMPLATE_H

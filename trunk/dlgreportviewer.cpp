@@ -23,6 +23,9 @@
 
 #include <QPrinter>
 #include <QPrintDialog>
+#include <QFileDialog>
+#include <QTextDocument>
+#include <QTextDocumentWriter>
 
 DlgReportViewer::DlgReportViewer(QString &report_data, QWidget *p_parent)
   : QMainWindow(p_parent,Qt::Dialog | Qt::Popup), ui(new Ui::DlgReportViewer)
@@ -30,14 +33,14 @@ DlgReportViewer::DlgReportViewer(QString &report_data, QWidget *p_parent)
   // Init local vars
   ui->setupUi(this);
   this->p_local_event_loop=NULL;
+  this->orig_report_data=report_data;
 
   // Set report content
   this->ui->WebView->setHtml(report_data);
 
   // Set dialog title based on report content title
   QString report_title=this->ui->WebView->title();
-  if(report_title.isEmpty()) this->setWindowTitle("Report Viewer");
-  else this->setWindowTitle(report_title.prepend("Report Viewer : "));
+  this->setWindowTitle("Report Viewer");
 }
 
 DlgReportViewer::~DlgReportViewer() {
@@ -85,4 +88,20 @@ void DlgReportViewer::on_action_Print_triggered() {
 
 void DlgReportViewer::on_action_Close_triggered() {
   this->close();
+}
+
+void DlgReportViewer::on_action_Save_triggered() {
+  QString filename=QFileDialog::getSaveFileName(this,
+                                                tr("Save report as"),
+                                                "",
+                                                "ODF file (*.odf)");
+  if(filename!="") {
+    QTextDocument *p_doc=new QTextDocument(this);
+    p_doc->setHtml(this->orig_report_data);
+    QTextDocumentWriter *p_doc_writer=new QTextDocumentWriter(filename);
+    p_doc_writer->setFormat(QByteArray("ODF"));
+    p_doc_writer->write(p_doc);
+    delete p_doc_writer;
+    delete p_doc;
+  }
 }

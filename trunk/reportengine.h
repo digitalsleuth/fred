@@ -49,7 +49,12 @@ class ReportEngine : public QScriptEngine {
 
     ReportEngine(RegistryHive *p_hive);
     ~ReportEngine();
+
     QMap<QString,QVariant> GetReportTemplateInfo(QString file);
+    bool GenerateReport(RegistryHive *p_hive,
+                        QString report_file,
+                        QString &report_result,
+                        bool console_mode=true);
 
   private:
     ByteArray *p_type_byte_array;
@@ -74,6 +79,9 @@ class ReportEngine : public QScriptEngine {
                                                 QScriptEngine *engine);
     static QScriptValue GetRegistryNodeModTime(QScriptContext *context,
                                                QScriptEngine *engine);
+
+    bool GetReportTemplateFileContents(QString file, QString &contents);
+    void UpdateExportedFunctions(RegistryHive *p_hive);
 };
 
 Q_DECLARE_METATYPE(ReportEngine::s_RegistryKeyValue)

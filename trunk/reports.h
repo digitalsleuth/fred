@@ -25,8 +25,8 @@
 #include "reportengine.h"
 
 #include <QList>
-#include <QMap>
 #include <QString>
+#include <QStringList>
 
 class Reports {
   public:
@@ -35,17 +35,16 @@ class Reports {
 
     void LoadReportTemplates(QString dir);
     QStringList GetAvailableReportCategories();
-    QStringList GetAvailableReports(QString category);
-    QMap<QString,QString> GetReportInfo(QString category, QString name);
+    QList<ReportTemplate*> GetAvailableReports(QString category);
 
-/*
-    QString GenerateReport(RegistryHive *p_hive,
-                           QString report_category,
-                           QString report_name);
-    QString GenerateReport(RegistryHive *p_hive,
-                           QString report_template,
-                           bool console_mode=false);
-*/
+    bool GenerateReport(RegistryHive *p_hive,
+                        QString report_file,
+                        QString &report_result,
+                        bool console_mode=false);
+    bool GenerateReport(RegistryHive *p_hive,
+                        QList<ReportTemplate*> report_list,
+                        QString &report_result,
+                        bool console_mode=false);
   private:
     QList<ReportTemplate*> report_templates;
     ReportEngine *p_engine;

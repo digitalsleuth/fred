@@ -47,9 +47,12 @@ class DlgReportViewer : public QMainWindow {
     void on_action_Print_triggered();
     void on_action_Close_triggered();
 
-private:
+    void on_action_Save_triggered();
+
+  private:
     Ui::DlgReportViewer *ui;
     QEventLoop *p_local_event_loop;
+    QString orig_report_data;
 
 };
 

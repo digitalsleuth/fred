@@ -30,6 +30,15 @@ class RegistryHive : public QObject {
   Q_OBJECT
 
   public:
+    typedef enum eHiveType {
+      eHiveType_UNKNOWN=0,
+      eHiveType_SYSTEM,
+      eHiveType_SOFTWARE,
+      eHiveType_SAM,
+      eHiveType_SECURITY,
+      eHiveType_NTUSER
+    } teHiveType;
+
     explicit RegistryHive(QObject *p_parent=0);
     ~RegistryHive();
 
@@ -40,6 +49,8 @@ class RegistryHive : public QObject {
     bool Close(bool commit_changes=false);
 
     QString Filename();
+    teHiveType HiveType();
+    QString HiveTypeToString(teHiveType hive_type);
 
     QMap<QString,int> GetNodes(QString path="\\");
     QMap<QString,int> GetNodes(int parent_node=0);
@@ -77,6 +88,7 @@ class RegistryHive : public QObject {
     QByteArray GetKeyValueHelper(hive_value_h hive_key,
                                  int *p_value_type,
                                  size_t *p_value_len);
+    bool PathExists(QString path);
 
 };
 
