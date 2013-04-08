@@ -21,9 +21,9 @@ function print_table_row(cell01,cell02) {
 function fred_report_html() {
   var val;
 
-  println("<html>");
-  println("  <head><title>Last known shutdown time</title></head>");
-  println("  <body style=\"font-size:12\">");
+//  println("<html>");
+//  println("  <head><title>Last known shutdown time</title></head>");
+//  println("  <body style=\"font-size:12\">");
   println("  <h2>Last known shutdown time</h2>");
 
   // Get current controlset
@@ -53,5 +53,5 @@ function fred_report_html() {
     println("  </font></p>");
   }
 
-  println("</html>");
+//  println("</html>");
 }

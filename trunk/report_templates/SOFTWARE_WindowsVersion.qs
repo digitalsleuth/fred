@@ -42,9 +42,9 @@ function DecodeProductKey(arr) {
 }
 
 function fred_report_html() {
-  println("<html>");
-  println("  <head><title>Windows version info</title></head>");
-  println("  <body style=\"font-size:12\">");
+//  println("<html>");
+//  println("  <head><title>Windows version info</title></head>");
+//  println("  <body style=\"font-size:12\">");
   println("  <h2>Windows version info</h2>");
 
   // Windows version sp and build info
@@ -105,5 +105,5 @@ function fred_report_html() {
     println("  </font></p>");
   }
 
-  println("</html>");
+//  println("</html>");
 }

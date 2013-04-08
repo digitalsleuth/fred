@@ -61,9 +61,9 @@ function PrintUserAssistEntry(key,val,os) {
 }
 
 function fred_report_html() {
-  println("<html>");
-  println("  <head><title>Launched Applications</title></head>");
-  println("  <body style=\"font-size:12\">");
+//  println("<html>");
+//  println("  <head><title>Launched Applications</title></head>");
+//  println("  <body style=\"font-size:12\">");
   println("  <h2>Launched applications</h2>");
 
   // First, we need to find the correct GUID for the current Windows version

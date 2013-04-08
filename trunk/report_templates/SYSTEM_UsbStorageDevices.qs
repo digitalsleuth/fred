@@ -28,9 +28,9 @@ function fred_report_html() {
   // TODO: There is more here. Check http://www.forensicswiki.org/wiki/USB_History_Viewing
   var val;
 
-  println("<html>");
-  println("  <head><title>USB Storage Devices</title></head>");
-  println("  <body style=\"font-size:12\">");
+//  println("<html>");
+//  println("  <head><title>USB Storage Devices</title></head>");
+//  println("  <body style=\"font-size:12\">");
   println("  <h2>USB storage devices</h2>");
 
   // Preload MountedDevices to possibly identify mount points of USB storage devices
@@ -84,7 +84,7 @@ function fred_report_html() {
     var storage_roots=GetRegistryNodes(cur_controlset+"\\Enum\\USBSTOR");
     if(IsValid(storage_roots)) {
       for(var i=0;i<storage_roots.length;i++) {
-        println("    <u>",storage_roots[i],"</u><br />");
+        println("    <u style=\"margin-left:20px; font-size:12; white-space:nowrap\">",storage_roots[i],"</u><br />");
         var storage_subroots=GetRegistryNodes(cur_controlset+"\\Enum\\USBSTOR\\"+storage_roots[i]);
         for(ii=0;ii<storage_subroots.length;ii++) {
           println("    <table style=\"margin-left:20px; font-size:12; white-space:nowrap\">");
@@ -146,5 +146,5 @@ function fred_report_html() {
     println("  </font></p>");
   }
 
-  println("</html>");
+//  println("</html>");
 }

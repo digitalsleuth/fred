@@ -26,9 +26,9 @@ function print_v_info(v_key_value,info_name,str_off) {
 
 function fred_report_html() {
   // See http://windowsir.blogspot.com/2006/08/getting-user-info-from-image.html
-  println("<html>");
-  println("  <head><title>User Accounts</title></head>");
-  println("  <body style=\"font-size:12\">");
+//  println("<html>");
+//  println("  <head><title>User Accounts</title></head>");
+//  println("  <body style=\"font-size:12\">");
   println("  <h2>User accounts</h2>");
 
   // Iterate over all user names
@@ -105,5 +105,5 @@ function fred_report_html() {
     println("  </font></p>");
   }
 
-  println("</html>");
+//  println("</html>");
 }

@@ -15,9 +15,9 @@ function IsValid(val) {
 }
 
 function fred_report_html() {
-  println("<html>");
-  println("  <head><title>Typed Paths</title></head>");
-  println("  <body style=\"font-size:12\">");
+//  println("<html>");
+//  println("  <head><title>Typed Paths</title></head>");
+//  println("  <body style=\"font-size:12\">");
   println("  <h2>Typed paths</h2>");
 
   // Iterate over all typed paths
@@ -45,5 +45,5 @@ function fred_report_html() {
     println("  </font></p>");
   }
 
-  println("</html>");
+//  println("</html>");
 }

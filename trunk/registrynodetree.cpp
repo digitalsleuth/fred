@@ -72,8 +72,9 @@ void RegistryNodeTree::setModel(QAbstractItemModel *p_model) {
 
 void RegistryNodeTree::contextMenuEvent(QContextMenuEvent *p_event) {
   // Only show context menu when a node is selected
-  if(this->selectedIndexes().count()!=1) return;
+  if(this->selectedIndexes().count()!=2) return;
   // Only show context menu when user clicked on selected row
+  // TODO: Does not work when clicking on column 2
   if(this->indexAt(p_event->pos())!=this->selectedIndexes().at(0)) return;
 
   // Emit a click signal

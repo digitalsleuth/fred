@@ -39,10 +39,10 @@ function ZeroPad(number,padlen) {
 function fred_report_html() {
   var val;
 
-  println("<html>");
-  println("  <head><title>System Time Info</title></head>");
-  println("  <body style=\"font-size:12\">");
-  println("  <h2>System time info (",cur_controlset,")</h2>");
+//  println("<html>");
+//  println("  <head><title>System Time Info</title></head>");
+//  println("  <body style=\"font-size:12\">");
+  println("  <h2>System time info</h2>");
 
   // Get current controlset
   var cur_controlset=GetRegistryKeyValue("\\Select","Current");
@@ -118,5 +118,5 @@ function fred_report_html() {
     println("  </font></p>");
   }
 
-  println("</html>");
+//  println("</html>");
 }

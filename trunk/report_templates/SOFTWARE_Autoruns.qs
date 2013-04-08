@@ -41,9 +41,9 @@ function ListAutoruns(autorun_path,autorun_key) {
 function fred_report_html() {
   var val;
 
-  println("<html>");
-  println("  <head><title>System Autoruns</title></head>");
-  println("  <body style=\"font-size:12\">");
+//  println("<html>");
+//  println("  <head><title>System Autoruns</title></head>");
+//  println("  <body style=\"font-size:12\">");
   println("  <h2>System Autoruns</h2>");
 
   // Run
@@ -57,5 +57,5 @@ function fred_report_html() {
 
   // TODO: There might be a Run under WindowsNT\CurrentVersion\Run too!
 
-  println("</html>");
+//  println("</html>");
 }

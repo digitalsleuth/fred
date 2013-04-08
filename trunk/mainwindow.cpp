@@ -172,14 +172,7 @@ MainWindow::MainWindow(ArgParser *p_arg_parser) :
 
   // Load report templates
   this->p_reports=new Reports();
-  // Load reports from system wide include dir
-  this->p_reports->LoadReportTemplates(FRED_REPORT_TEMPLATE_DIR);
-  // Load user's report templates
-  this->p_reports->LoadReportTemplates(QDir::homePath()
-                                         .append(QDir::separator())
-                                         .append(".fred")
-                                         .append(QDir::separator())
-                                         .append("report_templates"));
+  this->ReloadReportTemplates();
 
   // Finally, react on some command line arguments
   if(this->p_args->IsSet("maximized")) {
@@ -573,4 +566,19 @@ void MainWindow::OpenHive(QString hive_file) {
   this->p_hex_edit_widget->setEnabled(true);
 
   this->UpdateWindowTitle(hive_file);
+}
+
+void MainWindow::ReloadReportTemplates() {
+  // Load reports from system wide include dir
+  this->p_reports->LoadReportTemplates(FRED_REPORT_TEMPLATE_DIR);
+  // Load user's report templates
+  this->p_reports->LoadReportTemplates(QDir::homePath()
+                                         .append(QDir::separator())
+                                         .append(".fred")
+                                         .append(QDir::separator())
+                                         .append("report_templates"));
+}
+
+void MainWindow::on_ActionReloadReportTemplates_triggered() {
+  this->ReloadReportTemplates();
 }

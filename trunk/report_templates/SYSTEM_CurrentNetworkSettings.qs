@@ -29,9 +29,9 @@ function fred_report_html() {
   // http://technet.microsoft.com/de-de/library/cc739819%28v=WS.10%29.aspx
   var val;
 
-  println("<html>");
-  println("  <head><title>Current Network Settings (Tcp/Ip)</title></head>");
-  println("  <body style=\"font-size:12\">");
+//  println("<html>");
+//  println("  <head><title>Current Network Settings (Tcp/Ip)</title></head>");
+//  println("  <body style=\"font-size:12\">");
   println("  <h2>Current network settings (Tcp/Ip)</h2>");
 
   // Get current controlset
@@ -61,9 +61,9 @@ function fred_report_html() {
       // the {4D36E972-E325-11CE-BFC1-08002BE10318} key name might be (and hopefully is) static :)
       val=GetRegistryKeyValue(cur_controlset+"\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\"+adapters[i]+"\\Connection","Name");
       if(IsValid(val)) {
-        println("    ",RegistryKeyValueToString(val.value,val.type));
+        println("    <u>",RegistryKeyValueToString(val.value,val.type),"</u>");
       } else {
-        println("    ",adapters[i]);
+        println("    <u>",adapters[i],"</u>");
       }
 
       // Get settings node
@@ -137,5 +137,5 @@ function fred_report_html() {
     println("  </font></p>");
   }
 
-  println("</html>");
+//  println("</html>");
 }

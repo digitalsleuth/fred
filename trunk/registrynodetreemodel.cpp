@@ -75,6 +75,9 @@ QVariant RegistryNodeTreeModel::data(const QModelIndex &index, int role) const
       return QVariant();
     }
   }
+
+  // Control will never reach this, but in order to stop g++ complaining...
+  return QVariant();
 }
 
 Qt::ItemFlags RegistryNodeTreeModel::flags(const QModelIndex &index) const {

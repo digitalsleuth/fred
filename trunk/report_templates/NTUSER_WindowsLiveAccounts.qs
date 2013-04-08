@@ -15,9 +15,9 @@ function IsValid(val) {
 }
 
 function fred_report_html() {
-  println("<html>");
-  println("  <head><title>Windows Live Accounts</title></head>");
-  println("  <body style=\"font-size:12\">");
+//  println("<html>");
+//  println("  <head><title>Windows Live Accounts</title></head>");
+//  println("  <body style=\"font-size:12\">");
   println("  <h2>Windows live accounts</h2>");
 
   // Iterate over all contacts
@@ -44,5 +44,5 @@ function fred_report_html() {
     println("  </font></p>");
   }
 
-  println("</html>");
+//  println("</html>");
 }

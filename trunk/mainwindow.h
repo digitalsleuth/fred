@@ -73,6 +73,8 @@ class MainWindow : public QMainWindow {
     void SlotSearchResultWidgetDoubleClicked(QModelIndex index);
     void SlotTabCloseButtonClicked(int index);
 
+    void on_ActionReloadReportTemplates_triggered();
+
   private:
     Ui::MainWindow *ui;
     ArgParser *p_args;
@@ -117,6 +119,7 @@ class MainWindow : public QMainWindow {
      * Open a registry hive
      */
     void OpenHive(QString hive_file);
+    void ReloadReportTemplates();
 };
 
 #endif // MAINWINDOW_H

@@ -15,9 +15,9 @@ function IsValid(val) {
 }
 
 function fred_report_html() {
-  println("<html>");
-  println("  <head><title>Recent Documents</title></head>");
-  println("  <body style=\"font-size:12\">");
+//  println("<html>");
+//  println("  <head><title>Recent Documents</title></head>");
+//  println("  <body style=\"font-size:12\">");
   println("  <h2>Recent documents</h2>");
 
   // Get list of recent docs
@@ -50,5 +50,5 @@ function fred_report_html() {
     println("  </font></p>");
   }
 
-  println("</html>");
+//  println("</html>");
 }

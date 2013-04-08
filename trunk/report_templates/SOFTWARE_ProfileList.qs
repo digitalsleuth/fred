@@ -21,9 +21,9 @@ function print_table_row(cell01,cell02) {
 function fred_report_html() {
   var val;
 
-  println("<html>");
-  println("  <head><title>Profile List</title></head>");
-  println("  <body style=\"font-size:12\">");
+//  println("<html>");
+//  println("  <head><title>Profile List</title></head>");
+//  println("  <body style=\"font-size:12\">");
   println("  <h2>Profile List</h2>");
 
   var profile_list=GetRegistryNodes("\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList");
@@ -52,5 +52,5 @@ function fred_report_html() {
     println("    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;None");
   }
 
-  println("</html>");
+//  println("</html>");
 }
