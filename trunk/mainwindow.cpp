@@ -170,20 +170,6 @@ MainWindow::MainWindow(ArgParser *p_arg_parser) :
   // Set last open location to home dir
   this->last_open_location=QDir::homePath();
 
-/*
-  // Load report templates
-  this->p_data_reporter=new DataReporter();
-  // Load reports from system wide include dir
-  this->p_data_reporter->LoadReportTemplates(FRED_REPORT_TEMPLATE_DIR);
-  // Load user's report templates
-  this->p_data_reporter->LoadReportTemplates(QDir::homePath()
-                                               .append(QDir::separator())
-                                               .append(".fred")
-                                               .append(QDir::separator())
-                                               .append("report_templates"));
-  this->UpdateDataReporterMenu();
-*/
-
   // Load report templates
   this->p_reports=new Reports();
   // Load reports from system wide include dir
@@ -442,28 +428,6 @@ void MainWindow::SlotKeyTableDoubleClicked(QModelIndex index) {
   */
 }
 
-/*
-void MainWindow::SlotReportClicked() {
-  // Get report category and name from sender and it's parent
-  QString category=((QMenu*)((QAction*)QObject::sender())->parent())->title();
-  QString report=((QAction*)QObject::sender())->text();
-
-  // Generate report
-  QString report_content=this->p_data_reporter->GenerateReport(this->p_hive,
-                                                               category,
-                                                               report);
-
-  // Show result in report viewer
-  if(report_content!=QString()) {
-    DlgReportViewer *p_dlg_report_view=new DlgReportViewer(report_content,this);
-    p_dlg_report_view->exec();
-    delete p_dlg_report_view;
-  } else {
-    // TODO: Something went wrong!
-  }
-}
-*/
-
 void MainWindow::SlotSearchFinished() {
   delete this->p_search_thread;
   this->p_search_thread=NULL;
@@ -575,31 +539,6 @@ void MainWindow::UpdateWindowTitle(QString filename) {
                                                       .constData()));
   }
 }
-
-/*
-void MainWindow::UpdateDataReporterMenu() {
-  int i=0,ii=0;
-  QMenu *p_category_entry;
-  QAction *p_report_entry;
-  QStringList categories=this->p_data_reporter->GetAvailableReportCategories();
-  QStringList reports;
-
-  for(i=0;i<categories.count();i++) {
-    // First create category submenu
-    p_category_entry=this->ui->MenuReports->addMenu(categories.value(i));
-    // Now add category reports
-    reports=this->p_data_reporter->GetAvailableReports(categories.value(i));
-    for(ii=0;ii<reports.count();ii++) {
-      p_report_entry=new QAction(reports.value(ii),p_category_entry);
-      p_category_entry->addAction(p_report_entry);
-      this->connect(p_report_entry,
-                    SIGNAL(triggered()),
-                    this,
-                    SLOT(SlotReportClicked()));
-    }
-  }
-}
-*/
 
 void MainWindow::OpenHive(QString hive_file) {
   // Update last open location

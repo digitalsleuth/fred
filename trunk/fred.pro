@@ -51,8 +51,6 @@ SOURCES   += main.cpp\
              qhexedit/qhexedit_p.cpp \
              qhexedit/qhexedit.cpp \
              reporttemplate.cpp \
-             datareporter.cpp \
-             datareporterengine.cpp \
              registryhive.cpp \
              qtscript_types/bytearray.cpp \
              qtscript_types/bytearrayprototype.cpp \
@@ -71,9 +69,9 @@ SOURCES   += main.cpp\
              settings.cpp \
              searchresulttabledelegate.cpp \
              registrynodetreemodelproxy.cpp \
-    reports.cpp \
-    reportengine.cpp \
-    dlgreportchooser.cpp
+             reports.cpp \
+             reportengine.cpp \
+             dlgreportchooser.cpp
 
 HEADERS   += mainwindow.h \
              registrynode.h \
@@ -85,8 +83,6 @@ HEADERS   += mainwindow.h \
              qhexedit/qhexedit_p.h \
              qhexedit/qhexedit.h \
              reporttemplate.h \
-             datareporter.h \
-             datareporterengine.h \
              registryhive.h \
              qtscript_types/bytearray.h \
              qtscript_types/bytearrayprototype.h \
@@ -105,16 +101,16 @@ HEADERS   += mainwindow.h \
              settings.h \
              searchresulttabledelegate.h \
              registrynodetreemodelproxy.h \
-    reports.h \
-    reportengine.h \
-    dlgreportchooser.h
+             reports.h \
+             reportengine.h \
+             dlgreportchooser.h
 
 FORMS     += mainwindow.ui \
              dlgabout.ui \
              dlgkeydetails.ui \
              dlgreportviewer.ui \
              dlgsearch.ui \
-    dlgreportchooser.ui
+             dlgreportchooser.ui
 
 #LIBS      += -lhivex
 LIBS      += $$PWD/hivex/lib/.libs/libhivex.a

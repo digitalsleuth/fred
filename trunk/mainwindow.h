@@ -41,7 +41,6 @@
 #include "registrykeytable.h"
 #include "registrykeytablemodel.h"
 #include "hexeditwidget.h"
-//#include "datareporter.h"
 #include "reports.h"
 #include "threadsearch.h"
 #include "searchresultwidget.h"
@@ -70,7 +69,6 @@ class MainWindow : public QMainWindow {
     void SlotNodeTreeClicked(QModelIndex index);
     void SlotKeyTableClicked(QModelIndex index);
     void SlotKeyTableDoubleClicked(QModelIndex index);
-//    void SlotReportClicked();
     void SlotSearchFinished();
     void SlotSearchResultWidgetDoubleClicked(QModelIndex index);
     void SlotTabCloseButtonClicked(int index);
@@ -96,7 +94,6 @@ class MainWindow : public QMainWindow {
     HexEditWidget *p_hex_edit_widget;
     QSplitter *p_horizontal_splitter;
     QSplitter *p_vertical_splitter;
-//    DataReporter *p_data_reporter;
     Reports *p_reports;
 
     // Threads
@@ -114,11 +111,6 @@ class MainWindow : public QMainWindow {
      * Updates the window title
      */
     void UpdateWindowTitle(QString filename="");
-    /*
-     * UpdateDataReporterMenu
-     *
-     */
-//    void UpdateDataReporterMenu();
     /*
      * OpenHive
      *

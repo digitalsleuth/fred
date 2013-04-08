@@ -26,7 +26,7 @@
 #include "mainwindow.h"
 #include "argparser.h"
 #include "compileinfo.h"
-#include "datareporter.h"
+#include "reportengine.h"
 #include "registryhive.h"
 
 // Forward declarations
@@ -132,7 +132,7 @@ void PrintUsage() {
 
 void DumpReport(QString report_template, QString hive_file) {
   RegistryHive *p_hive=new RegistryHive();
-  DataReporter *p_data_reporter=new DataReporter();
+  ReportEngine *p_report_engine=new ReportEngine(NULL);
 
   // Open hive
   if(!p_hive->Open(hive_file,true)) {
@@ -142,11 +142,15 @@ void DumpReport(QString report_template, QString hive_file) {
   }
 
   // Generate report
-  QString result=p_data_reporter->GenerateReport(p_hive,report_template,true);
+  QString result="";
+  p_report_engine->GenerateReport(p_hive,
+                                 report_template,
+                                 result,
+                                 true);
 
   // Close hive and free DataReporter and RegistryHive
   p_hive->Close();
-  delete p_data_reporter;
+  delete p_report_engine;
   delete p_hive;
 
   // Print result to stdout
