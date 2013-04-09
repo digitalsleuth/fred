@@ -22,16 +22,18 @@
 #define SETTINGS_H
 
 #include <QObject>
+#include <QSettings>
+#include <QString>
 
 class settings : public QObject {
   Q_OBJECT
 
   public:
-    explicit settings(QObject *parent = 0);
+    explicit settings(QObject *p_parent=0);
 
-  signals:
-
-  public slots:
+  private:
+    QSettings *p_settings;
+    QString user_settings_dir;
 
 };
 

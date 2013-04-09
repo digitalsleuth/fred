@@ -88,7 +88,7 @@ void RegistryNodeTree::contextMenuEvent(QContextMenuEvent *p_event) {
 
 void RegistryNodeTree::keyPressEvent(QKeyEvent *p_event) {
   // Only react if a node is selected and user pressed Key_Left
-  if(this->selectedIndexes().count()==1 &&
+  if(this->selectedIndexes().count()==2 &&
      p_event->key()==Qt::Key_Left)
   {
     QModelIndex cur_index=this->selectedIndexes().at(0);
