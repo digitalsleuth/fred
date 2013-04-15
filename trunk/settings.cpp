@@ -24,39 +24,66 @@
 
 #ifndef FRED_REPORT_TEMPLATE_DIR
   #ifndef __MINGW32__
-    #define FRED_REPORT_TEMPLATE_DIR "/usr/share/fred/report_templates/"
+    #define SYSTEM_REPORT_TEMPLATE_DIR "/usr/share/fred/report_templates/"
   #else
-    #define FRED_REPORT_TEMPLATE_DIR ".\\report_templates\\"
+    #define SYSTEM_REPORT_TEMPLATE_DIR ".\\report_templates\\"
   #endif
 #endif
 
 #define APP_ORGANIZATION "pinguin.lu"
 #define APP_NAME "fred"
 
-settings::settings(QObject *p_parent) : QObject(p_parent) {
+Settings::Settings(QObject *p_parent) : QObject(p_parent) {
   // Init vars
   this->p_settings=NULL;
   this->user_settings_dir=QDir::homePath()
     .append(QDir::separator()).append(".fred");
+  this->user_report_template_dir=QString(this->user_settings_dir)
+                                   .append(QDir::separator())
+                                   .append("report_templates");
 }
 
-bool settings::Init() {
-  // Make sure config dir exists
+bool Settings::Init() {
+  // Make sure config dirs exist
   if(!QDir(this->user_settings_dir).exists()) {
     // User config dir does not exists, try to create it
     if(!QDir().mkpath(this->user_settings_dir)) {
       // TODO: Maybe warn user
       return false;
     }
+  }
+  if(!QDir(this->user_report_template_dir).exists()) {
     // Create config dir sub folder for report templates
-    user_config_dir.append(QDir::separator()).append("report_templates");
-    if(!QDir().mkpath(user_config_dir)) {
+    if(!QDir().mkpath(this->user_report_template_dir)) {
       // TODO: Maybe warn user
       return false;
     }
   }
 
-  this->p_settings=new QSettings(APP_ORGANIZATION,APP_NAME,this);
+#ifndef __MINGW32__
+  // On any Unix-like OS, settings should be saved in the .fred folder
+  QSettings::setPath(QSettings::NativeFormat,
+                     QSettings::UserScope,
+                     this->user_settings_dir);
+#endif
+
+  // Create / open settings
+  this->p_settings=new QSettings(QSettings::NativeFormat,
+                                 QSettings::UserScope,
+                                 APP_ORGANIZATION,
+                                 APP_NAME,
+                                 this);
+  if(this->p_settings->status()!=QSettings::NoError ||
+     !this->p_settings->isWritable())
+  {
+    return false;
+  }
+
+  return true;
 }
 
+QStringList Settings::GetReportTemplateDirs() {
+  return QStringList()<<SYSTEM_REPORT_TEMPLATE_DIR
+                     <<this->user_report_template_dir;
+}
 

@@ -24,16 +24,20 @@
 #include <QObject>
 #include <QSettings>
 #include <QString>
+#include <QStringList>
 
-class settings : public QObject {
+class Settings : public QObject {
   Q_OBJECT
 
   public:
-    explicit settings(QObject *p_parent=0);
+    explicit Settings(QObject *p_parent=0);
+    bool Init();
+    QStringList GetReportTemplateDirs();
 
   private:
     QSettings *p_settings;
     QString user_settings_dir;
+    QString user_report_template_dir;
 
 };
 
