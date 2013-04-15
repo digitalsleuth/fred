@@ -32,6 +32,7 @@
 #include <QDesktopWidget>
 #include <QDir>
 #include <QSplitter>
+#include <QListIterator>
 
 #include <QDebug>
 
@@ -64,8 +65,15 @@ MainWindow::MainWindow(ArgParser *p_arg_parser) :
   this->p_search_thread=NULL;
   this->search_result_widgets.clear();
 
+  // Init settings
+  this->p_settings=new Settings(this);
+  if(!this->p_settings->Init()) {
+    // TODO: Warn user
+    qDebug()<<"Unable to init settings!";
+  }
+
   // Check for ~/.fred config dir
-  this->CheckUserConfigDir();
+  //this->CheckUserConfigDir();
 
   // Set main window size
   int cur_screen=QApplication::desktop()->screenNumber(this);
@@ -569,6 +577,11 @@ void MainWindow::OpenHive(QString hive_file) {
 }
 
 void MainWindow::ReloadReportTemplates() {
+  QListIterator<QString> it(this->p_settings->GetReportTemplateDirs());
+  while(it.hasNext()) {
+    this->p_reports->LoadReportTemplates(it.next());
+  }
+/*
   // Load reports from system wide include dir
   this->p_reports->LoadReportTemplates(FRED_REPORT_TEMPLATE_DIR);
   // Load user's report templates
@@ -577,6 +590,7 @@ void MainWindow::ReloadReportTemplates() {
                                          .append(".fred")
                                          .append(QDir::separator())
                                          .append("report_templates"));
+*/
 }
 
 void MainWindow::on_ActionReloadReportTemplates_triggered() {

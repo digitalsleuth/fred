@@ -45,6 +45,7 @@
 #include "threadsearch.h"
 #include "searchresultwidget.h"
 #include "tabwidget.h"
+#include "settings.h"
 
 namespace Ui {
   class MainWindow;
@@ -83,6 +84,7 @@ class MainWindow : public QMainWindow {
     bool is_hive_open;
     QByteArray selected_key_value;
     QList<SearchResultWidget*> search_result_widgets;
+    Settings *p_settings;
 
     // Models
     RegistryNodeTreeModel *p_reg_node_tree_model;

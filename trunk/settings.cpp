@@ -60,19 +60,27 @@ bool Settings::Init() {
     }
   }
 
+  // Create / open settings
 #ifndef __MINGW32__
   // On any Unix-like OS, settings should be saved in the .fred folder
+  this->p_settings=new QSettings(QString(this->user_settings_dir)
+                                   .append(QDir::separator())
+                                   .append("fred.conf"),
+                                 QSettings::NativeFormat,
+                                 this);
+/*
   QSettings::setPath(QSettings::NativeFormat,
                      QSettings::UserScope,
                      this->user_settings_dir);
-#endif
-
-  // Create / open settings
+*/
+#else
+  // On Windows, it can be stored inside registry
   this->p_settings=new QSettings(QSettings::NativeFormat,
                                  QSettings::UserScope,
                                  APP_ORGANIZATION,
                                  APP_NAME,
                                  this);
+#endif
   if(this->p_settings->status()!=QSettings::NoError ||
      !this->p_settings->isWritable())
   {
@@ -84,6 +92,6 @@ bool Settings::Init() {
 
 QStringList Settings::GetReportTemplateDirs() {
   return QStringList()<<SYSTEM_REPORT_TEMPLATE_DIR
-                     <<this->user_report_template_dir;
+                      <<this->user_report_template_dir;
 }
 
