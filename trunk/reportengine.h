@@ -75,6 +75,8 @@ class ReportEngine : public QScriptEngine {
                                                  QScriptEngine *engine);
     static QScriptValue RegistryKeyValueToVariant(QScriptContext *context,
                                                   QScriptEngine *engine);
+    static QScriptValue RegistryKeyValueToStringList(QScriptContext *context,
+                                                     QScriptEngine *engine);
     static QScriptValue RegistryKeyTypeToString(QScriptContext *context,
                                                 QScriptEngine *engine);
     static QScriptValue GetRegistryNodeModTime(QScriptContext *context,

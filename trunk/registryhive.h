@@ -71,6 +71,7 @@ class RegistryHive : public QObject {
                                     int offset=0,
                                     int length=0,
                                     bool little_endian=true);
+    static QStringList KeyValueToStringList(QByteArray value, int value_type);
     static QString KeyTypeToString(int value_type);
     static uint64_t FiletimeToUnixtime(int64_t filetime);
 

@@ -26,8 +26,17 @@ function ListValues(root_key) {
     for(var i=0;i<values.length;i++) {
       var value=GetRegistryKeyValue(root_key,values[i]);
       if(IsValid(value)) {
-        // TODO: These are all REG_MULTI_SZ's
-        print_table_row(values[i],RegistryKeyValueToString(value.value,value.type));
+        println("      <tr>");
+        println("        <td>",values[i],"</td>");
+        println("        <td>");
+        var strings=RegistryKeyValueToStringList(value.val,value.type);
+        if(IsValid(strings) {
+          for(var i=0;i<strings.length;i++) {
+            println("          ",strings[i],"<br />");
+          }
+        }
+        println("        </td>");
+        println("      </tr>");
       }
     }
     println("    </table>");

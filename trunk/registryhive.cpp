@@ -38,6 +38,10 @@
   #define EPOCH_DIFF 0x19DB1DED53E8000LL
 #endif
 
+/*******************************************************************************
+ * Public
+ ******************************************************************************/
+
 /*
  * RegistryHive
  */
@@ -405,7 +409,7 @@ QString RegistryHive::KeyValueToString(QByteArray key_value,
   (((uint64_t)bswap_32((uint32_t)((value) & 0xffffffff)) << 32) | \
   (uint64_t)bswap_32((uint32_t)((value) >> 32)))                  \
 
-  // ConvertFull name
+  // Convert full name
   if(format=="int8" && remaining_data_len>=1) {
     ret=QString().sprintf("%d",*(int8_t*)p_data);
   } else if(format=="uint8" && remaining_data_len>=1) {
@@ -488,6 +492,32 @@ QString RegistryHive::KeyValueToString(QByteArray key_value,
 }
 
 /*
+ * KeyValueToStringList
+ */
+QStringList RegistryHive::KeyValueToStringList(QByteArray value, int value_type) {
+  QStringList result;
+  int last_pos=0,cur_pos=0;
+
+  // Only supported on REG_MULTI_SZ values!!
+  if(value_type!=hive_t_REG_MULTI_SZ) return QStringList();
+
+  while(last_pos<value.count() &&
+        (cur_pos=value.indexOf(QByteArray("\0\0"),last_pos))!=-1)
+  {
+    if(cur_pos!=last_pos) {
+      // TODO: What happens if encoding is not UTF16-LE ??? Thx Billy!!!
+      result.append(QString().fromUtf16((ushort*)value
+                                          .mid(last_pos,cur_pos-last_pos)
+                                          .append(QByteArray("\0\0"))
+                                          .constData()));
+    }
+    last_pos=cur_pos+2;
+  }
+
+  return result;
+}
+
+/*
  * KeyTypeToString
  */
 QString RegistryHive::KeyTypeToString(int value_type) {
@@ -543,6 +573,10 @@ QString RegistryHive::KeyTypeToString(int value_type) {
 uint64_t RegistryHive::FiletimeToUnixtime(int64_t filetime) {
   return (unsigned)((filetime-EPOCH_DIFF)/10000000);
 }
+
+/*******************************************************************************
+ * Private
+ ******************************************************************************/
 
 /*
  * SetError

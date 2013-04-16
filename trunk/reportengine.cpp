@@ -23,6 +23,7 @@
 #include <QFile>
 #include <QTextStream>
 #include <QDateTime>
+#include <QStringList>
 
 #include <QtDebug>
 
@@ -72,6 +73,11 @@ ReportEngine::ReportEngine(RegistryHive *p_hive) : QScriptEngine() {
     this->newFunction(this->RegistryKeyValueToVariant);
   this->globalObject().setProperty("RegistryKeyValueToVariant",
                                    func_value_to_variant);
+  // RegistryKeyValueToStringList
+  QScriptValue func_value_to_string_list=
+    this->newFunction(this->RegistryKeyValueToStringList);
+  this->globalObject().setProperty("RegistryKeyValueToStringList",
+                                   func_value_to_string_list);
   // RegistryKeyTypeToString
   QScriptValue func_type_to_string=
     this->newFunction(this->RegistryKeyTypeToString,1);
@@ -421,6 +427,36 @@ QScriptValue ReportEngine::RegistryKeyValueToVariant(QScriptContext *context,
   ret=RegistryHive::KeyValueToString(key_value,format,offset,length,little_endian);
 
   return engine->newVariant(ret);
+}
+
+/*
+ * RegistryKeyValueToStringList
+ */
+QScriptValue ReportEngine::RegistryKeyValueToStringList(QScriptContext *context,
+                                                        QScriptEngine *engine)
+{
+  QByteArray value;
+  QStringList strings;
+  QScriptValue ret;
+  int i=0;
+
+  // This function needs two arguments, key value and key type
+  if(context->argumentCount()!=2) return engine->undefinedValue();
+
+  // Cast ByteArray argument to QByteArray and convert
+  value=qvariant_cast<QByteArray>(context->argument(0).data().toVariant());
+  strings=RegistryHive::KeyValueToStringList(value,
+                                             context->argument(1)
+                                               .toInt32());
+
+  // Build script array
+  ret=engine->newArray(strings.count());
+  QListIterator<QString> str_it(strings);
+  while(str_it.hasNext()) {
+    ret.setProperty(i++,QScriptValue(str_it.next()));
+  }
+
+  return ret;
 }
 
 /*
