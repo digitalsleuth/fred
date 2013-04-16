@@ -21,6 +21,8 @@
 #ifndef DLGREPORTVIEWER_H
 #define DLGREPORTVIEWER_H
 
+#include "settings.h"
+
 #include <QMainWindow>
 #include <QEventLoop>
 #include <QCloseEvent>
@@ -34,6 +36,7 @@ class DlgReportViewer : public QMainWindow {
 
   public:
     explicit DlgReportViewer(QString &report_data,
+                             Settings *p_sets,
                              QWidget *p_parent=0);
     ~DlgReportViewer();
 
@@ -53,7 +56,7 @@ class DlgReportViewer : public QMainWindow {
     Ui::DlgReportViewer *ui;
     QEventLoop *p_local_event_loop;
     QString orig_report_data;
-
+    Settings *p_settings;
 };
 
 #endif // DLGREPORTVIEWER_H

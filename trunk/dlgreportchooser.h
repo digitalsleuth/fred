@@ -22,6 +22,7 @@
 #define DLGREPORTCHOOSER_H
 
 #include "reports.h"
+#include "settings.h"
 
 #include <QDialog>
 #include <QList>
@@ -37,6 +38,7 @@ class DlgReportChooser : public QDialog {
   public:
     explicit DlgReportChooser(Reports *p_reps,
                               QString hive_type_string,
+                              Settings *p_sets,
                               QWidget *p_parent=0);
     ~DlgReportChooser();
 
@@ -44,6 +46,7 @@ class DlgReportChooser : public QDialog {
 
   protected:
     void changeEvent(QEvent *e);
+    void closeEvent(QCloseEvent *p_event);
 
   private slots:
     void on_BtnCancel_clicked();
@@ -54,6 +57,7 @@ class DlgReportChooser : public QDialog {
   private:
     Ui::DlgReportChooser *ui;
     Reports *p_reports;
+    Settings *p_settings;
     QString hive_type;
     QList<QTreeWidgetItem*> tree_category_items;
     QList<ReportTemplate*> selected_reports;

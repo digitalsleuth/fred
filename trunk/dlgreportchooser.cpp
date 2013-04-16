@@ -29,6 +29,7 @@
 
 DlgReportChooser::DlgReportChooser(Reports *p_reps,
                                    QString hive_type_string,
+                                   Settings *p_sets,
                                    QWidget *p_parent)
   : QDialog(p_parent), ui(new Ui::DlgReportChooser)
 {
@@ -42,9 +43,14 @@ DlgReportChooser::DlgReportChooser(Reports *p_reps,
   // Init private vars
   this->ui->setupUi(this);
   this->p_reports=p_reps;
+  this->p_settings=p_sets;
   this->hive_type=hive_type_string;
   this->tree_category_items.clear();
   this->selected_reports.clear();
+
+  // Restore dialog geometry if possible
+  QByteArray geometry=this->p_settings->GetWindowGeometry("DlgReportChooser");
+  if(!geometry.isEmpty()) this->restoreGeometry(geometry);
 
   // Populate tree with reports
   tree_cats=this->p_reports->GetAvailableReportCategories();
@@ -102,6 +108,12 @@ void DlgReportChooser::changeEvent(QEvent *e) {
     default:
       break;
   }
+}
+
+void DlgReportChooser::closeEvent(QCloseEvent *p_event) {
+  Q_UNUSED(p_event)
+
+  this->p_settings->SaveWindowGeometry("DlgReportChooser",this->saveGeometry());
 }
 
 void DlgReportChooser::on_BtnCancel_clicked() {

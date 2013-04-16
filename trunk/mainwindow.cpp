@@ -67,30 +67,30 @@ MainWindow::MainWindow(ArgParser *p_arg_parser) :
 
   // Init settings
   this->p_settings=new Settings(this);
-  if(!this->p_settings->Init()) {
-    // TODO: Warn user
-    qDebug()<<"Unable to init settings!";
-  }
-
-  // Check for ~/.fred config dir
-  //this->CheckUserConfigDir();
 
   // Set main window size
-  int cur_screen=QApplication::desktop()->screenNumber(this);
-  int window_width=
-    QApplication::desktop()->availableGeometry(cur_screen).width()*0.5;
-  int window_height=
-    QApplication::desktop()->availableGeometry(cur_screen).height()*0.5;
-  int window_x=
-    (QApplication::desktop()->availableGeometry(cur_screen).width()/2)-
-    (window_width/2);
-  int window_y=
-    (QApplication::desktop()->availableGeometry(cur_screen).height()/2)-
-    (window_height/2);
-  this->setGeometry(window_x,
-                    window_y,
-                    window_width,
-                    window_height);
+  QByteArray geometry=this->p_settings->GetWindowGeometry("MainWindow");
+  if(!geometry.isEmpty()) {
+    // Restore saved geometry
+    this->restoreGeometry(geometry);
+  } else {
+    // No saved geometry, calculate and set default
+    int cur_screen=QApplication::desktop()->screenNumber(this);
+    int window_width=
+      QApplication::desktop()->availableGeometry(cur_screen).width()*0.5;
+    int window_height=
+      QApplication::desktop()->availableGeometry(cur_screen).height()*0.5;
+    int window_x=
+      (QApplication::desktop()->availableGeometry(cur_screen).width()/2)-
+      (window_width/2);
+    int window_y=
+      (QApplication::desktop()->availableGeometry(cur_screen).height()/2)-
+      (window_height/2);
+    this->setGeometry(window_x,
+                      window_y,
+                      window_width,
+                      window_height);
+  }
 
   // Create widgets
   this->p_horizontal_splitter=new QSplitter();
@@ -175,6 +175,11 @@ MainWindow::MainWindow(ArgParser *p_arg_parser) :
   // Set window title
   this->UpdateWindowTitle();
 
+  // Create and update recently opened menu
+  this->p_recently_opened_menu=new QMenu(this);
+  this->ui->ActionRecentlyOpened->setMenu(this->p_recently_opened_menu);
+  this->UpdateRecentlyOpenedMenu();
+
   // Set last open location to home dir
   this->last_open_location=QDir::homePath();
 
@@ -198,7 +203,32 @@ MainWindow::~MainWindow() {
   if(this->is_hive_open) {
     this->p_hive->Close();
   }
+
+  // Delete created objects
+  delete this->p_reports;
+  this->ClearRecentlyOpenedMenu();
+  delete this->p_recently_opened_menu;
+  delete this->p_hex_edit_widget;
+  delete this->p_tab_widget;
+  delete this->p_key_table;
+  delete this->p_vertical_splitter;
+  delete this->p_node_tree;
+  delete this->p_horizontal_splitter;
+  delete this->p_settings;
+  delete this->p_hive;
   delete ui;
+}
+
+/*******************************************************************************
+ * Protected
+ ******************************************************************************/
+
+void MainWindow::closeEvent(QCloseEvent *p_event) {
+  Q_UNUSED(p_event)
+
+  // Save window position and size on exit
+  this->p_settings->SaveWindowGeometry("MainWindow",this->saveGeometry());
+  QMainWindow::closeEvent(p_event);
 }
 
 /*******************************************************************************
@@ -318,6 +348,7 @@ void MainWindow::on_ActionGenerateReport_triggered() {
   DlgReportChooser dlg_repchooser(this->p_reports,
                                   this->p_hive->HiveTypeToString(
                                     this->p_hive->HiveType()),
+                                  this->p_settings,
                                   this);
   if(dlg_repchooser.exec()==QDialog::Accepted) {
     QList<ReportTemplate*> selected_reports;
@@ -335,6 +366,7 @@ void MainWindow::on_ActionGenerateReport_triggered() {
     {
       // Report generation was successfull, show reports
       DlgReportViewer *p_dlg_report_view=new DlgReportViewer(report_result,
+                                                             this->p_settings,
                                                              this);
       p_dlg_report_view->exec();
       delete p_dlg_report_view;
@@ -508,6 +540,13 @@ void MainWindow::SlotTabCloseButtonClicked(int index) {
   this->search_result_widgets.removeAt(index-1);
 }
 
+void MainWindow::SlotRecentlyOpenedFileClicked(bool checked) {
+  Q_UNUSED(checked)
+
+  QAction *p_sender=(QAction*)QObject::sender();
+  this->OpenHive(p_sender->text());
+}
+
 /*******************************************************************************
  * Private
  ******************************************************************************/
@@ -573,7 +612,12 @@ void MainWindow::OpenHive(QString hive_file) {
   // Enable data interpreter
   this->p_hex_edit_widget->setEnabled(true);
 
+  // Update window title
   this->UpdateWindowTitle(hive_file);
+
+  // Add file to recent list and update recently opened menu
+  this->p_settings->AddRecentFile(hive_file);
+  this->UpdateRecentlyOpenedMenu();
 }
 
 void MainWindow::ReloadReportTemplates() {
@@ -581,18 +625,51 @@ void MainWindow::ReloadReportTemplates() {
   while(it.hasNext()) {
     this->p_reports->LoadReportTemplates(it.next());
   }
-/*
-  // Load reports from system wide include dir
-  this->p_reports->LoadReportTemplates(FRED_REPORT_TEMPLATE_DIR);
-  // Load user's report templates
-  this->p_reports->LoadReportTemplates(QDir::homePath()
-                                         .append(QDir::separator())
-                                         .append(".fred")
-                                         .append(QDir::separator())
-                                         .append("report_templates"));
-*/
 }
 
 void MainWindow::on_ActionReloadReportTemplates_triggered() {
   this->ReloadReportTemplates();
+}
+
+void MainWindow::ClearRecentlyOpenedMenu() {
+  QAction *p_action;
+
+  // Remove existing menu entries
+  QList<QAction*> menu_entries=this->p_recently_opened_menu->actions();
+  QListIterator<QAction*> it_me(menu_entries);
+  while(it_me.hasNext()) {
+    p_action=it_me.next();
+    this->p_recently_opened_menu->removeAction(p_action);
+    delete p_action;
+  }
+}
+
+void MainWindow::UpdateRecentlyOpenedMenu() {
+  QStringList recent_files=this->p_settings->GetRecentFiles();
+  QAction *p_action;
+
+  // Remove existing menu entries
+  this->ClearRecentlyOpenedMenu();
+
+  // If there are no recent files, disable submenu and return
+  if(recent_files.isEmpty()) {
+    this->ui->ActionRecentlyOpened->setEnabled(false);
+    return;
+  } else {
+    this->ui->ActionRecentlyOpened->setEnabled(true);
+  }
+
+  // Add recently opened files to menu
+  QListIterator<QString> it_rf(recent_files);
+  while(it_rf.hasNext()) {
+    // Create menu entry
+    p_action=new QAction(it_rf.next(),this->p_recently_opened_menu);
+    // Connect it to us
+    this->connect(p_action,
+                  SIGNAL(triggered(bool)),
+                  this,
+                  SLOT(SlotRecentlyOpenedFileClicked(bool)));
+    // Add it to submenu
+    this->p_recently_opened_menu->addAction(p_action);
+  }
 }

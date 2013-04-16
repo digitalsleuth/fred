@@ -44,6 +44,7 @@
      <string>&amp;File</string>
     </property>
     <addaction name="action_Open_hive"/>
+    <addaction name="ActionRecentlyOpened"/>
     <addaction name="action_Close_hive"/>
     <addaction name="separator"/>
     <addaction name="action_Quit"/>
@@ -143,6 +144,14 @@
   <action name="ActionReloadReportTemplates">
    <property name="text">
     <string>Reload report templates</string>
+   </property>
+  </action>
+  <action name="ActionRecentlyOpened">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Recently opened</string>
    </property>
   </action>
  </widget>

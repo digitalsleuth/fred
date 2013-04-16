@@ -25,20 +25,26 @@
 #include <QSettings>
 #include <QString>
 #include <QStringList>
+#include <QByteArray>
 
 class Settings : public QObject {
   Q_OBJECT
 
   public:
     explicit Settings(QObject *p_parent=0);
-    bool Init();
+
     QStringList GetReportTemplateDirs();
+
+    void SaveWindowGeometry(QString window_name, QByteArray geometry);
+    QByteArray GetWindowGeometry(QString window_name);
+    void AddRecentFile(QString file);
+    QStringList GetRecentFiles();
 
   private:
     QSettings *p_settings;
+    bool initialized;
     QString user_settings_dir;
     QString user_report_template_dir;
-
 };
 
 #endif // SETTINGS_H

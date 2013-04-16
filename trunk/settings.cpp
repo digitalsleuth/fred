@@ -36,27 +36,26 @@
 Settings::Settings(QObject *p_parent) : QObject(p_parent) {
   // Init vars
   this->p_settings=NULL;
+  this->initialized=false;
   this->user_settings_dir=QDir::homePath()
     .append(QDir::separator()).append(".fred");
   this->user_report_template_dir=QString(this->user_settings_dir)
                                    .append(QDir::separator())
                                    .append("report_templates");
-}
 
-bool Settings::Init() {
   // Make sure config dirs exist
   if(!QDir(this->user_settings_dir).exists()) {
     // User config dir does not exists, try to create it
     if(!QDir().mkpath(this->user_settings_dir)) {
       // TODO: Maybe warn user
-      return false;
+      return;
     }
   }
   if(!QDir(this->user_report_template_dir).exists()) {
     // Create config dir sub folder for report templates
     if(!QDir().mkpath(this->user_report_template_dir)) {
       // TODO: Maybe warn user
-      return false;
+      return;
     }
   }
 
@@ -68,11 +67,6 @@ bool Settings::Init() {
                                    .append("fred.conf"),
                                  QSettings::NativeFormat,
                                  this);
-/*
-  QSettings::setPath(QSettings::NativeFormat,
-                     QSettings::UserScope,
-                     this->user_settings_dir);
-*/
 #else
   // On Windows, it can be stored inside registry
   this->p_settings=new QSettings(QSettings::NativeFormat,
@@ -84,10 +78,10 @@ bool Settings::Init() {
   if(this->p_settings->status()!=QSettings::NoError ||
      !this->p_settings->isWritable())
   {
-    return false;
+    return;
   }
 
-  return true;
+  this->initialized=true;
 }
 
 QStringList Settings::GetReportTemplateDirs() {
@@ -95,3 +89,34 @@ QStringList Settings::GetReportTemplateDirs() {
                       <<this->user_report_template_dir;
 }
 
+void Settings::SaveWindowGeometry(QString window_name, QByteArray geometry) {
+  if(!this->initialized) return;
+  this->p_settings->setValue(QString("WindowGeometry_%1").arg(window_name),
+                             geometry);
+}
+
+QByteArray Settings::GetWindowGeometry(QString window_name) {
+  if(!this->initialized) return QByteArray();
+  return this->p_settings->value(QString("WindowGeometry_%1")
+                                   .arg(window_name)).toByteArray();
+}
+
+void Settings::AddRecentFile(QString file) {
+  // Get recent files
+  QStringList recent_files=this->GetRecentFiles();
+
+  if(recent_files.contains(file)) {
+    // File already exists in recent list. Simply move it to top
+    recent_files.move(recent_files.indexOf(file),0);
+  } else {
+    // We only save 5 files at max
+    if(recent_files.count()==5) recent_files.removeLast();
+    recent_files.prepend(file);
+  }
+
+  this->p_settings->setValue("RecentFiles",recent_files);
+}
+
+QStringList Settings::GetRecentFiles() {
+  return this->p_settings->value("RecentFiles").toStringList();
+}

@@ -58,6 +58,9 @@ class MainWindow : public QMainWindow {
     explicit MainWindow(ArgParser *p_arg_parser);
     ~MainWindow();
 
+  protected:
+    void closeEvent(QCloseEvent *p_event);
+
   private slots:
     void on_action_Quit_triggered();
     void on_action_Open_hive_triggered();
@@ -66,6 +69,7 @@ class MainWindow : public QMainWindow {
     void on_actionAbout_fred_triggered();
     void on_ActionSearch_triggered();
     void on_ActionGenerateReport_triggered();
+    void on_ActionReloadReportTemplates_triggered();
 
     void SlotNodeTreeClicked(QModelIndex index);
     void SlotKeyTableClicked(QModelIndex index);
@@ -73,8 +77,7 @@ class MainWindow : public QMainWindow {
     void SlotSearchFinished();
     void SlotSearchResultWidgetDoubleClicked(QModelIndex index);
     void SlotTabCloseButtonClicked(int index);
-
-    void on_ActionReloadReportTemplates_triggered();
+    void SlotRecentlyOpenedFileClicked(bool checked);
 
   private:
     Ui::MainWindow *ui;
@@ -99,29 +102,18 @@ class MainWindow : public QMainWindow {
     QSplitter *p_horizontal_splitter;
     QSplitter *p_vertical_splitter;
     Reports *p_reports;
+    QMenu *p_recently_opened_menu;
 
     // Threads
     ThreadSearch *p_search_thread;
 
-    /*
-     * CheckUserConfigDir
-     *
-     * Checks for and possibly creates the ~/.fred directory
-     */
+    // Functions
     void CheckUserConfigDir();
-    /*
-     * UpdateWindowTitle
-     *
-     * Updates the window title
-     */
     void UpdateWindowTitle(QString filename="");
-    /*
-     * OpenHive
-     *
-     * Open a registry hive
-     */
     void OpenHive(QString hive_file);
     void ReloadReportTemplates();
+    void ClearRecentlyOpenedMenu();
+    void UpdateRecentlyOpenedMenu();
 };
 
 #endif // MAINWINDOW_H

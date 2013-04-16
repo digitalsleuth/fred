@@ -27,13 +27,20 @@
 #include <QTextDocument>
 #include <QTextDocumentWriter>
 
-DlgReportViewer::DlgReportViewer(QString &report_data, QWidget *p_parent)
+DlgReportViewer::DlgReportViewer(QString &report_data,
+                                 Settings *p_sets,
+                                 QWidget *p_parent)
   : QMainWindow(p_parent,Qt::Dialog | Qt::Popup), ui(new Ui::DlgReportViewer)
 {
   // Init local vars
   ui->setupUi(this);
   this->p_local_event_loop=NULL;
   this->orig_report_data=report_data;
+  this->p_settings=p_sets;
+
+  // Try to restore dialog geometry
+  QByteArray geometry=this->p_settings->GetWindowGeometry("DlgReportViewer");
+  if(!geometry.isEmpty()) this->restoreGeometry(geometry);
 
   // Set report content
   this->ui->WebView->setHtml(report_data);
@@ -60,6 +67,9 @@ void DlgReportViewer::changeEvent(QEvent *e) {
 }
 
 void DlgReportViewer::closeEvent(QCloseEvent *event) {
+  // Save dialog geometry
+  this->p_settings->SaveWindowGeometry("DlgReportViewer",this->saveGeometry());
+
   // Make sure we exit the local event loop on exit
   if(this->p_local_event_loop!=NULL) {
     this->p_local_event_loop->exit();
