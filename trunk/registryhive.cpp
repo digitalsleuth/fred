@@ -23,6 +23,8 @@
 #include <QStringList>
 #include <QDateTime>
 
+#include <QDebug>
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -496,22 +498,23 @@ QString RegistryHive::KeyValueToString(QByteArray key_value,
  */
 QStringList RegistryHive::KeyValueToStringList(QByteArray value, int value_type) {
   QStringList result;
+  const char str_sep[2]={0x00,0x00};
   int last_pos=0,cur_pos=0;
 
   // Only supported on REG_MULTI_SZ values!!
   if(value_type!=hive_t_REG_MULTI_SZ) return QStringList();
 
   while(last_pos<value.count() &&
-        (cur_pos=value.indexOf(QByteArray("\0\0"),last_pos))!=-1)
+        (cur_pos=value.indexOf(QByteArray().fromRawData(str_sep,2),last_pos))!=-1)
   {
     if(cur_pos!=last_pos) {
       // TODO: What happens if encoding is not UTF16-LE ??? Thx Billy!!!
       result.append(QString().fromUtf16((ushort*)value
                                           .mid(last_pos,cur_pos-last_pos)
-                                          .append(QByteArray("\0\0"))
+                                          .append(QByteArray().fromRawData(str_sep,2))
                                           .constData()));
     }
-    last_pos=cur_pos+2;
+    last_pos=cur_pos+3;
   }
 
   return result;

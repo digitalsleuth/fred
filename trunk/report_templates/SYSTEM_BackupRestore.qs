@@ -24,16 +24,14 @@ function ListValues(root_key) {
     println("  <p style=\"font-size:12; white-space:nowrap\">");
     println("    <table style=\"margin-left:20px; font-size:12; white-space:nowrap\">");
     for(var i=0;i<values.length;i++) {
-      var value=GetRegistryKeyValue(root_key,values[i]);
-      if(IsValid(value)) {
+      var val=GetRegistryKeyValue(root_key,values[i]);
+      if(IsValid(val)) {
         println("      <tr>");
         println("        <td>",values[i],"</td>");
         println("        <td>");
-        var strings=RegistryKeyValueToStringList(value.val,value.type);
-        if(IsValid(strings) {
-          for(var i=0;i<strings.length;i++) {
-            println("          ",strings[i],"<br />");
-          }
+        var strings=RegistryKeyValueToStringList(val.value,val.type);
+        for(var ii=0;ii<strings.length;ii++) {
+          println("          ",strings[ii],"<br />");
         }
         println("        </td>");
         println("      </tr>");
