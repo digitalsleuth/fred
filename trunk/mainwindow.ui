@@ -127,7 +127,7 @@
   </action>
   <action name="ActionPreferences">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="text">
     <string>&amp;Preferences</string>

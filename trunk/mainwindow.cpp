@@ -43,6 +43,7 @@
 #include "dlgreportchooser.h"
 #include "dlgreportviewer.h"
 #include "dlgsearch.h"
+#include "dlgpreferences.h"
 
 #include "compileinfo.h"
 
@@ -672,4 +673,9 @@ void MainWindow::UpdateRecentlyOpenedMenu() {
     // Add it to submenu
     this->p_recently_opened_menu->addAction(p_action);
   }
+}
+
+void MainWindow::on_ActionPreferences_triggered() {
+  DlgPreferences dlg_preferences(this);
+  dlg_preferences.exec();
 }

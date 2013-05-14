@@ -79,6 +79,8 @@ class MainWindow : public QMainWindow {
     void SlotTabCloseButtonClicked(int index);
     void SlotRecentlyOpenedFileClicked(bool checked);
 
+    void on_ActionPreferences_triggered();
+
   private:
     Ui::MainWindow *ui;
     ArgParser *p_args;

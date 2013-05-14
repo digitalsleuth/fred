@@ -71,7 +71,8 @@ SOURCES   += main.cpp\
              registrynodetreemodelproxy.cpp \
              reports.cpp \
              reportengine.cpp \
-             dlgreportchooser.cpp
+             dlgreportchooser.cpp \
+             dlgpreferences.cpp
 
 HEADERS   += mainwindow.h \
              registrynode.h \
@@ -103,14 +104,16 @@ HEADERS   += mainwindow.h \
              registrynodetreemodelproxy.h \
              reports.h \
              reportengine.h \
-             dlgreportchooser.h
+             dlgreportchooser.h \
+             dlgpreferences.h
 
 FORMS     += mainwindow.ui \
              dlgabout.ui \
              dlgkeydetails.ui \
              dlgreportviewer.ui \
              dlgsearch.ui \
-             dlgreportchooser.ui
+             dlgreportchooser.ui \
+             dlgpreferences.ui
 
 #LIBS      += -lhivex
 LIBS      += $$PWD/hivex/lib/.libs/libhivex.a

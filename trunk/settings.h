@@ -35,8 +35,12 @@ class Settings : public QObject {
 
     QStringList GetReportTemplateDirs();
 
+    void SetSaveWindowGeometryStatus(bool save);
+    bool GetSaveWindowGeometryStatus();
     void SaveWindowGeometry(QString window_name, QByteArray geometry);
     QByteArray GetWindowGeometry(QString window_name);
+    void SetRecentFileDepth(int depth);
+    int GetRecentFileDepth();
     void AddRecentFile(QString file);
     QStringList GetRecentFiles();
 
