@@ -24,7 +24,7 @@
 
 #ifndef FRED_REPORT_TEMPLATE_DIR
   #ifndef __MINGW32__
-    #define SYSTEM_REPORT_TEMPLATE_DIR "/usr/share/fred/report_templates/"
+    #define SYSTEM_REPORT_TEMPLATE_DIR "/usr/share/fred/report_templates"
   #else
     #define SYSTEM_REPORT_TEMPLATE_DIR ".\\report_templates\\"
   #endif

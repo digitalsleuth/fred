@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>442</width>
-    <height>300</height>
+    <width>615</width>
+    <height>404</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -34,7 +34,7 @@
        <item row="0" column="0">
         <widget class="QLabel" name="LblRecentFiles">
          <property name="text">
-          <string>Amount of recent files to remember:</string>
+          <string>Number of recent files to remember:</string>
          </property>
         </widget>
        </item>
@@ -86,6 +86,89 @@
       <attribute name="title">
        <string>Reports</string>
       </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Warning:&lt;/span&gt;&lt;/p&gt;&lt;p&gt;The following list gives you the possibility to add/remove report locations and to change their precedence. Reports are searched and added from top to bottom, thus reports found in later directories replace reports found earlier if they have same name, category and hive! In addition, you may also remove the two default system and user locations which might result in no reports being found at all if you don't have added your own locations.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QListWidget" name="ListReportLocations"/>
+         </item>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_2">
+           <item>
+            <widget class="QPushButton" name="BtnAddReportLoc">
+             <property name="text">
+              <string>Add</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="BtnEditReportLoc">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Edit</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="BtnRemoveReportLoc">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Remove</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="BtnMoveReportLocUp">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Move up</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="BtnMoveReportLocDown">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Move down</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+      </layout>
      </widget>
     </widget>
    </item>
@@ -95,6 +178,13 @@
       <widget class="QPushButton" name="BtnCancel">
        <property name="text">
         <string>&amp;Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="BtnReset">
+       <property name="text">
+        <string>Reset to defaults</string>
        </property>
       </widget>
      </item>

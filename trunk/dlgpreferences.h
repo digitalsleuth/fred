@@ -2,6 +2,7 @@
 #define DLGPREFERENCES_H
 
 #include <QDialog>
+#include <QModelIndex>
 
 #include "settings.h"
 
@@ -18,10 +19,19 @@ class DlgPreferences : public QDialog {
 
   private slots:
     void on_BtnCancel_clicked();
+    void on_ListReportLocations_clicked(const QModelIndex &index);
+    void on_BtnAddReportLoc_clicked();
+    void on_BtnEditReportLoc_clicked();
+    void on_BtnRemoveReportLoc_clicked();
+    void on_BtnMoveReportLocUp_clicked();
+    void on_BtnMoveReportLocDown_clicked();
+    void on_BtnReset_clicked();
 
   private:
     Ui::DlgPreferences *ui;
     Settings *p_settings;
+
+    void LoadPreferences();
 };
 
 #endif // DLGPREFERENCES_H

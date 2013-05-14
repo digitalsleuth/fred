@@ -676,6 +676,6 @@ void MainWindow::UpdateRecentlyOpenedMenu() {
 }
 
 void MainWindow::on_ActionPreferences_triggered() {
-  DlgPreferences dlg_preferences(this);
+  DlgPreferences dlg_preferences(this->p_settings,this);
   dlg_preferences.exec();
 }
