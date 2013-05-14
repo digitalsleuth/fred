@@ -127,12 +127,15 @@ void DlgReportChooser::on_TrReports_currentItemChanged(
 
   // If item has no parent, clear labels and return
   if(p_current->parent()==NULL) {
+    this->ui->LblHive->clear();
     this->ui->LblAuthor->clear();
     this->ui->LblDesc->clear();
     return;
   }
 
   // Update labels
+  this->ui->LblHive->setText(
+    p_current->data(0,Qt::UserRole).value<ReportTemplate*>()->Hive());
   this->ui->LblAuthor->setText(
     p_current->data(0,Qt::UserRole).value<ReportTemplate*>()->Author());
   this->ui->LblDesc->setText(
