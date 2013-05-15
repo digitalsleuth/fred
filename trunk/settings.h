@@ -33,6 +33,9 @@ class Settings : public QObject {
   public:
     explicit Settings(QObject *p_parent=0);
 
+    void Reset();
+
+    void SetReportTemplateDirs(QStringList &dirs);
     QStringList GetReportTemplateDirs();
 
     void SetSaveWindowGeometryStatus(bool save);

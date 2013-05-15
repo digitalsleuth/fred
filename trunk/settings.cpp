@@ -33,6 +33,10 @@
 #define APP_ORGANIZATION "pinguin.lu"
 #define APP_NAME "fred"
 
+/*******************************************************************************
+ * Public
+ ******************************************************************************/
+
 Settings::Settings(QObject *p_parent) : QObject(p_parent) {
   // Init vars
   this->p_settings=NULL;
@@ -84,9 +88,20 @@ Settings::Settings(QObject *p_parent) : QObject(p_parent) {
   this->initialized=true;
 }
 
+void Settings::Reset() {
+
+}
+
+void Settings::SetReportTemplateDirs(QStringList &dirs) {
+  this->p_settings->setValue("ReportTemplateDirs",dirs);
+}
+
 QStringList Settings::GetReportTemplateDirs() {
-  return QStringList()<<SYSTEM_REPORT_TEMPLATE_DIR
-                      <<this->user_report_template_dir;
+  if(!this->initialized) return QStringList();
+  return this->p_settings->value("ReportTemplateDirs",
+                                 QStringList()<<SYSTEM_REPORT_TEMPLATE_DIR
+                                              <<this->user_report_template_dir
+                                ).toStringList();
 }
 
 void Settings::SaveWindowGeometry(QString window_name, QByteArray geometry) {

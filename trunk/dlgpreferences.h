@@ -27,11 +27,14 @@ class DlgPreferences : public QDialog {
     void on_BtnMoveReportLocDown_clicked();
     void on_BtnReset_clicked();
 
+    void on_BtnOk_clicked();
+
   private:
     Ui::DlgPreferences *ui;
     Settings *p_settings;
 
     void LoadPreferences();
+    void SavePreferences();
 };
 
 #endif // DLGPREFERENCES_H
