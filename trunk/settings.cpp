@@ -43,6 +43,10 @@ Settings::Settings(QObject *p_parent) : QObject(p_parent) {
   this->initialized=false;
   this->user_settings_dir=QDir::homePath()
     .append(QDir::separator()).append(".fred");
+
+
+
+
   this->user_report_template_dir=QString(this->user_settings_dir)
                                    .append(QDir::separator())
                                    .append("report_templates");
