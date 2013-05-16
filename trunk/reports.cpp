@@ -20,6 +20,7 @@
 
 #include "reports.h"
 
+#include <QStringList>
 #include <QListIterator>
 #include <QDir>
 #include <QMap>
@@ -30,9 +31,12 @@
  * Public
  ******************************************************************************/
 
-Reports::Reports() {
+Reports::Reports(Settings *p_sets) {
+  this->p_settings=p_sets;
   this->p_engine=new ReportEngine(NULL);
   this->report_templates.clear();
+
+  if(this->p_settings!=NULL) this->LoadReportTemplates();
 }
 
 Reports::~Reports() {
@@ -40,7 +44,90 @@ Reports::~Reports() {
   delete this->p_engine;
 }
 
-void Reports::LoadReportTemplates(QString dir) {
+void Reports::LoadReportTemplates() {
+  // Delete any previously loaded reports
+  qDeleteAll(this->report_templates);
+  this->report_templates.clear();
+
+  // Return if we have no settings loaded
+  if(this->p_settings==NULL) return;
+
+  // Load all available reports
+  QStringList report_dirs=this->p_settings->GetReportTemplateDirs();
+  QListIterator<QString> report_dir_it(report_dirs);
+  while(report_dir_it.hasNext()) {
+    this->LoadReportTemplatesFromDir(report_dir_it.next());
+  }
+}
+
+QStringList Reports::GetAvailableReportCategories() {
+  QStringList ret;
+  QString cat;
+  int i;
+
+  ret.clear();
+  for(i=0;i<this->report_templates.count();i++) {
+    cat=this->report_templates.value(i)->Category();
+    if(!ret.contains(cat)) ret.append(cat);
+  }
+  ret.sort();
+
+  return ret;
+}
+
+
+QList<ReportTemplate*> Reports::GetAvailableReports(QString category) {
+  QList<ReportTemplate*> ret;
+  QString cat;
+  int i=0;
+
+  ret.clear();
+  for(i=0;i<this->report_templates.count();i++) {
+    cat=this->report_templates.value(i)->Category();
+    if(cat==category) ret.append(this->report_templates.value(i));
+  }
+
+  return ret;
+}
+
+bool Reports::GenerateReport(RegistryHive *p_hive,
+                             QString report_file,
+                             QString &report_result,
+                             bool console_mode)
+{
+  return this->p_engine->GenerateReport(p_hive,
+                                        report_file,
+                                        report_result,
+                                        console_mode);
+}
+
+bool Reports::GenerateReport(RegistryHive *p_hive,
+                             QList<ReportTemplate*> report_list,
+                             QString &report_result,
+                             bool console_mode)
+{
+  bool ret;
+  QString res;
+
+  QListIterator<ReportTemplate*> rep_it(report_list);
+  while(rep_it.hasNext()) {
+    res="";
+    ret=this->GenerateReport(p_hive,
+                             rep_it.next()->File(),
+                             res,
+                             console_mode);
+    if(ret) report_result.append(res);
+    // TODO: Inform user something didn't work
+  }
+
+  return true;
+}
+
+/*******************************************************************************
+ * Private
+ ******************************************************************************/
+
+void Reports::LoadReportTemplatesFromDir(QString dir) {
   QString report_template="";
   QString report_category,report_name,report_author,report_desc,report_hive;
   bool found;
@@ -114,70 +201,3 @@ void Reports::LoadReportTemplates(QString dir) {
     }
   }
 }
-
-QStringList Reports::GetAvailableReportCategories() {
-  QStringList ret;
-  QString cat;
-  int i;
-
-  ret.clear();
-  for(i=0;i<this->report_templates.count();i++) {
-    cat=this->report_templates.value(i)->Category();
-    if(!ret.contains(cat)) ret.append(cat);
-  }
-  ret.sort();
-
-  return ret;
-}
-
-
-QList<ReportTemplate*> Reports::GetAvailableReports(QString category) {
-  QList<ReportTemplate*> ret;
-  QString cat;
-  int i=0;
-
-  ret.clear();
-  for(i=0;i<this->report_templates.count();i++) {
-    cat=this->report_templates.value(i)->Category();
-    if(cat==category) ret.append(this->report_templates.value(i));
-  }
-
-  return ret;
-}
-
-bool Reports::GenerateReport(RegistryHive *p_hive,
-                             QString report_file,
-                             QString &report_result,
-                             bool console_mode)
-{
-  return this->p_engine->GenerateReport(p_hive,
-                                        report_file,
-                                        report_result,
-                                        console_mode);
-}
-
-bool Reports::GenerateReport(RegistryHive *p_hive,
-                             QList<ReportTemplate*> report_list,
-                             QString &report_result,
-                             bool console_mode)
-{
-  bool ret;
-  QString res;
-
-  QListIterator<ReportTemplate*> rep_it(report_list);
-  while(rep_it.hasNext()) {
-    res="";
-    ret=this->GenerateReport(p_hive,
-                             rep_it.next()->File(),
-                             res,
-                             console_mode);
-    if(ret) report_result.append(res);
-    // TODO: Inform user something didn't work
-  }
-
-  return true;
-}
-
-/*******************************************************************************
- * Private
- ******************************************************************************/

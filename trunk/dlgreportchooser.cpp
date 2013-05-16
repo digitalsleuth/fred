@@ -91,6 +91,8 @@ DlgReportChooser::DlgReportChooser(Reports *p_reps,
 }
 
 DlgReportChooser::~DlgReportChooser() {
+  // Save dialog geometry
+  this->p_settings->SetWindowGeometry("DlgReportChooser",this->saveGeometry());
   delete this->ui;
 }
 
@@ -99,21 +101,15 @@ QList<ReportTemplate*> DlgReportChooser::GetSelectedReports()
   return this->selected_reports;
 }
 
-void DlgReportChooser::changeEvent(QEvent *e) {
-  QDialog::changeEvent(e);
-  switch (e->type()) {
+void DlgReportChooser::changeEvent(QEvent *p_event) {
+  QDialog::changeEvent(p_event);
+  switch (p_event->type()) {
     case QEvent::LanguageChange:
       this->ui->retranslateUi(this);
       break;
     default:
       break;
   }
-}
-
-void DlgReportChooser::closeEvent(QCloseEvent *p_event) {
-  Q_UNUSED(p_event)
-
-  this->p_settings->SaveWindowGeometry("DlgReportChooser",this->saveGeometry());
 }
 
 void DlgReportChooser::on_BtnCancel_clicked() {

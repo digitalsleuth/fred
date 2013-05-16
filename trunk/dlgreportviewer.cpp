@@ -51,13 +51,15 @@ DlgReportViewer::DlgReportViewer(QString &report_data,
 }
 
 DlgReportViewer::~DlgReportViewer() {
+  // Save dialog geometry
+  this->p_settings->SetWindowGeometry("DlgReportViewer",this->saveGeometry());
   delete ui;
   if(this->p_local_event_loop!=NULL) this->p_local_event_loop->exit();
 }
 
-void DlgReportViewer::changeEvent(QEvent *e) {
-  QMainWindow::changeEvent(e);
-  switch(e->type()) {
+void DlgReportViewer::changeEvent(QEvent *p_event) {
+  QMainWindow::changeEvent(p_event);
+  switch(p_event->type()) {
     case QEvent::LanguageChange:
       ui->retranslateUi(this);
       break;
@@ -66,16 +68,13 @@ void DlgReportViewer::changeEvent(QEvent *e) {
   }
 }
 
-void DlgReportViewer::closeEvent(QCloseEvent *event) {
-  // Save dialog geometry
-  this->p_settings->SaveWindowGeometry("DlgReportViewer",this->saveGeometry());
-
+void DlgReportViewer::closeEvent(QCloseEvent *p_event) {
   // Make sure we exit the local event loop on exit
   if(this->p_local_event_loop!=NULL) {
     this->p_local_event_loop->exit();
     this->p_local_event_loop=NULL;
   }
-  event->accept();
+  p_event->accept();
 }
 
 void DlgReportViewer::exec() {

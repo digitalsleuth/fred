@@ -181,12 +181,8 @@ MainWindow::MainWindow(ArgParser *p_arg_parser) :
   this->ui->ActionRecentlyOpened->setMenu(this->p_recently_opened_menu);
   this->UpdateRecentlyOpenedMenu();
 
-  // Set last open location to home dir
-  this->last_open_location=QDir::homePath();
-
   // Load report templates
-  this->p_reports=new Reports();
-  this->ReloadReportTemplates();
+  this->p_reports=new Reports(this->p_settings);
 
   // Finally, react on some command line arguments
   if(this->p_args->IsSet("maximized")) {
@@ -228,7 +224,7 @@ void MainWindow::closeEvent(QCloseEvent *p_event) {
   Q_UNUSED(p_event)
 
   // Save window position and size on exit
-  this->p_settings->SaveWindowGeometry("MainWindow",this->saveGeometry());
+  this->p_settings->SetWindowGeometry("MainWindow",this->saveGeometry());
   QMainWindow::closeEvent(p_event);
 }
 
@@ -245,7 +241,7 @@ void MainWindow::on_action_Open_hive_triggered() {
 
   hive_file=QFileDialog::getOpenFileName(this,
                                     tr("Open registry hive"),
-                                    this->last_open_location,
+                                    this->p_settings->GetLastOpenLocation(),
                                     tr("All files (*)"));
   if(hive_file=="") return;
 
@@ -583,8 +579,8 @@ void MainWindow::UpdateWindowTitle(QString filename) {
 
 void MainWindow::OpenHive(QString hive_file) {
   // Update last open location
-  this->last_open_location=hive_file.left(hive_file.
-                                            lastIndexOf(QDir::separator()));
+  this->p_settings->SetLastOpenLocation(
+    hive_file.left(hive_file.lastIndexOf(QDir::separator())));
 
   // If another hive is currently open, close it
   if(this->is_hive_open) this->on_action_Close_hive_triggered();
@@ -621,15 +617,8 @@ void MainWindow::OpenHive(QString hive_file) {
   this->UpdateRecentlyOpenedMenu();
 }
 
-void MainWindow::ReloadReportTemplates() {
-  QListIterator<QString> it(this->p_settings->GetReportTemplateDirs());
-  while(it.hasNext()) {
-    this->p_reports->LoadReportTemplates(it.next());
-  }
-}
-
 void MainWindow::on_ActionReloadReportTemplates_triggered() {
-  this->ReloadReportTemplates();
+  this->p_reports->LoadReportTemplates();
 }
 
 void MainWindow::ClearRecentlyOpenedMenu() {
@@ -678,4 +667,7 @@ void MainWindow::UpdateRecentlyOpenedMenu() {
 void MainWindow::on_ActionPreferences_triggered() {
   DlgPreferences dlg_preferences(this->p_settings,this);
   dlg_preferences.exec();
+  // Update objects and GUI elements which might be affected by new settings
+  this->UpdateRecentlyOpenedMenu();
+  this->p_reports->LoadReportTemplates();
 }

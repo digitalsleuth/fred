@@ -45,8 +45,7 @@ class DlgReportChooser : public QDialog {
     QList<ReportTemplate*> GetSelectedReports();
 
   protected:
-    void changeEvent(QEvent *e);
-    void closeEvent(QCloseEvent *p_event);
+    void changeEvent(QEvent *p_event);
 
   private slots:
     void on_BtnCancel_clicked();

@@ -215,7 +215,16 @@
  <tabstops>
   <tabstop>BtnOk</tabstop>
   <tabstop>BtnCancel</tabstop>
+  <tabstop>BtnReset</tabstop>
   <tabstop>tabWidget</tabstop>
+  <tabstop>SpinBoxRecentFiles</tabstop>
+  <tabstop>ChkBoxSavePositions</tabstop>
+  <tabstop>ListReportLocations</tabstop>
+  <tabstop>BtnAddReportLoc</tabstop>
+  <tabstop>BtnEditReportLoc</tabstop>
+  <tabstop>BtnRemoveReportLoc</tabstop>
+  <tabstop>BtnMoveReportLocUp</tabstop>
+  <tabstop>BtnMoveReportLocDown</tabstop>
  </tabstops>
  <resources>
   <include location="fred.qrc"/>

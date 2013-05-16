@@ -43,8 +43,8 @@ class DlgReportViewer : public QMainWindow {
     void exec();
 
   protected:
-    void changeEvent(QEvent *e);
-    void closeEvent(QCloseEvent *event);
+    void changeEvent(QEvent *p_event);
+    void closeEvent(QCloseEvent *p_event);
 
   private slots:
     void on_action_Print_triggered();

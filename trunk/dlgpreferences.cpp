@@ -43,6 +43,7 @@ void DlgPreferences::on_ListReportLocations_clicked(const QModelIndex &index) {
     this->ui->BtnRemoveReportLoc->setEnabled(false);
     this->ui->BtnMoveReportLocUp->setEnabled(false);
     this->ui->BtnMoveReportLocDown->setEnabled(false);
+    this->ui->BtnAddReportLoc->setFocus();
     return;
   }
 
@@ -57,6 +58,8 @@ void DlgPreferences::on_ListReportLocations_clicked(const QModelIndex &index) {
 
   if(index.row()==0) {
     // First row selected, disable up button
+    if(this->ui->BtnMoveReportLocUp->hasFocus())
+      this->ui->BtnMoveReportLocDown->setFocus();
     this->ui->BtnEditReportLoc->setEnabled(true);
     this->ui->BtnRemoveReportLoc->setEnabled(true);
     this->ui->BtnMoveReportLocUp->setEnabled(false);
@@ -66,6 +69,8 @@ void DlgPreferences::on_ListReportLocations_clicked(const QModelIndex &index) {
 
   if(index.row()==(this->ui->ListReportLocations->count()-1)) {
     // Last row selected, disable down button
+    if(this->ui->BtnMoveReportLocDown->hasFocus())
+      this->ui->BtnMoveReportLocUp->setFocus();
     this->ui->BtnEditReportLoc->setEnabled(true);
     this->ui->BtnRemoveReportLoc->setEnabled(true);
     this->ui->BtnMoveReportLocUp->setEnabled(true);
@@ -160,6 +165,7 @@ void DlgPreferences::on_BtnReset_clicked() {
                    QMessageBox::Yes)==QMessageBox::Yes)
   {
     this->p_settings->Reset();
+    this->LoadPreferences();
   }
 }
 
@@ -173,6 +179,11 @@ void DlgPreferences::on_BtnOk_clicked() {
  ******************************************************************************/
 
 void DlgPreferences::LoadPreferences() {
+  // Load general preferences
+  this->ui->SpinBoxRecentFiles->
+    setValue(this->p_settings->GetRecentFilesDepth());
+  this->ui->ChkBoxSavePositions->
+    setChecked(this->p_settings->GetWindowGeometryStatus());
 
   // Populate report location list
   this->ui->ListReportLocations->clear();
@@ -190,6 +201,10 @@ void DlgPreferences::LoadPreferences() {
 }
 
 void DlgPreferences::SavePreferences() {
+  // Save general preferences
+  this->p_settings->SetRecentFilesDepth(this->ui->SpinBoxRecentFiles->value());
+  this->p_settings->SetWindowGeometryStatus(
+    this->ui->ChkBoxSavePositions->isChecked());
 
   // Save report location list
   QStringList report_dirs;

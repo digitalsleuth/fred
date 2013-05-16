@@ -84,7 +84,6 @@ class MainWindow : public QMainWindow {
   private:
     Ui::MainWindow *ui;
     ArgParser *p_args;
-    QString last_open_location;
     RegistryHive *p_hive;
     bool is_hive_open;
     QByteArray selected_key_value;
@@ -113,7 +112,6 @@ class MainWindow : public QMainWindow {
     void CheckUserConfigDir();
     void UpdateWindowTitle(QString filename="");
     void OpenHive(QString hive_file);
-    void ReloadReportTemplates();
     void ClearRecentlyOpenedMenu();
     void UpdateRecentlyOpenedMenu();
 };

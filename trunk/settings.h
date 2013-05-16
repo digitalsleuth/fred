@@ -38,14 +38,19 @@ class Settings : public QObject {
     void SetReportTemplateDirs(QStringList &dirs);
     QStringList GetReportTemplateDirs();
 
-    void SetSaveWindowGeometryStatus(bool save);
-    bool GetSaveWindowGeometryStatus();
-    void SaveWindowGeometry(QString window_name, QByteArray geometry);
+    void SetWindowGeometryStatus(bool save);
+    bool GetWindowGeometryStatus();
+    void SetWindowGeometry(QString window_name, QByteArray geometry);
     QByteArray GetWindowGeometry(QString window_name);
-    void SetRecentFileDepth(int depth);
-    int GetRecentFileDepth();
+
+    void SetRecentFilesDepth(int depth);
+    int GetRecentFilesDepth();
+    void SetRecentFiles(QStringList &recent_files);
     void AddRecentFile(QString file);
     QStringList GetRecentFiles();
+
+    void SetLastOpenLocation(QString dir);
+    QString GetLastOpenLocation();
 
   private:
     QSettings *p_settings;

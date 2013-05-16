@@ -23,6 +23,7 @@
 
 #include "reporttemplate.h"
 #include "reportengine.h"
+#include "settings.h"
 
 #include <QList>
 #include <QString>
@@ -30,10 +31,10 @@
 
 class Reports {
   public:
-    Reports();
+    Reports(Settings *p_sets=NULL);
     ~Reports();
 
-    void LoadReportTemplates(QString dir);
+    void LoadReportTemplates();
     QStringList GetAvailableReportCategories();
     QList<ReportTemplate*> GetAvailableReports(QString category);
 
@@ -46,8 +47,11 @@ class Reports {
                         QString &report_result,
                         bool console_mode=false);
   private:
+    Settings *p_settings;
     QList<ReportTemplate*> report_templates;
     ReportEngine *p_engine;
+
+    void LoadReportTemplatesFromDir(QString dir);
 };
 
 #endif // REPORTS_H
