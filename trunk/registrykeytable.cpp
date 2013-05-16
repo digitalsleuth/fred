@@ -25,6 +25,8 @@
 #include <QClipboard>
 
 RegistryKeyTable::RegistryKeyTable(QWidget *p_parent) : QTableView(p_parent) {
+  this->is_writable=false;
+
   // Configure widget
   this->setSelectionMode(QAbstractItemView::SingleSelection);
   this->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -34,6 +36,9 @@ RegistryKeyTable::RegistryKeyTable(QWidget *p_parent) : QTableView(p_parent) {
   this->setTextElideMode(Qt::ElideNone);
 
   // Create context menu
+  this->p_action_add_key=new QAction(tr("Add key"),this);
+  this->p_action_edit_key=new QAction(tr("Edit key"),this);
+  this->p_action_delete_key=new QAction(tr("Delete key"),this);
   this->p_menu_copy=new QMenu(tr("Copy"),this);
   this->p_action_copy_key_name=new QAction(tr("Key name"),
                                            this->p_menu_copy);
@@ -56,9 +61,12 @@ RegistryKeyTable::~RegistryKeyTable() {
   delete this->p_action_copy_key_name;
   delete this->p_action_copy_key_value;
   delete this->p_menu_copy;
+  delete this->p_action_delete_key;
+  delete this->p_action_edit_key;
+  delete this->p_action_add_key;
 }
 
-void RegistryKeyTable::setModel(QAbstractItemModel *p_model) {
+void RegistryKeyTable::setModel(QAbstractItemModel *p_model, bool writable) {
   QTableView::setModel(p_model);
   // Resize table rows / columns to fit data
   this->resizeColumnsToContents();
@@ -68,6 +76,16 @@ void RegistryKeyTable::setModel(QAbstractItemModel *p_model) {
     // Select first table item
     this->selectRow(0);
   }
+
+  // Set writable status
+  this->SetWritable(writable);
+}
+
+void RegistryKeyTable::SetWritable(bool writable) {
+  this->is_writable=writable;
+  this->p_action_add_key->setEnabled(this->is_writable);
+  this->p_action_edit_key->setEnabled(this->is_writable);
+  this->p_action_delete_key->setEnabled(this->is_writable);
 }
 
 /*
@@ -117,6 +135,10 @@ void RegistryKeyTable::contextMenuEvent(QContextMenuEvent *p_event) {
 
   // Create context menu and add actions
   QMenu context_menu(this);
+  context_menu.addAction(this->p_action_add_key);
+  context_menu.addAction(this->p_action_edit_key);
+  context_menu.addAction(this->p_action_delete_key);
+  context_menu.addSeparator();
   context_menu.addMenu(this->p_menu_copy);
   context_menu.exec(p_event->globalPos());
 }

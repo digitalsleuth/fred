@@ -66,8 +66,9 @@ MainWindow::MainWindow(ArgParser *p_arg_parser) :
   this->p_search_thread=NULL;
   this->search_result_widgets.clear();
 
-  // Init settings
+  // Init and load settings
   this->p_settings=new Settings(this);
+  this->is_hive_writable=!this->p_settings->GetOpenHivesReadOnly();
 
   // Set main window size
   QByteArray geometry=this->p_settings->GetWindowGeometry("MainWindow");
@@ -181,6 +182,9 @@ MainWindow::MainWindow(ArgParser *p_arg_parser) :
   this->ui->ActionRecentlyOpened->setMenu(this->p_recently_opened_menu);
   this->UpdateRecentlyOpenedMenu();
 
+  // Update EnableWriteSupport menu according to defaults
+  this->UpdateEnableWriteSupportMenu();
+
   // Load report templates
   this->p_reports=new Reports(this->p_settings);
 
@@ -232,10 +236,6 @@ void MainWindow::closeEvent(QCloseEvent *p_event) {
  * Private slots
  ******************************************************************************/
 
-void MainWindow::on_action_Quit_triggered() {
-  qApp->exit();
-}
-
 void MainWindow::on_action_Open_hive_triggered() {
   QString hive_file="";
 
@@ -279,20 +279,15 @@ void MainWindow::on_action_Close_hive_triggered() {
     this->p_hive->Close();
 
     this->is_hive_open=false;
-    this->ui->action_Close_hive->setEnabled(false);
-    this->ui->ActionSearch->setEnabled(false);
-    this->ui->MenuReports->setEnabled(false);
+    this->is_hive_writable=!this->p_settings->GetOpenHivesReadOnly();
     this->UpdateWindowTitle();
+    this->UpdateMenuStates();
+    this->UpdateEnableWriteSupportMenu();
   }
 }
 
-void MainWindow::on_actionAbout_Qt_triggered() {
-  QMessageBox::aboutQt(this,tr("About Qt"));
-}
-
-void MainWindow::on_actionAbout_fred_triggered() {
-  DlgAbout dlg_about(this);
-  dlg_about.exec();
+void MainWindow::on_action_Quit_triggered() {
+  qApp->exit();
 }
 
 void MainWindow::on_ActionSearch_triggered() {
@@ -341,6 +336,21 @@ void MainWindow::on_ActionSearch_triggered() {
   }
 }
 
+void MainWindow::on_ActionEnableWriteSupport_triggered() {
+  this->is_hive_writable=!this->is_hive_writable;
+  this->UpdateEnableWriteSupportMenu();
+  this->p_node_tree->SetWritable(this->is_hive_writable);
+}
+
+void MainWindow::on_ActionPreferences_triggered() {
+  DlgPreferences dlg_preferences(this->p_settings,this);
+  dlg_preferences.exec();
+  // Update objects and GUI elements which might be affected by new settings
+  this->UpdateRecentlyOpenedMenu();
+  this->UpdateEnableWriteSupportMenu();
+  this->p_reports->LoadReportTemplates();
+}
+
 void MainWindow::on_ActionGenerateReport_triggered() {
   DlgReportChooser dlg_repchooser(this->p_reports,
                                   this->p_hive->HiveTypeToString(
@@ -374,6 +384,10 @@ void MainWindow::on_ActionGenerateReport_triggered() {
   }
 }
 
+void MainWindow::on_ActionReloadReportTemplates_triggered() {
+  this->p_reports->LoadReportTemplates();
+}
+
 void MainWindow::SlotNodeTreeClicked(QModelIndex index) {
   QString node_path;
 
@@ -393,9 +407,19 @@ void MainWindow::SlotNodeTreeClicked(QModelIndex index) {
     this->p_hex_edit_widget->SetData(QByteArray());
   }
   this->p_reg_key_table_model=new RegistryKeyTableModel(this->p_hive,node_path);
-  this->p_key_table->setModel(this->p_reg_key_table_model);
+  this->p_key_table->setModel(this->p_reg_key_table_model,
+                              this->is_hive_writable);
   // Set focus back to nodetree to be able to navigate with keyboard
   this->p_node_tree->setFocus();
+}
+
+void MainWindow::on_actionAbout_Qt_triggered() {
+  QMessageBox::aboutQt(this,tr("About Qt"));
+}
+
+void MainWindow::on_actionAbout_fred_triggered() {
+  DlgAbout dlg_about(this);
+  dlg_about.exec();
 }
 
 void MainWindow::SlotKeyTableClicked(QModelIndex index) {
@@ -548,35 +572,6 @@ void MainWindow::SlotRecentlyOpenedFileClicked(bool checked) {
  * Private
  ******************************************************************************/
 
-void MainWindow::CheckUserConfigDir() {
-  QString user_config_dir=QDir::homePath()
-                            .append(QDir::separator())
-                            .append(".fred");
-  if(!QDir(user_config_dir).exists()) {
-    // User config dir does not exists, try to create it
-    if(!QDir().mkpath(user_config_dir)) {
-      // TODO: Maybe warn user
-      return;
-    }
-    user_config_dir.append(QDir::separator()).append("report_templates");
-    if(!QDir().mkpath(user_config_dir)) {
-      // TODO: Maybe warn user
-      return;
-    }
-  }
-}
-
-void MainWindow::UpdateWindowTitle(QString filename) {
-  if(filename=="") {
-    this->setWindowTitle(QString("%1 v%2").arg(APP_TITLE,APP_VERSION));
-  } else {
-    this->setWindowTitle(QString("%1 v%2 - %3").arg(APP_TITLE,
-                                                    APP_VERSION,
-                                                    filename.toLocal8Bit()
-                                                      .constData()));
-  }
-}
-
 void MainWindow::OpenHive(QString hive_file) {
   // Update last open location
   this->p_settings->SetLastOpenLocation(
@@ -586,7 +581,7 @@ void MainWindow::OpenHive(QString hive_file) {
   if(this->is_hive_open) this->on_action_Close_hive_triggered();
 
   // Try to open hive
-  if(!this->p_hive->Open(hive_file)) {
+  if(!this->p_hive->Open(hive_file,this->is_hive_writable)) {
     QMessageBox::critical(this,
                           tr("Error opening hive file"),
                           tr("Unable to open file '%1'").arg(hive_file));
@@ -599,12 +594,10 @@ void MainWindow::OpenHive(QString hive_file) {
   //this->p_reg_node_tree_model_proxy->setDynamicSortFilter(true);
   this->p_reg_node_tree_model_proxy->
     setSourceModel(this->p_reg_node_tree_model);
-  this->p_node_tree->setModel(this->p_reg_node_tree_model_proxy);
+  this->p_node_tree->setModel(this->p_reg_node_tree_model_proxy,
+                              this->is_hive_writable);
 
   this->is_hive_open=true;
-  this->ui->action_Close_hive->setEnabled(true);
-  this->ui->ActionSearch->setEnabled(true);
-  this->ui->MenuReports->setEnabled(true);
 
   // Enable data interpreter
   this->p_hex_edit_widget->setEnabled(true);
@@ -612,13 +605,45 @@ void MainWindow::OpenHive(QString hive_file) {
   // Update window title
   this->UpdateWindowTitle(hive_file);
 
+  // Update menu states
+  this->UpdateMenuStates();
+
   // Add file to recent list and update recently opened menu
   this->p_settings->AddRecentFile(hive_file);
   this->UpdateRecentlyOpenedMenu();
 }
 
-void MainWindow::on_ActionReloadReportTemplates_triggered() {
-  this->p_reports->LoadReportTemplates();
+void MainWindow::UpdateWindowTitle(QString filename) {
+  if(filename=="") {
+    this->setWindowTitle(QString("%1 v%2").arg(APP_TITLE,APP_VERSION));
+  } else {
+    this->setWindowTitle(QString("%1 v%2 - %3").arg(APP_TITLE,
+                                                    APP_VERSION,
+                                                    filename.toLocal8Bit()
+                                                      .constData()));
+    if(!this->is_hive_writable) {
+      this->setWindowTitle(this->windowTitle().append(QString(" (%1)")
+                                                        .arg(tr("read-only"))));
+    }
+  }
+}
+
+void MainWindow::UpdateMenuStates() {
+  if(this->is_hive_open) {
+    this->ui->action_Close_hive->setEnabled(true);
+    this->ui->ActionEnableWriteSupport->setEnabled(true);
+    this->ui->ActionSearch->setEnabled(true);
+    this->ui->ActionEnableWriteSupport->setEnabled(true);
+    this->ui->ActionGenerateReport->setEnabled(true);
+    this->ui->ActionReloadReportTemplates->setEnabled(true);
+  } else {
+    this->ui->action_Close_hive->setEnabled(false);
+    this->ui->ActionEnableWriteSupport->setEnabled(false);
+    this->ui->ActionSearch->setEnabled(false);
+    this->ui->ActionEnableWriteSupport->setEnabled(false);
+    this->ui->ActionGenerateReport->setEnabled(false);
+    this->ui->ActionReloadReportTemplates->setEnabled(false);
+  }
 }
 
 void MainWindow::ClearRecentlyOpenedMenu() {
@@ -664,10 +689,20 @@ void MainWindow::UpdateRecentlyOpenedMenu() {
   }
 }
 
-void MainWindow::on_ActionPreferences_triggered() {
-  DlgPreferences dlg_preferences(this->p_settings,this);
-  dlg_preferences.exec();
-  // Update objects and GUI elements which might be affected by new settings
-  this->UpdateRecentlyOpenedMenu();
-  this->p_reports->LoadReportTemplates();
+void MainWindow::UpdateEnableWriteSupportMenu() {
+  if(!this->is_hive_writable && this->p_settings->GetOpenHivesReadOnly()) {
+    this->ui->ActionEnableWriteSupport->setText(tr("Enable &write support"));
+    this->p_node_tree->SetWritable(false);
+    this->p_key_table->SetWritable(false);
+  } else {
+    this->ui->ActionEnableWriteSupport->setText(tr("Disable &write support"));
+    this->p_node_tree->SetWritable(true);
+    this->p_key_table->SetWritable(true);
+  }
 }
+
+/*
+void MainWindow::SetWriteSupport(bool enable) {
+
+}
+*/

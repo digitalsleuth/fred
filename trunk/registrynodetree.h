@@ -34,7 +34,8 @@ class RegistryNodeTree : public QTreeView {
     RegistryNodeTree(QWidget *p_parent=0);
     ~RegistryNodeTree();
 
-    void setModel(QAbstractItemModel *p_model);
+    void setModel(QAbstractItemModel *p_model, bool writable=false);
+    void SetWritable(bool writable);
 
   Q_SIGNALS:
     void CurrentItemChanged(QModelIndex current);
@@ -45,6 +46,10 @@ class RegistryNodeTree : public QTreeView {
     void keyPressEvent(QKeyEvent *p_event);
 
   private:
+    bool is_writable;
+    QAction *p_action_add_node;
+    QAction *p_action_rename_node;
+    QAction *p_action_delete_node;
     QMenu *p_menu_copy;
     QAction *p_action_copy_node_name;
     QAction *p_action_copy_node_path;

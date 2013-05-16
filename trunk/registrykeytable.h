@@ -33,7 +33,8 @@ class RegistryKeyTable : public QTableView {
     RegistryKeyTable(QWidget *p_parent=0);
     ~RegistryKeyTable();
 
-    void setModel(QAbstractItemModel *p_model);
+    void setModel(QAbstractItemModel *p_model, bool writable=false);
+    void SetWritable(bool writable);
     //void selectRow(QString key_name);
 
   Q_SIGNALS:
@@ -44,6 +45,10 @@ class RegistryKeyTable : public QTableView {
     void contextMenuEvent(QContextMenuEvent *p_event);
 
   private:
+    bool is_writable;
+    QAction *p_action_add_key;
+    QAction *p_action_edit_key;
+    QAction *p_action_delete_key;
     QMenu *p_menu_copy;
     QAction *p_action_copy_key_name;
     QAction *p_action_copy_key_value;

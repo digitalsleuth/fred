@@ -39,6 +39,7 @@
 #define DEFAULT_WINDOW_GEOMETRY_STATUS true
 #define DEFAULT_RECENT_FILES_DEPTH 5
 #define DEFAULT_LAST_OPEN_LOCATION QDir::homePath()
+#define DEFAULT_OPEN_HIVES_READ_ONLY true
 
 /*******************************************************************************
  * Public
@@ -191,4 +192,15 @@ QString Settings::GetLastOpenLocation() {
                                    DEFAULT_LAST_OPEN_LOCATION).toString();
   if(QDir(last_loc).exists()) return last_loc;
   else return DEFAULT_LAST_OPEN_LOCATION;
+}
+
+void Settings::SetOpenHivesReadOnly(bool read_only) {
+  if(!this->initialized) return;
+  this->p_settings->setValue("OpenFilesReadOnly",read_only);
+}
+
+bool Settings::GetOpenHivesReadOnly() {
+  if(!this->initialized) return DEFAULT_OPEN_HIVES_READ_ONLY;
+  return this->p_settings->value("OpenFilesReadOnly",
+                                 DEFAULT_OPEN_HIVES_READ_ONLY).toBool();
 }

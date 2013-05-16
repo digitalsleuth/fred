@@ -36,7 +36,7 @@
      <x>0</x>
      <y>0</y>
      <width>508</width>
-     <height>29</height>
+     <height>27</height>
     </rect>
    </property>
    <widget class="QMenu" name="MenuFile">
@@ -45,6 +45,7 @@
     </property>
     <addaction name="action_Open_hive"/>
     <addaction name="ActionRecentlyOpened"/>
+    <addaction name="ActionSave"/>
     <addaction name="action_Close_hive"/>
     <addaction name="separator"/>
     <addaction name="action_Quit"/>
@@ -58,7 +59,7 @@
    </widget>
    <widget class="QMenu" name="MenuReports">
     <property name="enabled">
-     <bool>false</bool>
+     <bool>true</bool>
     </property>
     <property name="title">
      <string>&amp;Reports</string>
@@ -72,6 +73,7 @@
     </property>
     <addaction name="ActionSearch"/>
     <addaction name="separator"/>
+    <addaction name="ActionEnableWriteSupport"/>
     <addaction name="ActionPreferences"/>
    </widget>
    <addaction name="MenuFile"/>
@@ -135,13 +137,16 @@
   </action>
   <action name="ActionGenerateReport">
    <property name="enabled">
-    <bool>true</bool>
+    <bool>false</bool>
    </property>
    <property name="text">
     <string>Generate report</string>
    </property>
   </action>
   <action name="ActionReloadReportTemplates">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Reload report templates</string>
    </property>
@@ -152,6 +157,22 @@
    </property>
    <property name="text">
     <string>Recently opened</string>
+   </property>
+  </action>
+  <action name="ActionEnableWriteSupport">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Enable &amp;write support</string>
+   </property>
+  </action>
+  <action name="ActionSave">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Save</string>
    </property>
   </action>
  </widget>

@@ -176,10 +176,12 @@ void DlgPreferences::on_BtnOk_clicked() {
 
 void DlgPreferences::LoadPreferences() {
   // Load general preferences
-  this->ui->SpinBoxRecentFiles->
-    setValue(this->p_settings->GetRecentFilesDepth());
-  this->ui->ChkBoxSavePositions->
-    setChecked(this->p_settings->GetWindowGeometryStatus());
+  this->ui->SpinBoxRecentFiles->setValue(
+    this->p_settings->GetRecentFilesDepth());
+  this->ui->ChkBoxSavePositions->setChecked(
+    this->p_settings->GetWindowGeometryStatus());
+  this->ui->ChkBoxOpenReadOnly->setChecked(
+    this->p_settings->GetOpenHivesReadOnly());
 
   // Populate report location list
   this->ui->ListReportLocations->clear();
@@ -201,6 +203,8 @@ void DlgPreferences::SavePreferences() {
   this->p_settings->SetRecentFilesDepth(this->ui->SpinBoxRecentFiles->value());
   this->p_settings->SetWindowGeometryStatus(
     this->ui->ChkBoxSavePositions->isChecked());
+  this->p_settings->SetOpenHivesReadOnly(
+    this->ui->ChkBoxOpenReadOnly->isChecked());
 
   // Save report location list
   QStringList report_dirs;

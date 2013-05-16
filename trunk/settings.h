@@ -52,6 +52,9 @@ class Settings : public QObject {
     void SetLastOpenLocation(QString dir);
     QString GetLastOpenLocation();
 
+    void SetOpenHivesReadOnly(bool read_only);
+    bool GetOpenHivesReadOnly();
+
   private:
     QSettings *p_settings;
     bool initialized;

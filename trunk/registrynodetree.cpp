@@ -26,6 +26,8 @@
 #include <QClipboard>
 
 RegistryNodeTree::RegistryNodeTree(QWidget *p_parent) : QTreeView(p_parent) {
+  this->is_writable=false;
+
   // Configure widget
   this->setTextElideMode(Qt::ElideNone);
   this->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -34,6 +36,9 @@ RegistryNodeTree::RegistryNodeTree(QWidget *p_parent) : QTreeView(p_parent) {
   this->setSortingEnabled(true);
 
   // Create context menu
+  this->p_action_add_node=new QAction(tr("Add node"),this);
+  this->p_action_rename_node=new QAction(tr("Rename node"),this);
+  this->p_action_delete_node=new QAction(tr("Delete node"),this);
   this->p_menu_copy=new QMenu(tr("Copy"),this);
   this->p_action_copy_node_name=new QAction(tr("Node name"),
                                             this->p_menu_copy);
@@ -56,9 +61,12 @@ RegistryNodeTree::~RegistryNodeTree() {
   delete this->p_action_copy_node_name;
   delete this->p_action_copy_node_path;
   delete this->p_menu_copy;
+  delete this->p_action_delete_node;
+  delete this->p_action_rename_node;
+  delete this->p_action_add_node;
 }
 
-void RegistryNodeTree::setModel(QAbstractItemModel *p_model) {
+void RegistryNodeTree::setModel(QAbstractItemModel *p_model, bool writable) {
   // Assign model to view
   QTreeView::setModel(p_model);
 
@@ -68,6 +76,16 @@ void RegistryNodeTree::setModel(QAbstractItemModel *p_model) {
     // Select first tree item
     this->setCurrentIndex(p_model->index(0,0));
   }
+
+  // Set writable status
+  this->SetWritable(writable);
+}
+
+void RegistryNodeTree::SetWritable(bool writable) {
+  this->is_writable=writable;
+  this->p_action_add_node->setEnabled(this->is_writable);
+  this->p_action_rename_node->setEnabled(this->is_writable);
+  this->p_action_delete_node->setEnabled(this->is_writable);
 }
 
 void RegistryNodeTree::contextMenuEvent(QContextMenuEvent *p_event) {
@@ -82,6 +100,10 @@ void RegistryNodeTree::contextMenuEvent(QContextMenuEvent *p_event) {
 
   // Create context menu and add actions
   QMenu context_menu(this);
+  context_menu.addAction(this->p_action_add_node);
+  context_menu.addAction(this->p_action_rename_node);
+  context_menu.addAction(this->p_action_delete_node);
+  context_menu.addSeparator();
   context_menu.addMenu(this->p_menu_copy);
   context_menu.exec(p_event->globalPos());
 }

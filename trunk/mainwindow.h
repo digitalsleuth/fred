@@ -62,14 +62,16 @@ class MainWindow : public QMainWindow {
     void closeEvent(QCloseEvent *p_event);
 
   private slots:
-    void on_action_Quit_triggered();
     void on_action_Open_hive_triggered();
     void on_action_Close_hive_triggered();
-    void on_actionAbout_Qt_triggered();
-    void on_actionAbout_fred_triggered();
+    void on_action_Quit_triggered();
     void on_ActionSearch_triggered();
+    void on_ActionEnableWriteSupport_triggered();
+    void on_ActionPreferences_triggered();
     void on_ActionGenerateReport_triggered();
     void on_ActionReloadReportTemplates_triggered();
+    void on_actionAbout_Qt_triggered();
+    void on_actionAbout_fred_triggered();
 
     void SlotNodeTreeClicked(QModelIndex index);
     void SlotKeyTableClicked(QModelIndex index);
@@ -79,13 +81,12 @@ class MainWindow : public QMainWindow {
     void SlotTabCloseButtonClicked(int index);
     void SlotRecentlyOpenedFileClicked(bool checked);
 
-    void on_ActionPreferences_triggered();
-
   private:
     Ui::MainWindow *ui;
     ArgParser *p_args;
     RegistryHive *p_hive;
     bool is_hive_open;
+    bool is_hive_writable;
     QByteArray selected_key_value;
     QList<SearchResultWidget*> search_result_widgets;
     Settings *p_settings;
@@ -109,11 +110,12 @@ class MainWindow : public QMainWindow {
     ThreadSearch *p_search_thread;
 
     // Functions
-    void CheckUserConfigDir();
-    void UpdateWindowTitle(QString filename="");
     void OpenHive(QString hive_file);
+    void UpdateWindowTitle(QString filename="");
+    void UpdateMenuStates();
     void ClearRecentlyOpenedMenu();
     void UpdateRecentlyOpenedMenu();
+    void UpdateEnableWriteSupportMenu();
 };
 
 #endif // MAINWINDOW_H
