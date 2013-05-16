@@ -347,8 +347,10 @@ void MainWindow::on_ActionEnableWriteSupport_triggered() {
 void MainWindow::on_ActionPreferences_triggered() {
   DlgPreferences dlg_preferences(this->p_settings,this);
   dlg_preferences.exec();
-  // Update objects and GUI elements which might be affected by new settings
+  // Update vars, objects and GUI elements which might be affected by the new
+  // settings
   this->UpdateRecentlyOpenedMenu();
+  this->is_hive_writable=!this->p_settings->GetOpenHivesReadOnly();
   this->UpdateEnableWriteSupportMenu();
   this->p_reports->LoadReportTemplates();
 }
@@ -692,7 +694,7 @@ void MainWindow::UpdateRecentlyOpenedMenu() {
 }
 
 void MainWindow::UpdateEnableWriteSupportMenu() {
-  if(!this->is_hive_writable && this->p_settings->GetOpenHivesReadOnly()) {
+  if(!this->is_hive_writable) {
     this->ui->ActionEnableWriteSupport->setText(tr("Enable &write support"));
     this->p_node_tree->SetWritable(false);
     this->p_key_table->SetWritable(false);
@@ -702,9 +704,3 @@ void MainWindow::UpdateEnableWriteSupportMenu() {
     this->p_key_table->SetWritable(true);
   }
 }
-
-/*
-void MainWindow::SetWriteSupport(bool enable) {
-
-}
-*/
