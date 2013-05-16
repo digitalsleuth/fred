@@ -340,6 +340,8 @@ void MainWindow::on_ActionEnableWriteSupport_triggered() {
   this->is_hive_writable=!this->is_hive_writable;
   this->UpdateEnableWriteSupportMenu();
   this->p_node_tree->SetWritable(this->is_hive_writable);
+  this->p_key_table->SetWritable(this->is_hive_writable);
+  this->UpdateWindowTitle(this->p_hive->Filename());
 }
 
 void MainWindow::on_ActionPreferences_triggered() {
