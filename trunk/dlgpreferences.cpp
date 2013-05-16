@@ -58,8 +58,6 @@ void DlgPreferences::on_ListReportLocations_clicked(const QModelIndex &index) {
 
   if(index.row()==0) {
     // First row selected, disable up button
-    if(this->ui->BtnMoveReportLocUp->hasFocus())
-      this->ui->BtnMoveReportLocDown->setFocus();
     this->ui->BtnEditReportLoc->setEnabled(true);
     this->ui->BtnRemoveReportLoc->setEnabled(true);
     this->ui->BtnMoveReportLocUp->setEnabled(false);
@@ -69,8 +67,6 @@ void DlgPreferences::on_ListReportLocations_clicked(const QModelIndex &index) {
 
   if(index.row()==(this->ui->ListReportLocations->count()-1)) {
     // Last row selected, disable down button
-    if(this->ui->BtnMoveReportLocDown->hasFocus())
-      this->ui->BtnMoveReportLocUp->setFocus();
     this->ui->BtnEditReportLoc->setEnabled(true);
     this->ui->BtnRemoveReportLoc->setEnabled(true);
     this->ui->BtnMoveReportLocUp->setEnabled(true);

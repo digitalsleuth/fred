@@ -32,6 +32,8 @@ DlgAbout::DlgAbout(QWidget *parent) :
 
   // Update dialog with current infos
   this->m_ui->LblAbout->setText(
+    this->m_ui->LblAbout->text().replace("%APP_NAME_LONG%",APP_NAME_LONG));
+  this->m_ui->LblAbout->setText(
     this->m_ui->LblAbout->text().replace("%APP_NAME%",APP_NAME));
   this->m_ui->LblAbout->setText(
     this->m_ui->LblAbout->text().replace("%APP_COPYRIGHT%",APP_COPYRIGHT));

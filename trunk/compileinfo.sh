@@ -14,6 +14,7 @@ echo '// Automatically generated file. See project file and compileinfo.sh for f
 #                                    print "const char *pCompileInfoVersion   = \"" Version "\";"}'
 
 echo '#define APP_NAME "fred"'
+echo '#define APP_NAME_LONG "Forensic Registry EDitor"'
 echo '#define APP_TITLE "Forensic Registry EDitor (fred)"'
 echo '#define APP_COPYRIGHT "Copyright (c) 2011-2013 by Gillen Daniel"'
 echo '#define APP_DEVELOPPER_EMAIL "gillen.dan@pinguin.lu"'
