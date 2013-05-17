@@ -39,10 +39,15 @@ class RegistryKeyTable : public QTableView {
 
   Q_SIGNALS:
     void CurrentItemChanged(QModelIndex current);
+    void SignalAddKey(QModelIndex root_node);
+    void SignalEditKey(QModelIndex node);
+    void SignalDeleteKey(QModelIndex node);
 
   protected:
     int sizeHintForColumn(int column) const;
     void contextMenuEvent(QContextMenuEvent *p_event);
+    void currentChanged(const QModelIndex &current,
+                        const QModelIndex &previous);
 
   private:
     bool is_writable;
@@ -52,10 +57,11 @@ class RegistryKeyTable : public QTableView {
     QMenu *p_menu_copy;
     QAction *p_action_copy_key_name;
     QAction *p_action_copy_key_value;
-    void currentChanged(const QModelIndex &current,
-                        const QModelIndex &previous);
 
   private slots:
+    void SlotAddKey();
+    void SlotEditKey();
+    void SlotDeleteKey();
     void SlotCopyKeyName();
     void SlotCopyKeyValue();
 };

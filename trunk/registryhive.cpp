@@ -53,6 +53,8 @@ RegistryHive::RegistryHive(QObject *p_parent) : QObject(p_parent) {
   this->hive_file="";
   this->p_hive=NULL;
   this->is_hive_open=false;
+  this->is_hive_writable=false;
+  this->has_changes_to_commit=false;
 }
 
 /*
@@ -93,26 +95,72 @@ bool RegistryHive::Open(QString file, bool read_only) {
   // Set local vars
   this->hive_file=file;
   this->is_hive_open=true;
+  this->is_hive_writable=!read_only;
 
+  return true;
+}
+
+/*
+ * Reopen
+ */
+bool RegistryHive::Reopen(bool read_only) {
+  if(!this->is_hive_open) return false;
+
+  // Close hive first
+  if(hivex_close(this->p_hive)!=0) {
+    // According to the docs, even if hivex_close fails, it frees all handles.
+    // So we consider this fatal and final!
+    this->hive_file="";
+    this->is_hive_open=false;
+    this->is_hive_writable=false;
+    this->has_changes_to_commit=false;
+    return false;
+  }
+
+  // Reopen same hive
+  this->p_hive=hivex_open(this->hive_file.toAscii().constData(),
+                          read_only ? 0 : HIVEX_OPEN_WRITE);
+  if(this->p_hive==NULL) {
+    this->hive_file="";
+    this->is_hive_open=false;
+    this->is_hive_writable=false;
+    this->has_changes_to_commit=false;
+    return false;
+  }
+
+  // Update local vars
+  this->is_hive_writable=!read_only;
+  this->has_changes_to_commit=false;
+
+  return true;
+}
+
+/*
+ * CommitChanges
+ */
+bool RegistryHive::CommitChanges() {
+  if(!this->is_hive_open || !this->is_hive_writable) return false;
+  if(!this->has_changes_to_commit) return true;
+
+  // TODO: Maybe it would be more secure to commit changes to a new file and
+  // then move it over the original one.
+  if(hivex_commit(this->p_hive,NULL,0)!=0) {
+    return false;
+  }
   return true;
 }
 
 /*
  * Close
  */
-bool RegistryHive::Close(bool commit_changes) {
+bool RegistryHive::Close() {
   if(this->is_hive_open) {
-    if(commit_changes) {
-      // Commit changes before closing hive.
-      // TODO: Maybe it would be more secure to commit changes to a new file and
-      // then move it over the original one.
-      hivex_commit(this->p_hive,NULL,0);
-    }
-
     // As hivex_close will _ALWAYS_ free the handle, we don't need the following
     // values anymore
     this->hive_file="";
     this->is_hive_open=false;
+    this->is_hive_writable=false;
+    this->has_changes_to_commit=false;
 
     // Close hive
     if(hivex_close(this->p_hive)!=0) return false;
@@ -176,6 +224,13 @@ QString RegistryHive::HiveTypeToString(teHiveType hive_type) {
     default:
       return "UNKNOWN";
   }
+}
+
+/*
+ * HasChangesToCommit
+ */
+bool RegistryHive::HasChangesToCommit() {
+  return this->has_changes_to_commit;
 }
 
 /*
@@ -575,6 +630,62 @@ QString RegistryHive::KeyTypeToString(int value_type) {
  */
 uint64_t RegistryHive::FiletimeToUnixtime(int64_t filetime) {
   return (unsigned)((filetime-EPOCH_DIFF)/10000000);
+}
+
+/*
+ * AddNode
+ */
+bool RegistryHive::AddNode(QString parent_node_path, QString node_name) {
+  if(!this->is_hive_writable) return false;
+
+  // Get node handle to the parent where the new node should be created
+  hive_node_h parent_node;
+  if(!this->GetNodeHandle(parent_node_path,&parent_node)) {
+    // TODO: Set error
+    return false;
+  }
+
+  // Make sure there is no other node with same name
+  QMap<QString,int> child_nodes=this->GetNodes(parent_node);
+  if(child_nodes.contains(node_name.toAscii())) {
+    // TODO: Set error
+    return false;
+  }
+
+  // Add new node
+  hive_node_h new_node=hivex_node_add_child(this->p_hive,
+                                            parent_node,
+                                            node_name.toAscii().constData());
+  if(new_node==0) {
+    // TODO: Set error
+    return false;
+  }
+
+  this->has_changes_to_commit=true;
+  return true;
+}
+
+/*
+ * DeleteNode
+ */
+bool RegistryHive::DeleteNode(QString node_path) {
+  if(!this->is_hive_writable) return false;
+
+  // Get node handle to the node that should be deleted
+  hive_node_h node;
+  if(!this->GetNodeHandle(node_path,&node)) {
+    // TODO: Set error
+    return false;
+  }
+
+  // Delete node
+  if(hivex_node_delete_child(this->p_hive,node)==-1) {
+    // TODO: Set error
+    return false;
+  }
+
+  this->has_changes_to_commit=true;
+  return true;
 }
 
 /*******************************************************************************

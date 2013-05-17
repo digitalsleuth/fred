@@ -80,6 +80,8 @@ class MainWindow : public QMainWindow {
     void SlotSearchResultWidgetDoubleClicked(QModelIndex index);
     void SlotTabCloseButtonClicked(int index);
     void SlotRecentlyOpenedFileClicked(bool checked);
+    void SlotAddNode(QModelIndex index);
+    void SlotDeleteNode(QModelIndex index);
 
   private:
     Ui::MainWindow *ui;

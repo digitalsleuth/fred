@@ -24,6 +24,10 @@
 #include <QApplication>
 #include <QClipboard>
 
+/*******************************************************************************
+ * Public
+ ******************************************************************************/
+
 RegistryKeyTable::RegistryKeyTable(QWidget *p_parent) : QTableView(p_parent) {
   this->is_writable=false;
 
@@ -35,21 +39,33 @@ RegistryKeyTable::RegistryKeyTable(QWidget *p_parent) : QTableView(p_parent) {
   this->verticalHeader()->setHidden(true);
   this->setTextElideMode(Qt::ElideNone);
 
-  // Create context menu
+  // Create context menu item
   this->p_action_add_key=new QAction(tr("Add key"),this);
   this->p_action_edit_key=new QAction(tr("Edit key"),this);
   this->p_action_delete_key=new QAction(tr("Delete key"),this);
   this->p_menu_copy=new QMenu(tr("Copy"),this);
-  this->p_action_copy_key_name=new QAction(tr("Key name"),
-                                           this->p_menu_copy);
+  this->p_action_copy_key_name=new QAction(tr("Key name"),this->p_menu_copy);
   this->p_menu_copy->addAction(this->p_action_copy_key_name);
+  this->p_action_copy_key_value=new QAction(tr("Key value"),this->p_menu_copy);
+  this->p_menu_copy->addAction(this->p_action_copy_key_value);
+
+  // Connect context menu signals
+  this->connect(this->p_action_add_key,
+                SIGNAL(triggered()),
+                this,
+                SLOT(SlotAddKey()));
+  this->connect(this->p_action_edit_key,
+                SIGNAL(triggered()),
+                this,
+                SLOT(SlotEditKey()));
+  this->connect(this->p_action_delete_key,
+                SIGNAL(triggered()),
+                this,
+                SLOT(SlotDeleteKey()));
   this->connect(this->p_action_copy_key_name,
                 SIGNAL(triggered()),
                 this,
                 SLOT(SlotCopyKeyName()));
-  this->p_action_copy_key_value=new QAction(tr("Key value"),
-                                            this->p_menu_copy);
-  this->p_menu_copy->addAction(this->p_action_copy_key_value);
   this->connect(this->p_action_copy_key_value,
                 SIGNAL(triggered()),
                 this,
@@ -98,6 +114,10 @@ void RegistryKeyTable::selectRow(QString key_name) {
   }
 }
 */
+
+/*******************************************************************************
+ * Protected
+ ******************************************************************************/
 
 int RegistryKeyTable::sizeHintForColumn(int column) const {
   int size_hint=-1;
@@ -152,6 +172,23 @@ void RegistryKeyTable::currentChanged(const QModelIndex &current,
   // Now emit our signal
   QModelIndex current_item=QModelIndex(current);
   emit(RegistryKeyTable::CurrentItemChanged(current_item));
+}
+
+/*******************************************************************************
+ * Private slots
+ ******************************************************************************/
+
+void RegistryKeyTable::SlotAddKey() {
+  // TODO: We need to emit the ModelIndex of the parent node!!
+  //emit(this->SignalAddKey());
+}
+
+void RegistryKeyTable::SlotEditKey() {
+  emit(this->SignalEditKey(this->selectedIndexes().at(0)));
+}
+
+void RegistryKeyTable::SlotDeleteKey() {
+  emit(this->SignalDeleteKey(this->selectedIndexes().at(0)));
 }
 
 void RegistryKeyTable::SlotCopyKeyName() {

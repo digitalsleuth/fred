@@ -39,11 +39,16 @@ class RegistryNodeTree : public QTreeView {
 
   Q_SIGNALS:
     void CurrentItemChanged(QModelIndex current);
+    void SignalAddNode(QModelIndex root_node);
+    void SignalRenameNode(QModelIndex node);
+    void SignalDeleteNode(QModelIndex node);
 
   protected:
   //  int sizeHintForColumn(int column) const;
     void contextMenuEvent(QContextMenuEvent *p_event);
     void keyPressEvent(QKeyEvent *p_event);
+    void currentChanged(const QModelIndex &current,
+                        const QModelIndex &previous);
 
   private:
     bool is_writable;
@@ -53,10 +58,11 @@ class RegistryNodeTree : public QTreeView {
     QMenu *p_menu_copy;
     QAction *p_action_copy_node_name;
     QAction *p_action_copy_node_path;
-    void currentChanged(const QModelIndex &current,
-                        const QModelIndex &previous);
 
   private slots:
+    void SlotAddNode();
+    void SlotRenameNode();
+    void SlotDeleteNode();
     void SlotCopyNodeName();
     void SlotCopyNodePath();
 };

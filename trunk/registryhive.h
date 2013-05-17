@@ -46,11 +46,14 @@ class RegistryHive : public QObject {
     QString GetErrorMsg();
 
     bool Open(QString file, bool read_only=true);
-    bool Close(bool commit_changes=false);
+    bool Reopen(bool read_only=true);
+    bool CommitChanges();
+    bool Close();
 
     QString Filename();
     teHiveType HiveType();
     QString HiveTypeToString(teHiveType hive_type);
+    bool HasChangesToCommit();
 
     QMap<QString,int> GetNodes(QString path="\\");
     QMap<QString,int> GetNodes(int parent_node=0);
@@ -75,12 +78,17 @@ class RegistryHive : public QObject {
     static QString KeyTypeToString(int value_type);
     static uint64_t FiletimeToUnixtime(int64_t filetime);
 
+    bool AddNode(QString parent_node_path, QString node_name);
+    bool DeleteNode(QString node_path);
+
   private:
     QString erro_msg;
     bool is_error;
     QString hive_file;
     hive_h *p_hive;
     bool is_hive_open;
+    bool is_hive_writable;
+    bool has_changes_to_commit;
 
     void SetError(QString msg);
     bool GetNodeHandle(QString &path, hive_node_h *p_node);

@@ -33,6 +33,7 @@
 #include <QDir>
 #include <QSplitter>
 #include <QListIterator>
+#include <QInputDialog>
 
 #include <QDebug>
 
@@ -169,6 +170,14 @@ MainWindow::MainWindow(ArgParser *p_arg_parser) :
                 SIGNAL(tabCloseRequested(int)),
                 this,
                 SLOT(SlotTabCloseButtonClicked(int)));
+  this->connect(this->p_node_tree,
+                SIGNAL(SignalAddNode(QModelIndex)),
+                this,
+                SLOT(SlotAddNode(QModelIndex)));
+  this->connect(this->p_node_tree,
+                SIGNAL(SignalDeleteNode(QModelIndex)),
+                this,
+                SLOT(SlotDeleteNode(QModelIndex)));
 
   // Add central widget
   this->setCentralWidget(this->p_horizontal_splitter);
@@ -337,6 +346,21 @@ void MainWindow::on_ActionSearch_triggered() {
 }
 
 void MainWindow::on_ActionEnableWriteSupport_triggered() {
+  if(this->is_hive_writable && this->p_hive->HasChangesToCommit()) {
+    // There are unsaved changes, ask user if we should commit them
+    if(QMessageBox::warning(this,
+                            tr("Save changes"),
+                            tr("You have unsaved changes! Do you want to save them before switching to read-only mode?"),
+                            QMessageBox::Yes,
+                            QMessageBox::No)==QMessageBox::Yes)
+    {
+      if(!this->p_hive->CommitChanges()) {
+        QMessageBox::critical(this,
+                              tr("Saving changes"),
+                              tr("Unable to save changes!"));
+      }
+    }
+  }
   this->is_hive_writable=!this->is_hive_writable;
   this->UpdateEnableWriteSupportMenu();
   this->p_node_tree->SetWritable(this->is_hive_writable);
@@ -392,6 +416,15 @@ void MainWindow::on_ActionReloadReportTemplates_triggered() {
   this->p_reports->LoadReportTemplates();
 }
 
+void MainWindow::on_actionAbout_Qt_triggered() {
+  QMessageBox::aboutQt(this,tr("About Qt"));
+}
+
+void MainWindow::on_actionAbout_fred_triggered() {
+  DlgAbout dlg_about(this);
+  dlg_about.exec();
+}
+
 void MainWindow::SlotNodeTreeClicked(QModelIndex index) {
   QString node_path;
 
@@ -415,15 +448,6 @@ void MainWindow::SlotNodeTreeClicked(QModelIndex index) {
                               this->is_hive_writable);
   // Set focus back to nodetree to be able to navigate with keyboard
   this->p_node_tree->setFocus();
-}
-
-void MainWindow::on_actionAbout_Qt_triggered() {
-  QMessageBox::aboutQt(this,tr("About Qt"));
-}
-
-void MainWindow::on_actionAbout_fred_triggered() {
-  DlgAbout dlg_about(this);
-  dlg_about.exec();
 }
 
 void MainWindow::SlotKeyTableClicked(QModelIndex index) {
@@ -572,6 +596,40 @@ void MainWindow::SlotRecentlyOpenedFileClicked(bool checked) {
   this->OpenHive(p_sender->text());
 }
 
+void MainWindow::SlotAddNode(QModelIndex index) {
+  QString node_path;
+
+  if(!index.isValid()) return;
+
+  // Map proxy index to tree model index and get node path
+  index=this->p_reg_node_tree_model_proxy->mapToSource(index);
+  node_path=this->p_reg_node_tree_model->GetNodePath(index);
+
+  // Query user for a node name
+  bool ok=false;
+  QString node_name=QInputDialog::getText(this,
+                                          tr("Add node"),
+                                          tr("Please specify a name for the new node"),
+                                          QLineEdit::Normal,
+                                          QString(),
+                                          &ok);
+  if(ok) {
+    if(!this->p_hive->AddNode(node_path,node_name)) {
+      QMessageBox::critical(this,
+                            tr("Error"),
+                            tr("Unable to create node '%1\\%2'!")
+                              .arg(node_path,node_name));
+    } else {
+      this->p_reg_node_tree_model->ReloadModelData();
+      // TODO: Reload / add new node in node tree
+    }
+  }
+}
+
+void MainWindow::SlotDeleteNode(QModelIndex index) {
+  // TODO
+}
+
 /*******************************************************************************
  * Private
  ******************************************************************************/
@@ -585,7 +643,7 @@ void MainWindow::OpenHive(QString hive_file) {
   if(this->is_hive_open) this->on_action_Close_hive_triggered();
 
   // Try to open hive
-  if(!this->p_hive->Open(hive_file,this->is_hive_writable)) {
+  if(!this->p_hive->Open(hive_file,!this->is_hive_writable)) {
     QMessageBox::critical(this,
                           tr("Error opening hive file"),
                           tr("Unable to open file '%1'").arg(hive_file));

@@ -26,15 +26,20 @@
 
 #include <inttypes.h>
 
-RegistryNodeTreeModel::RegistryNodeTreeModel(RegistryHive *p_hive,
+/*******************************************************************************
+ * Public
+ ******************************************************************************/
+
+RegistryNodeTreeModel::RegistryNodeTreeModel(RegistryHive *p_reghive,
                                              QObject *p_parent)
   : QAbstractItemModel(p_parent)
 {
-  // Create root node. It's values will be used as header values.
-  this->p_root_node=new RegistryNode(QList<QVariant>()<<tr("Node")
-                                                      <<tr("Last mod. time"));
+  // Init private vars
+  this->p_root_node=NULL;
+  this->p_hive=p_reghive;
+
   // Build node list
-  this->SetupModelData(p_hive,this->p_root_node);
+  this->ReloadModelData();
 }
 
 RegistryNodeTreeModel::~RegistryNodeTreeModel() {
@@ -201,6 +206,25 @@ QString RegistryNodeTreeModel::GetNodePath(QModelIndex child_index) const
 
   return path;
 }
+
+void RegistryNodeTreeModel::ReloadModelData() {
+  // Delete current values if data was already loaded once
+  if(this->p_root_node!=NULL) delete this->p_root_node;
+
+  // Create root node. It's values will be used as header values.
+  this->p_root_node=new RegistryNode(QList<QVariant>()<<tr("Node")
+                                                      <<tr("Last mod. time"));
+
+  // Load data
+  this->SetupModelData(this->p_hive,this->p_root_node);
+
+  // TODO: Maybe emit signal that data has changed
+  //emit(RegistryNodeTreeModel::dataChanged())
+}
+
+/*******************************************************************************
+ * Private
+ ******************************************************************************/
 
 void RegistryNodeTreeModel::SetupModelData(RegistryHive *p_hive,
                                            RegistryNode *p_parent,
