@@ -78,7 +78,7 @@ class RegistryHive : public QObject {
     static QString KeyTypeToString(int value_type);
     static uint64_t FiletimeToUnixtime(int64_t filetime);
 
-    bool AddNode(QString parent_node_path, QString node_name);
+    int AddNode(QString parent_node_path, QString node_name);
     bool DeleteNode(QString node_path);
 
   private:

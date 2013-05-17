@@ -635,21 +635,21 @@ uint64_t RegistryHive::FiletimeToUnixtime(int64_t filetime) {
 /*
  * AddNode
  */
-bool RegistryHive::AddNode(QString parent_node_path, QString node_name) {
-  if(!this->is_hive_writable) return false;
+int RegistryHive::AddNode(QString parent_node_path, QString node_name) {
+  if(!this->is_hive_writable) return 0;
 
   // Get node handle to the parent where the new node should be created
   hive_node_h parent_node;
   if(!this->GetNodeHandle(parent_node_path,&parent_node)) {
     // TODO: Set error
-    return false;
+    return 0;
   }
 
   // Make sure there is no other node with same name
   QMap<QString,int> child_nodes=this->GetNodes(parent_node);
   if(child_nodes.contains(node_name.toAscii())) {
     // TODO: Set error
-    return false;
+    return 0;
   }
 
   // Add new node
@@ -658,11 +658,11 @@ bool RegistryHive::AddNode(QString parent_node_path, QString node_name) {
                                             node_name.toAscii().constData());
   if(new_node==0) {
     // TODO: Set error
-    return false;
+    return 0;
   }
 
   this->has_changes_to_commit=true;
-  return true;
+  return new_node;
 }
 
 /*

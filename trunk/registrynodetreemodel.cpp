@@ -30,16 +30,16 @@
  * Public
  ******************************************************************************/
 
-RegistryNodeTreeModel::RegistryNodeTreeModel(RegistryHive *p_reghive,
+RegistryNodeTreeModel::RegistryNodeTreeModel(RegistryHive *p_hive,
                                              QObject *p_parent)
   : QAbstractItemModel(p_parent)
 {
-  // Init private vars
-  this->p_root_node=NULL;
-  this->p_hive=p_reghive;
+  // Create root node. It's values will be used as header values.
+  this->p_root_node=new RegistryNode(QList<QVariant>()<<tr("Node")
+                                                      <<tr("Last mod. time"));
 
-  // Build node list
-  this->ReloadModelData();
+  // Load data
+  this->SetupModelData(p_hive,this->p_root_node);
 }
 
 RegistryNodeTreeModel::~RegistryNodeTreeModel() {
@@ -207,19 +207,34 @@ QString RegistryNodeTreeModel::GetNodePath(QModelIndex child_index) const
   return path;
 }
 
-void RegistryNodeTreeModel::ReloadModelData() {
-  // Delete current values if data was already loaded once
-  if(this->p_root_node!=NULL) delete this->p_root_node;
+QModelIndex RegistryNodeTreeModel::AddNode(const QModelIndex &parent_index,
+                                           int new_node_id,
+                                           QString new_node_name)
+{
+  RegistryNode *p_parent_node;
+  int64_t key_mod_time;
+  RegistryNode *p_node;
 
-  // Create root node. It's values will be used as header values.
-  this->p_root_node=new RegistryNode(QList<QVariant>()<<tr("Node")
-                                                      <<tr("Last mod. time"));
+  // Get pointer to parent node
+  p_parent_node=static_cast<RegistryNode*>(parent_index.internalPointer());
 
-  // Load data
-  this->SetupModelData(this->p_hive,this->p_root_node);
+  // Tell users of this view that we are going to insert a row
+  emit(RegistryNodeTreeModel::beginInsertRows(parent_index,
+                                              p_parent_node->ChildCount(),
+                                              p_parent_node->ChildCount()));
 
-  // TODO: Maybe emit signal that data has changed
-  //emit(RegistryNodeTreeModel::dataChanged())
+  // Create and add new node in internal node list
+  key_mod_time=p_hive->GetNodeModTime(new_node_id);
+  p_node=new RegistryNode(QList<QVariant>()<<new_node_name<<
+                            QVariant((qlonglong)key_mod_time),
+                          p_parent_node);
+  p_parent_node->AppendChild(p_node);
+
+  // Tell users of this view we have finished inserting a row
+  emit(RegistryNodeTreeModel::endInsertRows());
+
+  // Return index to new node
+  return this->createIndex(p_parent_node->ChildCount()-1,0,p_node);
 }
 
 /*******************************************************************************

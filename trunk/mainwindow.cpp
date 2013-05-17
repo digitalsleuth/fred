@@ -566,7 +566,9 @@ void MainWindow::SlotSearchResultWidgetDoubleClicked(QModelIndex index) {
     this->p_node_tree->selectionModel()->clear();
     this->p_node_tree->selectionModel()->
       select(indexes.at(indexes.count()-1),
-             QItemSelectionModel::Select);
+             QItemSelectionModel::ClearAndSelect |
+               QItemSelectionModel::Rows |
+               QItemSelectionModel::Current);
     // TODO: This does not work!!
     this->SlotNodeTreeClicked(indexes.at(indexes.count()-1));
   }
@@ -598,6 +600,7 @@ void MainWindow::SlotRecentlyOpenedFileClicked(bool checked) {
 
 void MainWindow::SlotAddNode(QModelIndex index) {
   QString node_path;
+  int new_node_id;
 
   if(!index.isValid()) return;
 
@@ -614,14 +617,34 @@ void MainWindow::SlotAddNode(QModelIndex index) {
                                           QString(),
                                           &ok);
   if(ok) {
-    if(!this->p_hive->AddNode(node_path,node_name)) {
+    if((new_node_id=this->p_hive->AddNode(node_path,node_name))==0) {
+      // TODO: Get error message and display it
       QMessageBox::critical(this,
                             tr("Error"),
                             tr("Unable to create node '%1\\%2'!")
                               .arg(node_path,node_name));
     } else {
-      this->p_reg_node_tree_model->ReloadModelData();
-      // TODO: Reload / add new node in node tree
+      // Add node to model. We have to pass node_name as Ascii as utf8 names are
+      // not supported inside hives!
+      QModelIndex new_node_index=
+        this->p_reg_node_tree_model->AddNode(index,
+                                             new_node_id,
+                                             node_name.toAscii());
+      // Now that node has been added, expand parent and select new node
+      this->p_node_tree->expand(
+        this->p_reg_node_tree_model_proxy->mapFromSource(index));
+      new_node_index=
+        this->p_reg_node_tree_model_proxy->mapFromSource(new_node_index);
+      this->p_node_tree->scrollTo(new_node_index,
+                                  QAbstractItemView::PositionAtCenter);
+      this->p_node_tree->selectionModel()->clear();
+      this->p_node_tree->selectionModel()->
+        select(new_node_index,
+               QItemSelectionModel::ClearAndSelect |
+                 QItemSelectionModel::Rows |
+                 QItemSelectionModel::Current);
+      // And finally update key table
+      this->SlotNodeTreeClicked(new_node_index);
     }
   }
 }

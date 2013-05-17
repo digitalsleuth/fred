@@ -32,7 +32,7 @@ class RegistryNodeTreeModel : public QAbstractItemModel {
   Q_OBJECT
 
   public:
-    RegistryNodeTreeModel(RegistryHive *p_reghive, QObject *p_parent=0);
+    RegistryNodeTreeModel(RegistryHive *p_hive, QObject *p_parent=0);
     ~RegistryNodeTreeModel();
 
     QVariant data(const QModelIndex &index, int role) const;
@@ -49,7 +49,9 @@ class RegistryNodeTreeModel : public QAbstractItemModel {
 
     QList<QModelIndex> GetIndexListOf(QString path) const;
     QString GetNodePath(QModelIndex child_index) const;
-    void ReloadModelData();
+    QModelIndex AddNode(const QModelIndex &parent_index,
+                        int new_node_id,
+                        QString new_node_name);
 
   private:
     enum ColumnContent {
