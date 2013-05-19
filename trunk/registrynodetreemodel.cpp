@@ -37,7 +37,6 @@ RegistryNodeTreeModel::RegistryNodeTreeModel(RegistryHive *p_hive,
   // Create root node. It's values will be used as header values.
   this->p_root_node=new RegistryNode(QList<QVariant>()<<tr("Node")
                                                       <<tr("Last mod. time"));
-
   // Load data
   this->SetupModelData(p_hive,this->p_root_node);
 }
@@ -207,7 +206,8 @@ QString RegistryNodeTreeModel::GetNodePath(QModelIndex child_index) const
   return path;
 }
 
-QModelIndex RegistryNodeTreeModel::AddNode(const QModelIndex &parent_index,
+QModelIndex RegistryNodeTreeModel::AddNode(RegistryHive *p_hive,
+                                           const QModelIndex &parent_index,
                                            int new_node_id,
                                            QString new_node_name)
 {

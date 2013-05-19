@@ -49,7 +49,7 @@ class RegistryNodeTreeModel : public QAbstractItemModel {
 
     QList<QModelIndex> GetIndexListOf(QString path) const;
     QString GetNodePath(QModelIndex child_index) const;
-    QModelIndex AddNode(const QModelIndex &parent_index,
+    QModelIndex AddNode(RegistryHive *p_hive, const QModelIndex &parent_index,
                         int new_node_id,
                         QString new_node_name);
 
@@ -59,7 +59,6 @@ class RegistryNodeTreeModel : public QAbstractItemModel {
       ColumnContent_NodeModTime
     };
 
-    RegistryHive *p_hive;
     RegistryNode *p_root_node;
 
     void SetupModelData(RegistryHive *p_hive,

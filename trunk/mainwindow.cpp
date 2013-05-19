@@ -627,7 +627,8 @@ void MainWindow::SlotAddNode(QModelIndex index) {
       // Add node to model. We have to pass node_name as Ascii as utf8 names are
       // not supported inside hives!
       QModelIndex new_node_index=
-        this->p_reg_node_tree_model->AddNode(index,
+        this->p_reg_node_tree_model->AddNode(this->p_hive,
+                                             index,
                                              new_node_id,
                                              node_name.toAscii());
       // Now that node has been added, expand parent and select new node
