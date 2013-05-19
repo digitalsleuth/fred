@@ -52,6 +52,7 @@ class RegistryNodeTreeModel : public QAbstractItemModel {
     QModelIndex AddNode(RegistryHive *p_hive, const QModelIndex &parent_index,
                         int new_node_id,
                         QString new_node_name);
+    QModelIndex RemoveNode(const QModelIndex &index);
 
   private:
     enum ColumnContent {

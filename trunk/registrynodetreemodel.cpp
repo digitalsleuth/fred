@@ -237,6 +237,49 @@ QModelIndex RegistryNodeTreeModel::AddNode(RegistryHive *p_hive,
   return this->createIndex(p_parent_node->ChildCount()-1,0,p_node);
 }
 
+QModelIndex RegistryNodeTreeModel::RemoveNode(const QModelIndex &index) {
+  RegistryNode *p_node;
+  RegistryNode *p_parent_node;
+  int node_row;
+  QModelIndex parent_node_index;
+
+  // Get pointers to current node and its parent
+  p_node=static_cast<RegistryNode*>(index.internalPointer());
+  p_parent_node=p_node->Parent();
+
+  // Get current nodes row
+  node_row=p_node->Row();
+
+  // Create index of parent node
+  parent_node_index=this->createIndex(p_parent_node->Row(),0,p_parent_node);
+
+  // Tell users of this view that we are going to remove a row
+  emit(RegistryNodeTreeModel::beginRemoveRows(parent_node_index,
+                                              node_row,
+                                              node_row));
+
+  // Remove node
+  p_parent_node->RemoveChild(node_row);
+
+  // Tell users of this view we have finished removing a row
+  emit(RegistryNodeTreeModel::endRemoveRows());
+
+  // Find a suitable index that should be selected after the current one has
+  // been deleted.
+  if(p_parent_node->ChildCount()>0) {
+    // Parent node still has child nodes, return nearest child node
+    if(node_row<p_parent_node->ChildCount()) {
+      // Any child node removed except the last one, row is still valid
+      return this->createIndex(node_row,0,p_parent_node->Child(node_row));
+    } else {
+      // Last child node removed, row-1 should be valid
+      return this->createIndex(node_row-1,0,p_parent_node->Child(node_row-1));
+    }
+  }
+  // If no child nodes are left, return parent node
+  return parent_node_index;
+}
+
 /*******************************************************************************
  * Private
  ******************************************************************************/

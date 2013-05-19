@@ -52,6 +52,9 @@
  * Public
  ******************************************************************************/
 
+/*
+ * Constructor
+ */
 MainWindow::MainWindow(ArgParser *p_arg_parser) :
   QMainWindow(0), ui(new Ui::MainWindow)
 {
@@ -209,6 +212,9 @@ MainWindow::MainWindow(ArgParser *p_arg_parser) :
   }
 }
 
+/*
+ * Destructor
+ */
 MainWindow::~MainWindow() {
   if(this->is_hive_open) {
     this->p_hive->Close();
@@ -233,8 +239,15 @@ MainWindow::~MainWindow() {
  * Protected
  ******************************************************************************/
 
+/*
+ * closeEvent
+ */
 void MainWindow::closeEvent(QCloseEvent *p_event) {
   Q_UNUSED(p_event)
+
+  // Make sure the user can save any changes
+  // TODO: If saving fails, let the user cancel closing
+  this->SaveHiveChanges();
 
   // Save window position and size on exit
   this->p_settings->SetWindowGeometry("MainWindow",this->saveGeometry());
@@ -245,6 +258,9 @@ void MainWindow::closeEvent(QCloseEvent *p_event) {
  * Private slots
  ******************************************************************************/
 
+/*
+ * on_action_Open_hive_triggered
+ */
 void MainWindow::on_action_Open_hive_triggered() {
   QString hive_file="";
 
@@ -257,7 +273,14 @@ void MainWindow::on_action_Open_hive_triggered() {
   this->OpenHive(hive_file);
 }
 
+/*
+ * on_action_Close_hive_triggered
+ */
 void MainWindow::on_action_Close_hive_triggered() {
+  // Make sure the user can save any changes
+  // TODO: If saving fails, let the user cancel closing
+  this->SaveHiveChanges();
+
   if(this->is_hive_open) {
     // Remove search results
     while(this->p_tab_widget->count()>1) {
@@ -295,10 +318,16 @@ void MainWindow::on_action_Close_hive_triggered() {
   }
 }
 
+/*
+ * on_action_Quit_triggered
+ */
 void MainWindow::on_action_Quit_triggered() {
   qApp->exit();
 }
 
+/*
+ * on_ActionSearch_triggered
+ */
 void MainWindow::on_ActionSearch_triggered() {
   DlgSearch dlg_search(this);
   if(dlg_search.exec()==QDialog::Accepted) {
@@ -345,22 +374,15 @@ void MainWindow::on_ActionSearch_triggered() {
   }
 }
 
+/*
+ * on_ActionEnableWriteSupport_triggered
+ */
 void MainWindow::on_ActionEnableWriteSupport_triggered() {
-  if(this->is_hive_writable && this->p_hive->HasChangesToCommit()) {
-    // There are unsaved changes, ask user if we should commit them
-    if(QMessageBox::warning(this,
-                            tr("Save changes"),
-                            tr("You have unsaved changes! Do you want to save them before switching to read-only mode?"),
-                            QMessageBox::Yes,
-                            QMessageBox::No)==QMessageBox::Yes)
-    {
-      if(!this->p_hive->CommitChanges()) {
-        QMessageBox::critical(this,
-                              tr("Saving changes"),
-                              tr("Unable to save changes!"));
-      }
-    }
-  }
+  // There might be unsaved changes, give the user the chance to save them
+  // TODO: If saving failed, give the user the chance to cancel switching
+  this->SaveHiveChanges();
+
+  // Switch write support
   this->is_hive_writable=!this->is_hive_writable;
   this->UpdateEnableWriteSupportMenu();
   this->p_node_tree->SetWritable(this->is_hive_writable);
@@ -368,6 +390,9 @@ void MainWindow::on_ActionEnableWriteSupport_triggered() {
   this->UpdateWindowTitle(this->p_hive->Filename());
 }
 
+/*
+ * on_ActionPreferences_triggered
+ */
 void MainWindow::on_ActionPreferences_triggered() {
   DlgPreferences dlg_preferences(this->p_settings,this);
   dlg_preferences.exec();
@@ -379,6 +404,9 @@ void MainWindow::on_ActionPreferences_triggered() {
   this->p_reports->LoadReportTemplates();
 }
 
+/*
+ * on_ActionGenerateReport_triggered
+ */
 void MainWindow::on_ActionGenerateReport_triggered() {
   DlgReportChooser dlg_repchooser(this->p_reports,
                                   this->p_hive->HiveTypeToString(
@@ -412,19 +440,31 @@ void MainWindow::on_ActionGenerateReport_triggered() {
   }
 }
 
+/*
+ * on_ActionReloadReportTemplates_triggered
+ */
 void MainWindow::on_ActionReloadReportTemplates_triggered() {
   this->p_reports->LoadReportTemplates();
 }
 
+/*
+ * on_actionAbout_Qt_triggered
+ */
 void MainWindow::on_actionAbout_Qt_triggered() {
   QMessageBox::aboutQt(this,tr("About Qt"));
 }
 
+/*
+ * on_actionAbout_fred_triggered
+ */
 void MainWindow::on_actionAbout_fred_triggered() {
   DlgAbout dlg_about(this);
   dlg_about.exec();
 }
 
+/*
+ * SlotNodeTreeClicked
+ */
 void MainWindow::SlotNodeTreeClicked(QModelIndex index) {
   QString node_path;
 
@@ -450,6 +490,9 @@ void MainWindow::SlotNodeTreeClicked(QModelIndex index) {
   this->p_node_tree->setFocus();
 }
 
+/*
+ * SlotKeyTableClicked
+ */
 void MainWindow::SlotKeyTableClicked(QModelIndex index) {
   if(!index.isValid()) return;
 
@@ -464,6 +507,9 @@ void MainWindow::SlotKeyTableClicked(QModelIndex index) {
   this->p_key_table->setFocus();
 }
 
+/*
+ * SlotKeyTableDoubleClicked
+ */
 void MainWindow::SlotKeyTableDoubleClicked(QModelIndex index) {
   Q_UNUSED(index);
   /*
@@ -510,6 +556,9 @@ void MainWindow::SlotKeyTableDoubleClicked(QModelIndex index) {
   */
 }
 
+/*
+ * SlotSearchFinished
+ */
 void MainWindow::SlotSearchFinished() {
   delete this->p_search_thread;
   this->p_search_thread=NULL;
@@ -518,6 +567,9 @@ void MainWindow::SlotSearchFinished() {
   this->search_result_widgets.last()->setEnabled(true);
 }
 
+/*
+ * SlotSearchResultWidgetDoubleClicked
+ */
 void MainWindow::SlotSearchResultWidgetDoubleClicked(QModelIndex index) {
   SearchResultWidget *p_sender;
   QString path;
@@ -584,6 +636,9 @@ void MainWindow::SlotSearchResultWidgetDoubleClicked(QModelIndex index) {
   }
 }
 
+/*
+ * SlotTabCloseButtonClicked
+ */
 void MainWindow::SlotTabCloseButtonClicked(int index) {
   // Delete tab widget and remove tab
   this->p_tab_widget->removeTab(index);
@@ -591,6 +646,9 @@ void MainWindow::SlotTabCloseButtonClicked(int index) {
   this->search_result_widgets.removeAt(index-1);
 }
 
+/*
+ * SlotRecentlyOpenedFileClicked
+ */
 void MainWindow::SlotRecentlyOpenedFileClicked(bool checked) {
   Q_UNUSED(checked)
 
@@ -598,6 +656,9 @@ void MainWindow::SlotRecentlyOpenedFileClicked(bool checked) {
   this->OpenHive(p_sender->text());
 }
 
+/*
+ * SlotAddNode
+ */
 void MainWindow::SlotAddNode(QModelIndex index) {
   QString node_path;
   int new_node_id;
@@ -650,14 +711,56 @@ void MainWindow::SlotAddNode(QModelIndex index) {
   }
 }
 
+/*
+ * SlotDeleteNode
+ */
 void MainWindow::SlotDeleteNode(QModelIndex index) {
-  // TODO
+  QString node_path;
+
+  if(!index.isValid()) return;
+
+  // Map proxy index to tree model index and get node path
+  index=this->p_reg_node_tree_model_proxy->mapToSource(index);
+  node_path=this->p_reg_node_tree_model->GetNodePath(index);
+
+  if(QMessageBox::warning(this,
+                          tr("Delete node"),
+                          tr("Are you sure you want to remove the node '%1' and all of its child nodes?").arg(node_path),
+                          QMessageBox::Yes,
+                          QMessageBox::No)==QMessageBox::Yes)
+  {
+    // Remove node from hive
+    if(!this->p_hive->DeleteNode(node_path)) {
+      // TODO: Get error message and display it
+      QMessageBox::critical(this,
+                            tr("Error"),
+                            tr("Unable to delete node '%1'!")
+                              .arg(node_path));
+      return;
+    }
+
+    // Remove node from tree model and select nearest node
+    QModelIndex next_node_index=this->p_reg_node_tree_model->RemoveNode(index);
+    next_node_index=
+      this->p_reg_node_tree_model_proxy->mapFromSource(next_node_index);
+    this->p_node_tree->selectionModel()->clear();
+    this->p_node_tree->selectionModel()->
+      select(next_node_index,
+             QItemSelectionModel::ClearAndSelect |
+               QItemSelectionModel::Rows |
+               QItemSelectionModel::Current);
+    // And finally update key table
+    this->SlotNodeTreeClicked(next_node_index);
+  }
 }
 
 /*******************************************************************************
  * Private
  ******************************************************************************/
 
+/*
+ * OpenHive
+ */
 void MainWindow::OpenHive(QString hive_file) {
   // Update last open location
   this->p_settings->SetLastOpenLocation(
@@ -699,6 +802,9 @@ void MainWindow::OpenHive(QString hive_file) {
   this->UpdateRecentlyOpenedMenu();
 }
 
+/*
+ * UpdateWindowTitle
+ */
 void MainWindow::UpdateWindowTitle(QString filename) {
   if(filename=="") {
     this->setWindowTitle(QString("%1 v%2").arg(APP_TITLE,APP_VERSION));
@@ -714,6 +820,9 @@ void MainWindow::UpdateWindowTitle(QString filename) {
   }
 }
 
+/*
+ * UpdateMenuStates
+ */
 void MainWindow::UpdateMenuStates() {
   if(this->is_hive_open) {
     this->ui->action_Close_hive->setEnabled(true);
@@ -732,6 +841,9 @@ void MainWindow::UpdateMenuStates() {
   }
 }
 
+/*
+ * ClearRecentlyOpenedMenu
+ */
 void MainWindow::ClearRecentlyOpenedMenu() {
   QAction *p_action;
 
@@ -745,6 +857,9 @@ void MainWindow::ClearRecentlyOpenedMenu() {
   }
 }
 
+/*
+ * UpdateRecentlyOpenedMenu
+ */
 void MainWindow::UpdateRecentlyOpenedMenu() {
   QStringList recent_files=this->p_settings->GetRecentFiles();
   QAction *p_action;
@@ -775,6 +890,9 @@ void MainWindow::UpdateRecentlyOpenedMenu() {
   }
 }
 
+/*
+ * UpdateEnableWriteSupportMenu
+ */
 void MainWindow::UpdateEnableWriteSupportMenu() {
   if(!this->is_hive_writable) {
     this->ui->ActionEnableWriteSupport->setText(tr("Enable &write support"));
@@ -785,4 +903,30 @@ void MainWindow::UpdateEnableWriteSupportMenu() {
     this->p_node_tree->SetWritable(true);
     this->p_key_table->SetWritable(true);
   }
+}
+
+/*
+ * SaveHiveChanges
+ */
+bool MainWindow::SaveHiveChanges() {
+  if(!this->is_hive_open) return true;
+  if(!this->is_hive_writable) return true;
+  if(!this->p_hive->HasChangesToCommit()) return true;
+
+  // There are unsaved changes, ask user if we should commit them
+  if(QMessageBox::warning(this,
+                          tr("Save changes"),
+                          tr("If you don't save your changes now, they will be lost. Do you want to save them?"),
+                          QMessageBox::Yes,
+                          QMessageBox::No)==QMessageBox::Yes)
+  {
+    if(!this->p_hive->CommitChanges()) {
+      // TODO: Get error message
+      QMessageBox::critical(this,
+                            tr("Saving changes"),
+                            tr("Unable to save changes!"));
+      return false;
+    }
+  }
+  return true;
 }

@@ -41,7 +41,6 @@ RegistryNodeTree::RegistryNodeTree(QWidget *p_parent) : QTreeView(p_parent) {
 
   // Create context menu items
   this->p_action_add_node=new QAction(tr("Add node"),this);
-  this->p_action_rename_node=new QAction(tr("Rename node"),this);
   this->p_action_delete_node=new QAction(tr("Delete node"),this);
   this->p_menu_copy=new QMenu(tr("Copy"),this);
   this->p_action_copy_node_name=new QAction(tr("Node name"),this->p_menu_copy);
@@ -54,10 +53,6 @@ RegistryNodeTree::RegistryNodeTree(QWidget *p_parent) : QTreeView(p_parent) {
                 SIGNAL(triggered()),
                 this,
                 SLOT(SlotAddNode()));
-  this->connect(this->p_action_rename_node,
-                SIGNAL(triggered()),
-                this,
-                SLOT(SlotRenameNode()));
   this->connect(this->p_action_delete_node,
                 SIGNAL(triggered()),
                 this,
@@ -78,7 +73,6 @@ RegistryNodeTree::~RegistryNodeTree() {
   delete this->p_action_copy_node_path;
   delete this->p_menu_copy;
   delete this->p_action_delete_node;
-  delete this->p_action_rename_node;
   delete this->p_action_add_node;
 }
 
@@ -100,7 +94,6 @@ void RegistryNodeTree::setModel(QAbstractItemModel *p_model, bool writable) {
 void RegistryNodeTree::SetWritable(bool writable) {
   this->is_writable=writable;
   this->p_action_add_node->setEnabled(this->is_writable);
-  this->p_action_rename_node->setEnabled(this->is_writable);
   this->p_action_delete_node->setEnabled(this->is_writable);
 }
 
@@ -121,7 +114,6 @@ void RegistryNodeTree::contextMenuEvent(QContextMenuEvent *p_event) {
   // Create context menu and add actions
   QMenu context_menu(this);
   context_menu.addAction(this->p_action_add_node);
-  context_menu.addAction(this->p_action_rename_node);
   context_menu.addAction(this->p_action_delete_node);
   context_menu.addSeparator();
   context_menu.addMenu(this->p_menu_copy);
@@ -168,6 +160,14 @@ void RegistryNodeTree::currentChanged(const QModelIndex &current,
  * Private slots
  ******************************************************************************/
 
+void RegistryNodeTree::SlotAddNode() {
+  emit(RegistryNodeTree::SignalAddNode(this->selectedIndexes().at(0)));
+}
+
+void RegistryNodeTree::SlotDeleteNode() {
+  emit(RegistryNodeTree::SignalDeleteNode(this->selectedIndexes().at(0)));
+}
+
 void RegistryNodeTree::SlotCopyNodeName() {
   QApplication::clipboard()->
     setText(this->selectedIndexes().at(0).data().toString(),
@@ -178,34 +178,4 @@ void RegistryNodeTree::SlotCopyNodePath() {
   QString path=((RegistryNodeTreeModel*)(this->model()))->
     GetNodePath(this->selectedIndexes().at(0));
   QApplication::clipboard()->setText(path,QClipboard::Clipboard);
-}
-
-void RegistryNodeTree::SlotAddNode() {
-  emit(RegistryNodeTree::SignalAddNode(this->selectedIndexes().at(0)));
-}
-
-void RegistryNodeTree::SlotRenameNode() {
-  emit(RegistryNodeTree::SignalRenameNode(this->selectedIndexes().at(0)));
-/*
-  // Get current node name and path
-  QString node_name=this->selectedIndexes().at(0).data().toString();
-  QString node_path=((RegistryNodeTreeModel*)(this->model()))->
-    GetNodePath(this->selectedIndexes().at(0));
-
-  // Query new name
-  bool ok=false;
-  QString new_node_name=QInputDialog::getText(this,
-                                              tr("Rename node"),
-                                              tr("Please specify a new name for the node"),
-                                              QLineEdit::Normal,
-                                              node_name,
-                                              &ok);
-  if(ok) {
-
-  }
-*/
-}
-
-void RegistryNodeTree::SlotDeleteNode() {
-  emit(RegistryNodeTree::SignalDeleteNode(this->selectedIndexes().at(0)));
 }

@@ -35,6 +35,15 @@ void RegistryNode::AppendChild(RegistryNode *p_child) {
   this->child_nodes.append(p_child);
 }
 
+void RegistryNode::RemoveChild(uint64_t row) {
+  if(row>=this->child_nodes.count()) return;
+
+  // Remove child from list and delete it (Will also delete all sub-nodes)
+  RegistryNode *p_child;
+  p_child=this->child_nodes.takeAt(row);
+  delete p_child;
+}
+
 RegistryNode* RegistryNode::Child(uint64_t row) {
   return this->child_nodes.value(row);
 }

@@ -33,6 +33,7 @@ class RegistryNode {
     ~RegistryNode();
 
     void AppendChild(RegistryNode *p_child);
+    void RemoveChild(uint64_t row);
     RegistryNode *Child(uint64_t row);
     uint64_t ChildCount() const;
     QVariant Data(int column) const;

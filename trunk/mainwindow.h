@@ -118,6 +118,7 @@ class MainWindow : public QMainWindow {
     void ClearRecentlyOpenedMenu();
     void UpdateRecentlyOpenedMenu();
     void UpdateEnableWriteSupportMenu();
+    bool SaveHiveChanges();
 };
 
 #endif // MAINWINDOW_H
