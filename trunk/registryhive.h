@@ -75,11 +75,23 @@ class RegistryHive : public QObject {
                                     int length=0,
                                     bool little_endian=true);
     static QStringList KeyValueToStringList(QByteArray value, int value_type);
+    static QStringList GetKeyValueTypes();
+    // TODO: Rename KeyTypeToString to KeyValueTypeToString
     static QString KeyTypeToString(int value_type);
     static uint64_t FiletimeToUnixtime(int64_t filetime);
 
     int AddNode(QString parent_node_path, QString node_name);
     bool DeleteNode(QString node_path);
+
+    int AddKey(QString parent_node_path,
+               QString key_name,
+               QString key_type,
+               QByteArray key_value);
+    int UpdateKey(QString parent_node_path,
+                  QString key_name,
+                  QString key_type,
+                  QByteArray key_value);
+    bool DeleteKey(QString parent_node_path, QString key_name);
 
   private:
     QString erro_msg;
@@ -98,6 +110,11 @@ class RegistryHive : public QObject {
                                  int *p_value_type,
                                  size_t *p_value_len);
     bool PathExists(QString path);
+    int StringToKeyValueType(QString value_type);
+    int SetKey(QString &parent_node_path,
+               QString &key_name,
+               QString &key_type,
+               QByteArray &key_value);
 
 };
 

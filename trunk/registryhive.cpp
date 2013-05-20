@@ -576,6 +576,24 @@ QStringList RegistryHive::KeyValueToStringList(QByteArray value, int value_type)
 }
 
 /*
+ * GetKeyValueTypes
+ */
+QStringList RegistryHive::GetKeyValueTypes() {
+  return QStringList()<<"REG_NONE"
+                        <<"REG_SZ"
+                        <<"REG_EXPAND_SZ"
+                        <<"REG_BINARY"
+                        <<"REG_DWORD"
+                        <<"REG_DWORD_BIG_ENDIAN"
+                        <<"REG_LINK"
+                        <<"REG_MULTI_SZ"
+                        <<"REG_RESOURCE_LIST"
+                        <<"REG_FULL_RESOURCE_DESC"
+                        <<"REG_RESOURCE_REQ_LIST"
+                        <<"REG_QWORD";
+}
+
+/*
  * KeyTypeToString
  */
 QString RegistryHive::KeyTypeToString(int value_type) {
@@ -686,6 +704,39 @@ bool RegistryHive::DeleteNode(QString node_path) {
 
   this->has_changes_to_commit=true;
   return true;
+}
+
+/*
+ * AddKey
+ */
+int RegistryHive::AddKey(QString parent_node_path,
+                         QString key_name,
+                         QString key_type,
+                         QByteArray key_value)
+{
+  // TODO
+}
+
+/*
+ * UpdateKey
+ */
+int RegistryHive::UpdateKey(QString parent_node_path,
+                            QString key_name,
+                            QString key_type,
+                            QByteArray key_value)
+{
+  if(!this->is_hive_writable) return 0;
+
+  // TODO
+
+
+}
+
+/*
+ * DeleteKey
+ */
+bool RegistryHive::DeleteKey(QString parent_node_path, QString key_name) {
+  // TODO
 }
 
 /*******************************************************************************
@@ -846,4 +897,66 @@ bool RegistryHive::PathExists(QString path) {
   }
 
   return true;
+}
+
+int RegistryHive::StringToKeyValueType(QString value_type) {
+  if(value_type=="REG_NONE") return hive_t_REG_NONE;
+  if(value_type=="REG_SZ") return hive_t_REG_SZ;
+  if(value_type=="REG_EXPAND_SZ") return hive_t_REG_EXPAND_SZ;
+  if(value_type=="REG_BINARY") return hive_t_REG_BINARY;
+  if(value_type=="REG_DWORD") return hive_t_REG_DWORD;
+  if(value_type=="REG_DWORD_BIG_ENDIAN") return hive_t_REG_DWORD_BIG_ENDIAN;
+  if(value_type=="REG_LINK") return hive_t_REG_LINK;
+  if(value_type=="REG_MULTI_SZ") return hive_t_REG_MULTI_SZ;
+  if(value_type=="REG_RESOURCE_LIST") return hive_t_REG_RESOURCE_LIST;
+  if(value_type=="REG_FULL_RESOURCE_DESC")
+    return hive_t_REG_FULL_RESOURCE_DESCRIPTOR;
+  if(value_type=="REG_RESOURCE_REQ_LIST")
+    return hive_t_REG_RESOURCE_REQUIREMENTS_LIST;
+  if(value_type=="REG_QWORD") return hive_t_REG_QWORD;
+
+  // I think this might be a good default :-)
+  return hive_t_REG_BINARY;
+}
+
+/*
+ * SetKey
+ */
+int RegistryHive::SetKey(QString &parent_node_path,
+                         QString &key_name,
+                         QString &key_type,
+                         QByteArray &key_value)
+{
+  // Get node handle to the node that holds the key to create/update
+  hive_node_h parent_node;
+  if(!this->GetNodeHandle(parent_node_path,&parent_node)) {
+    // TODO: Set error
+    return 0;
+  }
+
+  // Create and populate hive_set_value structure
+  hive_set_value key_val;
+  key_val.key=(char*)malloc((sizeof(char)*key_name.toAscii().count())+1);
+  key_val.value=(char*)malloc(sizeof(char)*key_value.size());
+  if(key_val.key==NULL || key_val.value==NULL) {
+    // TODO: Set error
+    return 0;
+  }
+  strcpy(key_val.key,key_name.toAscii().constData());
+  key_val.t=(hive_type)this->StringToKeyValueType(key_type);
+  key_val.len=key_value.size();
+  strncpy(key_val.value,key_value.constData(),key_value.size());
+
+  // Create/Update key
+  if(hivex_node_set_value(this->p_hive,parent_node,&key_val,0)!=0) {
+    // TODO: Set error
+    return 0;
+  }
+
+  // Free the hive_set_value structure
+  free(key_val.key);
+  free(key_val.value);
+
+  // TODO: Get handle to key and return whatever is ok (Probably QMap<QString,int>)
+  return 0;
 }
