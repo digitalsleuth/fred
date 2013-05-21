@@ -30,6 +30,13 @@ class RegistryHive : public QObject {
   Q_OBJECT
 
   public:
+    typedef struct sRegistryKey {
+      QString name;
+      int type;
+      size_t value_len;
+      QByteArray value;
+    } tsRegistryKey, *ptsRegistryKey;
+
     typedef enum eHiveType {
       eHiveType_UNKNOWN=0,
       eHiveType_SYSTEM,
@@ -83,14 +90,16 @@ class RegistryHive : public QObject {
     int AddNode(QString parent_node_path, QString node_name);
     bool DeleteNode(QString node_path);
 
-    int AddKey(QString parent_node_path,
-               QString key_name,
-               QString key_type,
-               QByteArray key_value);
-    int UpdateKey(QString parent_node_path,
-                  QString key_name,
-                  QString key_type,
-                  QByteArray key_value);
+    bool AddKey(QString parent_node_path,
+                QString key_name,
+                QString key_type,
+                QByteArray key_value,
+                ptsRegistryKey resulting_key);
+    bool UpdateKey(QString parent_node_path,
+                   QString key_name,
+                   QString key_type,
+                   QByteArray key_value,
+                   ptsRegistryKey resulting_key);
     bool DeleteKey(QString parent_node_path, QString key_name);
 
   private:
@@ -111,10 +120,17 @@ class RegistryHive : public QObject {
                                  size_t *p_value_len);
     bool PathExists(QString path);
     int StringToKeyValueType(QString value_type);
-    int SetKey(QString &parent_node_path,
-               QString &key_name,
-               QString &key_type,
-               QByteArray &key_value);
+    bool GetKey(QString &parent_node_path,
+                QString &key_name,
+                ptsRegistryKey *key_value);
+    bool GetKeys(QString &parent_node_path,
+                 QList<ptsRegistryKey> *p_key_values);
+    bool SetKey(QString &parent_node_path,
+                QString &key_name,
+                QString &key_type,
+                QByteArray &key_value,
+                ptsRegistryKey *resulting_key,
+                bool create_key);
 
 };
 
