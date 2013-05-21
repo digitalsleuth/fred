@@ -94,12 +94,12 @@ class RegistryHive : public QObject {
                 QString key_name,
                 QString key_type,
                 QByteArray key_value,
-                ptsRegistryKey resulting_key);
+                ptsRegistryKey *resulting_key);
     bool UpdateKey(QString parent_node_path,
                    QString key_name,
                    QString key_type,
                    QByteArray key_value,
-                   ptsRegistryKey resulting_key);
+                   ptsRegistryKey *resulting_key);
     bool DeleteKey(QString parent_node_path, QString key_name);
 
   private:

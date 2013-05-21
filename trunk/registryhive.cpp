@@ -713,7 +713,7 @@ bool RegistryHive::AddKey(QString parent_node_path,
                           QString key_name,
                           QString key_type,
                           QByteArray key_value,
-                          ptsRegistryKey resulting_key)
+                          ptsRegistryKey *resulting_key)
 {
   if(!this->is_hive_open || !this->is_hive_writable) {
     // TODO: Set error
@@ -735,7 +735,7 @@ bool RegistryHive::UpdateKey(QString parent_node_path,
                              QString key_name,
                              QString key_type,
                              QByteArray key_value,
-                             ptsRegistryKey resulting_key)
+                             ptsRegistryKey *resulting_key)
 {
   if(!this->is_hive_open || !this->is_hive_writable) {
     // TODO: Set error
@@ -784,7 +784,8 @@ bool RegistryHive::DeleteKey(QString parent_node_path, QString key_name) {
   QMapIterator<QString,int> node_keys_it(node_keys);
   while(node_keys_it.hasNext()) {
     node_keys_it.next();
-    node_key_values.append(this->GetKeyValue());
+    // TODO
+   // node_key_values.append(this->GetKeyValue());
   }
 }
 
@@ -989,7 +990,7 @@ bool RegistryHive::GetKey(QString &parent_node_path,
   hive_value_h key=hivex_node_get_value(this->p_hive,
                                         parent_node,
                                         key_name.toAscii().constData());
-  if(new_key==0) {
+  if(key==0) {
     // TODO: Set error
     return false;
   }
@@ -1010,20 +1011,20 @@ bool RegistryHive::GetKey(QString &parent_node_path,
     return false;
   }
   // Store name in ptsRegistryKey struct
-  *key_value->name=QString().fromLocal8Bit(buf);
+  (*key_value)->name=QString().fromLocal8Bit(buf);
   free(buf);
 
   // Get key value
   buf=hivex_value_value(this->p_hive,
                         key,
-                        (hive_type*)&(*key_value->type),
-                        &(*key_value->value_len));
+                        (hive_type*)&((*key_value)->type),
+                        &((*key_value)->value_len));
   if(buf==NULL) {
     // TODO: Set error
     return false;
   }
   // Store value in ptsRegistryKey struct
-  *key_value->value=QByteArray(buf,*key_value->value_len);
+  (*key_value)->value=QByteArray(buf,(*key_value)->value_len);
   free(buf);
 
   return true;
