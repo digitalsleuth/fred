@@ -82,6 +82,9 @@ class MainWindow : public QMainWindow {
     void SlotRecentlyOpenedFileClicked(bool checked);
     void SlotAddNode(QModelIndex index);
     void SlotDeleteNode(QModelIndex index);
+    void SlotAddKey();
+    void SlotEditKey(QModelIndex index);
+    void SlotDeleteKey(QModelIndex index);
 
   private:
     Ui::MainWindow *ui;

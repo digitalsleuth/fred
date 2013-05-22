@@ -39,7 +39,7 @@ class RegistryKeyTable : public QTableView {
 
   Q_SIGNALS:
     void CurrentItemChanged(QModelIndex current);
-    void SignalAddKey(QModelIndex root_node);
+    void SignalAddKey();
     void SignalEditKey(QModelIndex node);
     void SignalDeleteKey(QModelIndex node);
 

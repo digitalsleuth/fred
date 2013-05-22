@@ -644,6 +644,29 @@ QString RegistryHive::KeyTypeToString(int value_type) {
 }
 
 /*
+ * StringToKeyValueType
+ */
+int RegistryHive::StringToKeyValueType(QString value_type) {
+  if(value_type=="REG_NONE") return hive_t_REG_NONE;
+  if(value_type=="REG_SZ") return hive_t_REG_SZ;
+  if(value_type=="REG_EXPAND_SZ") return hive_t_REG_EXPAND_SZ;
+  if(value_type=="REG_BINARY") return hive_t_REG_BINARY;
+  if(value_type=="REG_DWORD") return hive_t_REG_DWORD;
+  if(value_type=="REG_DWORD_BIG_ENDIAN") return hive_t_REG_DWORD_BIG_ENDIAN;
+  if(value_type=="REG_LINK") return hive_t_REG_LINK;
+  if(value_type=="REG_MULTI_SZ") return hive_t_REG_MULTI_SZ;
+  if(value_type=="REG_RESOURCE_LIST") return hive_t_REG_RESOURCE_LIST;
+  if(value_type=="REG_FULL_RESOURCE_DESC")
+    return hive_t_REG_FULL_RESOURCE_DESCRIPTOR;
+  if(value_type=="REG_RESOURCE_REQ_LIST")
+    return hive_t_REG_RESOURCE_REQUIREMENTS_LIST;
+  if(value_type=="REG_QWORD") return hive_t_REG_QWORD;
+
+  // I think this might be a good default :-)
+  return hive_t_REG_BINARY;
+}
+
+/*
  * FiletimeToUnixtime
  */
 uint64_t RegistryHive::FiletimeToUnixtime(int64_t filetime) {
@@ -947,29 +970,6 @@ bool RegistryHive::PathExists(QString path) {
   }
 
   return true;
-}
-
-/*
- * StringToKeyValueType
- */
-int RegistryHive::StringToKeyValueType(QString value_type) {
-  if(value_type=="REG_NONE") return hive_t_REG_NONE;
-  if(value_type=="REG_SZ") return hive_t_REG_SZ;
-  if(value_type=="REG_EXPAND_SZ") return hive_t_REG_EXPAND_SZ;
-  if(value_type=="REG_BINARY") return hive_t_REG_BINARY;
-  if(value_type=="REG_DWORD") return hive_t_REG_DWORD;
-  if(value_type=="REG_DWORD_BIG_ENDIAN") return hive_t_REG_DWORD_BIG_ENDIAN;
-  if(value_type=="REG_LINK") return hive_t_REG_LINK;
-  if(value_type=="REG_MULTI_SZ") return hive_t_REG_MULTI_SZ;
-  if(value_type=="REG_RESOURCE_LIST") return hive_t_REG_RESOURCE_LIST;
-  if(value_type=="REG_FULL_RESOURCE_DESC")
-    return hive_t_REG_FULL_RESOURCE_DESCRIPTOR;
-  if(value_type=="REG_RESOURCE_REQ_LIST")
-    return hive_t_REG_RESOURCE_REQUIREMENTS_LIST;
-  if(value_type=="REG_QWORD") return hive_t_REG_QWORD;
-
-  // I think this might be a good default :-)
-  return hive_t_REG_BINARY;
 }
 
 /*

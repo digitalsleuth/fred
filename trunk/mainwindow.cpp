@@ -45,6 +45,7 @@
 #include "dlgreportviewer.h"
 #include "dlgsearch.h"
 #include "dlgpreferences.h"
+#include "dlgaddkey.h"
 
 #include "compileinfo.h"
 
@@ -181,6 +182,18 @@ MainWindow::MainWindow(ArgParser *p_arg_parser) :
                 SIGNAL(SignalDeleteNode(QModelIndex)),
                 this,
                 SLOT(SlotDeleteNode(QModelIndex)));
+  this->connect(this->p_key_table,
+                SIGNAL(SignalAddKey()),
+                this,
+                SLOT(SlotAddKey()));
+  this->connect(this->p_key_table,
+                SIGNAL(SignalEditKey(QModelIndex)),
+                this,
+                SLOT(SlotEditKey(QModelIndex)));
+  this->connect(this->p_key_table,
+                SIGNAL(SignalDeleteKey(QModelIndex)),
+                this,
+                SLOT(SlotDeleteKey(QModelIndex)));
 
   // Add central widget
   this->setCentralWidget(this->p_horizontal_splitter);
@@ -752,6 +765,68 @@ void MainWindow::SlotDeleteNode(QModelIndex index) {
     // And finally update key table
     this->SlotNodeTreeClicked(next_node_index);
   }
+}
+
+void MainWindow::SlotAddKey() {
+  DlgAddKey dlg_add_key(this);
+  if(dlg_add_key.exec()==QDialog::Accepted) {
+    // Get selected parent node
+    QModelIndex parent_node=this->p_node_tree->currentIndex();
+    parent_node=this->p_reg_node_tree_model_proxy->mapToSource(parent_node);
+    QString parent_node_path=this->p_reg_node_tree_model->GetNodePath(parent_node);
+
+    // Add key
+    RegistryHive::ptsRegistryKey new_key;
+    if(!this->p_hive->AddKey(parent_node_path,
+                             dlg_add_key.KeyName(),
+                             dlg_add_key.KeyType(),
+                             dlg_add_key.KeyValue(),
+                             &new_key))
+    {
+      // TODO: Get error
+      QMessageBox::critical(this,
+                            tr("Error"),
+                            tr("Unable to add key!"));
+      return;
+    }
+
+    // TODO: Add key to model
+    this->SlotNodeTreeClicked(
+      this->p_reg_node_tree_model_proxy->mapFromSource(parent_node));
+  }
+}
+
+void MainWindow::SlotEditKey(QModelIndex index) {
+  if(!index.isValid()) return;
+
+  QString key_name=
+    this->p_reg_key_table_model->data(this->p_reg_key_table_model->
+                                        index(index.row(),
+                                              RegistryKeyTableModel::
+                                                ColumnContent_KeyName),
+                                      Qt::DisplayRole).toString();
+  QString key_value_type=
+    this->p_reg_key_table_model->data(this->p_reg_key_table_model->
+                                        index(index.row(),
+                                              RegistryKeyTableModel::
+                                                ColumnContent_KeyType),
+                                      Qt::DisplayRole).toString();
+  QByteArray key_value=
+    this->p_reg_key_table_model->data(this->p_reg_key_table_model->
+                                        index(index.row(),
+                                              RegistryKeyTableModel::
+                                                ColumnContent_KeyValue),
+                                      RegistryKeyTableModel::
+                                        AdditionalRoles_GetRawData).toByteArray();
+
+  DlgAddKey dlg_add_key(this,key_name,key_value_type,key_value);
+  if(dlg_add_key.exec()==QDialog::Accepted) {
+    // TODO
+  }
+}
+
+void MainWindow::SlotDeleteKey(QModelIndex index) {
+  // TODO
 }
 
 /*******************************************************************************

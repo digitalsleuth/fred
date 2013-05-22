@@ -179,8 +179,7 @@ void RegistryKeyTable::currentChanged(const QModelIndex &current,
  ******************************************************************************/
 
 void RegistryKeyTable::SlotAddKey() {
-  // TODO: We need to emit the ModelIndex of the parent node!!
-  //emit(this->SignalAddKey());
+  emit(this->SignalAddKey());
 }
 
 void RegistryKeyTable::SlotEditKey() {

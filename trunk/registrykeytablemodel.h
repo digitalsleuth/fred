@@ -30,6 +30,12 @@ class RegistryKeyTableModel : public QAbstractTableModel {
   Q_OBJECT
 
   public:
+    enum ColumnContent {
+      ColumnContent_KeyName=0,
+      ColumnContent_KeyType,
+      ColumnContent_KeyValue
+    };
+
     enum AdditionalRoles {
       AdditionalRoles_GetRawData=Qt::UserRole
     };
@@ -53,12 +59,6 @@ class RegistryKeyTableModel : public QAbstractTableModel {
     int GetKeyRow(QString key_name) const;
 
   private:
-    enum ColumnContent {
-      ColumnContent_KeyName=0,
-      ColumnContent_KeyType,
-      ColumnContent_KeyValue
-    };
-
     RegistryKey *p_keys;
 
     void SetupModelData(RegistryHive *p_hive, QString &node_path);

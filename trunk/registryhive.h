@@ -85,6 +85,7 @@ class RegistryHive : public QObject {
     static QStringList GetKeyValueTypes();
     // TODO: Rename KeyTypeToString to KeyValueTypeToString
     static QString KeyTypeToString(int value_type);
+    static int StringToKeyValueType(QString value_type);
     static uint64_t FiletimeToUnixtime(int64_t filetime);
 
     int AddNode(QString parent_node_path, QString node_name);
@@ -119,7 +120,6 @@ class RegistryHive : public QObject {
                                  int *p_value_type,
                                  size_t *p_value_len);
     bool PathExists(QString path);
-    int StringToKeyValueType(QString value_type);
     bool GetKey(QString &parent_node_path,
                 QString &key_name,
                 ptsRegistryKey *key_value);
