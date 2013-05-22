@@ -93,9 +93,8 @@ class RegistryHive : public QObject {
 
     bool AddKey(QString parent_node_path,
                 QString key_name,
-                QString key_type,
-                QByteArray key_value,
-                ptsRegistryKey *resulting_key);
+                QString key_value_type,
+                QByteArray key_value);
     bool UpdateKey(QString parent_node_path,
                    QString key_name,
                    QString key_type,
