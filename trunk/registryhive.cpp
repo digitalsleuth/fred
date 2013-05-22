@@ -679,6 +679,8 @@ uint64_t RegistryHive::FiletimeToUnixtime(int64_t filetime) {
 int RegistryHive::AddNode(QString parent_node_path, QString node_name) {
   if(!this->is_hive_writable) return 0;
 
+  // TODO: node_name can not include a "\"
+
   // Get node handle to the parent where the new node should be created
   hive_node_h parent_node;
   if(!this->GetNodeHandle(parent_node_path,&parent_node)) {
@@ -734,9 +736,8 @@ bool RegistryHive::DeleteNode(QString node_path) {
  */
 bool RegistryHive::AddKey(QString parent_node_path,
                           QString key_name,
-                          QString key_type,
-                          QByteArray key_value,
-                          ptsRegistryKey *resulting_key)
+                          QString key_value_type,
+                          QByteArray key_value)
 {
   if(!this->is_hive_open || !this->is_hive_writable) {
     // TODO: Set error
@@ -745,9 +746,8 @@ bool RegistryHive::AddKey(QString parent_node_path,
 
   return this->SetKey(parent_node_path,
                       key_name,
-                      key_type,
+                      key_value_type,
                       key_value,
-                      resulting_key,
                       true);
 }
 
@@ -1077,6 +1077,10 @@ bool RegistryHive::SetKey(QString &parent_node_path,
   }
 
   // Create and populate hive_set_value structure
+  // TODO: From the hivex docs
+  // Note that the value field is just treated as a list of bytes, and is stored
+  // directly in the hive. The caller has to ensure correct encoding and
+  // endianness, for example converting dwords to little endian.
   hive_set_value key_val;
   key_val.key=(char*)malloc((sizeof(char)*key_name.toAscii().count())+1);
   key_val.value=(char*)malloc(sizeof(char)*key_value.size());
