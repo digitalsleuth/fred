@@ -66,6 +66,7 @@ class RegistryHive : public QObject {
     QMap<QString,int> GetNodes(int parent_node=0);
     QMap<QString,int> GetKeys(QString path="\\");
     QMap<QString,int> GetKeys(int parent_node=0);
+    bool GetKeyName(int hive_key, QString &key_name);
     QByteArray GetKeyValue(QString path,
                            QString key,
                            int *p_value_type,
@@ -91,15 +92,14 @@ class RegistryHive : public QObject {
     int AddNode(QString parent_node_path, QString node_name);
     bool DeleteNode(QString node_path);
 
-    bool AddKey(QString parent_node_path,
-                QString key_name,
-                QString key_value_type,
-                QByteArray key_value);
-    bool UpdateKey(QString parent_node_path,
-                   QString key_name,
-                   QString key_type,
-                   QByteArray key_value,
-                   ptsRegistryKey *resulting_key);
+    int AddKey(QString parent_node_path,
+               QString key_name,
+               QString key_value_type,
+               QByteArray key_value);
+    int UpdateKey(QString parent_node_path,
+                  QString key_name,
+                  QString key_value_type,
+                  QByteArray key_value);
     bool DeleteKey(QString parent_node_path, QString key_name);
 
   private:
@@ -113,6 +113,9 @@ class RegistryHive : public QObject {
 
     void SetError(QString msg);
     bool GetNodeHandle(QString &path, hive_node_h *p_node);
+    bool GetKeyHandle(QString &parent_node_path,
+                      QString &key_name,
+                      hive_value_h *p_key);
     QMap<QString,int> GetNodesHelper(hive_node_h parent_node);
     QMap<QString,int> GetKeysHelper(hive_node_h parent_node);
     QByteArray GetKeyValueHelper(hive_value_h hive_key,
@@ -124,12 +127,11 @@ class RegistryHive : public QObject {
                 ptsRegistryKey *key_value);
     bool GetKeys(QString &parent_node_path,
                  QList<ptsRegistryKey> *p_key_values);
-    bool SetKey(QString &parent_node_path,
-                QString &key_name,
-                QString &key_type,
-                QByteArray &key_value,
-                ptsRegistryKey *resulting_key,
-                bool create_key);
+    int SetKey(QString &parent_node_path,
+               QString &key_name,
+               QString &key_value_type,
+               QByteArray &key_value,
+               bool create_key);
 
 };
 

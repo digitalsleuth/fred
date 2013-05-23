@@ -20,6 +20,10 @@
 
 #include "registrykeytablemodel.h"
 
+/*******************************************************************************
+ * Public
+ ******************************************************************************/
+
 RegistryKeyTableModel::RegistryKeyTableModel(RegistryHive *p_hive,
                                              QString node_path,
                                              QObject *p_parent)
@@ -153,6 +157,92 @@ int RegistryKeyTableModel::GetKeyRow(QString key_name) const {
   // When key isn't found, return the first row
   return 0;
 }
+
+QModelIndex RegistryKeyTableModel::AddKey(RegistryHive *p_hive,
+                                          int new_key_id)
+{
+  RegistryKey *p_key;
+  QString key_name;
+  QByteArray key_value;
+  int key_value_type;
+  size_t key_value_len;
+
+  // Tell users of this model that we are going to add a row
+  emit(RegistryKeyTableModel::beginInsertRows(QModelIndex(),
+                                              this->p_keys->RowCount(),
+                                              this->p_keys->RowCount()));
+
+  // Get key name
+  if(!p_hive->GetKeyName(new_key_id,key_name)) {
+    return QModelIndex();
+  }
+  // Get key value, value type and value length
+  key_value=p_hive->GetKeyValue(new_key_id,&key_value_type,&key_value_len);
+  if(p_hive->GetErrorMsg()!="") {
+    return QModelIndex();
+  }
+  // Create new RegistryKey object and add it to our internal list
+  p_key=new RegistryKey(QList<QVariant>()<<
+                          QString(key_name.length() ? key_name : "(default)")<<
+                          QVariant(key_value_type)<<
+                          key_value);
+  this->p_keys->Append(p_key);
+
+  // Tell users of this model we have finished adding a row
+  emit(RegistryKeyTableModel::endInsertRows());
+
+  // Return an index to the new row
+  return this->index(this->p_keys->RowCount()-1,0);
+}
+
+QModelIndex RegistryKeyTableModel::UpdateKey(RegistryHive *p_hive,
+                                             int new_key_id)
+{
+  QString key_name;
+  QByteArray key_value;
+  int key_value_type;
+  size_t key_value_len;
+  int key_row=-1;
+
+  // Get key name
+  if(!p_hive->GetKeyName(new_key_id,key_name)) {
+    return QModelIndex();
+  }
+  // Get key value, value type and value length
+  key_value=p_hive->GetKeyValue(new_key_id,&key_value_type,&key_value_len);
+  if(p_hive->GetErrorMsg()!="") {
+    return QModelIndex();
+  }
+
+  // Find row containig the key to update
+  for(int i=0;i<this->p_keys->RowCount();i++) {
+    if(this->p_keys->Key(i)->Data(0).toString().toLower()==key_name.toLower()) {
+      key_row=i;
+    }
+  }
+  if(key_row==-1) return QModelIndex();
+
+  // TODO: Update values
+  this->p_keys->Key(key_row)->SetData(QList<QVariant>()<<
+                                        QString(key_name.length() ?
+                                                  key_name : "(default)")<<
+                                        QVariant(key_value_type)<<
+                                        key_value);
+
+  // Tell users of this model that data has changed
+  emit(RegistryKeyTableModel::dataChanged(this->index(key_row,0),
+                                          this->index(key_row,0)));
+
+  return this->index(key_row,0);
+}
+
+QModelIndex RegistryKeyTableModel::RemoveKey(const QModelIndex &index) {
+  // TODO
+}
+
+/*******************************************************************************
+ * Private
+ ******************************************************************************/
 
 void RegistryKeyTableModel::SetupModelData(RegistryHive *p_hive,
                                            QString &node_path)

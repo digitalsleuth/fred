@@ -776,13 +776,11 @@ void MainWindow::SlotAddKey() {
     QString parent_node_path=this->p_reg_node_tree_model->GetNodePath(parent_node);
 
     // Add key
-    RegistryHive::ptsRegistryKey new_key;
-    if(!this->p_hive->AddKey(parent_node_path,
-                             dlg_add_key.KeyName(),
-                             dlg_add_key.KeyType(),
-                             dlg_add_key.KeyValue(),
-                             &new_key))
-    {
+    int new_key=this->p_hive->AddKey(parent_node_path,
+                                     dlg_add_key.KeyName(),
+                                     dlg_add_key.KeyType(),
+                                     dlg_add_key.KeyValue());
+    if(new_key==0) {
       // TODO: Get error
       QMessageBox::critical(this,
                             tr("Error"),
@@ -790,15 +788,21 @@ void MainWindow::SlotAddKey() {
       return;
     }
 
-    // TODO: Add key to model
-    this->SlotNodeTreeClicked(
-      this->p_reg_node_tree_model_proxy->mapFromSource(parent_node));
+    // Add new key to the key table model
+    QModelIndex new_key_index=
+      this->p_reg_key_table_model->AddKey(this->p_hive,new_key);
+    this->p_key_table->clearSelection();
+    this->p_key_table->scrollTo(new_key_index,
+                                QAbstractItemView::PositionAtCenter);
+    this->p_key_table->selectRow(new_key_index.row());
+    this->SlotKeyTableClicked(new_key_index);
   }
 }
 
 void MainWindow::SlotEditKey(QModelIndex index) {
   if(!index.isValid()) return;
 
+  // Get current values
   QString key_name=
     this->p_reg_key_table_model->data(this->p_reg_key_table_model->
                                         index(index.row(),
@@ -819,9 +823,35 @@ void MainWindow::SlotEditKey(QModelIndex index) {
                                       RegistryKeyTableModel::
                                         AdditionalRoles_GetRawData).toByteArray();
 
-  DlgAddKey dlg_add_key(this,key_name,key_value_type,key_value);
-  if(dlg_add_key.exec()==QDialog::Accepted) {
-    // TODO
+  // Exec update dialog
+  DlgAddKey dlg_update_key(this,key_name,key_value_type,key_value);
+  if(dlg_update_key.exec()==QDialog::Accepted) {
+    // Get selected parent node
+    QModelIndex parent_node=this->p_node_tree->currentIndex();
+    parent_node=this->p_reg_node_tree_model_proxy->mapToSource(parent_node);
+    QString parent_node_path=this->p_reg_node_tree_model->GetNodePath(parent_node);
+
+    // Update key
+    int new_key=this->p_hive->UpdateKey(parent_node_path,
+                                        dlg_update_key.KeyName(),
+                                        dlg_update_key.KeyType(),
+                                        dlg_update_key.KeyValue());
+    if(new_key==0) {
+      // TODO: Get error
+      QMessageBox::critical(this,
+                            tr("Error"),
+                            tr("Unable to update key!"));
+      return;
+    }
+
+    // Update key in key table model
+    QModelIndex new_key_index=
+      this->p_reg_key_table_model->UpdateKey(this->p_hive,new_key);
+    this->p_key_table->clearSelection();
+    this->p_key_table->scrollTo(new_key_index,
+                                QAbstractItemView::PositionAtCenter);
+    this->p_key_table->selectRow(new_key_index.row());
+    this->SlotKeyTableClicked(new_key_index);
   }
 }
 

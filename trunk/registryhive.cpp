@@ -286,6 +286,29 @@ QMap<QString,int> RegistryHive::GetKeys(int parent_node) {
 }
 
 /*
+ * GetKeyName
+ */
+bool RegistryHive::GetKeyName(int hive_key, QString &key_name) {
+  char *buf;
+
+  if(!this->is_hive_open) {
+    this->SetError(tr("Need to operate on an open hive!"));
+    return false;
+  }
+
+  buf=hivex_value_key(this->p_hive,(hive_value_h)hive_key);
+  if(buf==NULL) {
+    this->SetError(tr("Unable to get key name for key '%1'").arg(hive_key));
+    return false;
+  }
+
+  key_name=QString(buf);
+  free(buf);
+
+  return true;
+}
+
+/*
  * GetKeyValue
  */
 QByteArray RegistryHive::GetKeyValue(QString path,
@@ -679,19 +702,27 @@ uint64_t RegistryHive::FiletimeToUnixtime(int64_t filetime) {
 int RegistryHive::AddNode(QString parent_node_path, QString node_name) {
   if(!this->is_hive_writable) return 0;
 
-  // TODO: node_name can not include a "\"
+  // Make sure name does not contain a backslash char
+  if(node_name.contains('\\')) {
+    this->SetError(tr("Unable to add node with name '%1'. "
+                        "Names can not include a backslash character.")
+                     .arg(node_name));
+    return 0;
+  }
 
   // Get node handle to the parent where the new node should be created
   hive_node_h parent_node;
   if(!this->GetNodeHandle(parent_node_path,&parent_node)) {
-    // TODO: Set error
+    this->SetError(tr("Unable to get node handle for '%1'!")
+                     .arg(parent_node_path));
     return 0;
   }
 
   // Make sure there is no other node with same name
   QMap<QString,int> child_nodes=this->GetNodes(parent_node);
   if(child_nodes.contains(node_name.toAscii())) {
-    // TODO: Set error
+    this->SetError(tr("The node '%1\\%2' already exists!")
+                     .arg(parent_node_path,node_name));
     return 0;
   }
 
@@ -700,7 +731,8 @@ int RegistryHive::AddNode(QString parent_node_path, QString node_name) {
                                             parent_node,
                                             node_name.toAscii().constData());
   if(new_node==0) {
-    // TODO: Set error
+    this->SetError(tr("Unable to create new node '%1\\%2'!")
+                     .arg(parent_node_path,node_name));
     return 0;
   }
 
@@ -717,13 +749,15 @@ bool RegistryHive::DeleteNode(QString node_path) {
   // Get node handle to the node that should be deleted
   hive_node_h node;
   if(!this->GetNodeHandle(node_path,&node)) {
-    // TODO: Set error
+    this->SetError(tr("Unable to get node handle for '%1'!")
+                     .arg(node_path));
     return false;
   }
 
   // Delete node
   if(hivex_node_delete_child(this->p_hive,node)==-1) {
-    // TODO: Set error
+    this->SetError(tr("Unable to delete node '%1'!")
+                     .arg(node_path));
     return false;
   }
 
@@ -734,7 +768,7 @@ bool RegistryHive::DeleteNode(QString node_path) {
 /*
  * AddKey
  */
-bool RegistryHive::AddKey(QString parent_node_path,
+int RegistryHive::AddKey(QString parent_node_path,
                           QString key_name,
                           QString key_value_type,
                           QByteArray key_value)
@@ -754,11 +788,10 @@ bool RegistryHive::AddKey(QString parent_node_path,
 /*
  * UpdateKey
  */
-bool RegistryHive::UpdateKey(QString parent_node_path,
+int RegistryHive::UpdateKey(QString parent_node_path,
                              QString key_name,
-                             QString key_type,
-                             QByteArray key_value,
-                             ptsRegistryKey *resulting_key)
+                             QString key_value_type,
+                             QByteArray key_value)
 {
   if(!this->is_hive_open || !this->is_hive_writable) {
     // TODO: Set error
@@ -767,9 +800,8 @@ bool RegistryHive::UpdateKey(QString parent_node_path,
 
   return this->SetKey(parent_node_path,
                       key_name,
-                      key_type,
+                      key_value_type,
                       key_value,
-                      resulting_key,
                       false);
 }
 
@@ -854,6 +886,32 @@ bool RegistryHive::GetNodeHandle(QString &path, hive_node_h *p_node) {
         return false;
       }
     }
+  }
+
+  return true;
+}
+
+/*
+ * GetKeyHandle
+ */
+bool RegistryHive::GetKeyHandle(QString &parent_node_path,
+                                QString &key_name,
+                                hive_value_h *p_key)
+{
+  // Get handle to parent node
+  hive_node_h parent_node;
+  if(!this->GetNodeHandle(parent_node_path,&parent_node)) {
+    // TODO: Set error
+    return false;
+  }
+
+  // Get handle to key
+  *p_key=hivex_node_get_value(this->p_hive,
+                              parent_node,
+                              key_name.toAscii().constData());
+  if(*p_key==0) {
+    // TODO: Set error
+    return false;
   }
 
   return true;
@@ -1051,18 +1109,17 @@ bool RegistryHive::GetKeys(QString &parent_node_path,
 /*
  * SetKey
  */
-bool RegistryHive::SetKey(QString &parent_node_path,
-                          QString &key_name,
-                          QString &key_type,
-                          QByteArray &key_value,
-                          ptsRegistryKey *resulting_key,
-                          bool create_key)
+int RegistryHive::SetKey(QString &parent_node_path,
+                         QString &key_name,
+                         QString &key_value_type,
+                         QByteArray &key_value,
+                         bool create_key)
 {
   // Get node handle to the node that holds the key to create/update
   hive_node_h parent_node;
   if(!this->GetNodeHandle(parent_node_path,&parent_node)) {
     // TODO: Set error
-    return false;
+    return 0;
   }
 
   // Make sure key exists if we should update it
@@ -1072,7 +1129,7 @@ bool RegistryHive::SetKey(QString &parent_node_path,
                                                key_name.toAscii().constData());
     if(temp_key==0) {
       // TODO: Set error
-      return false;
+      return 0;
     }
   }
 
@@ -1086,24 +1143,31 @@ bool RegistryHive::SetKey(QString &parent_node_path,
   key_val.value=(char*)malloc(sizeof(char)*key_value.size());
   if(key_val.key==NULL || key_val.value==NULL) {
     // TODO: Set error
-    return false;
+    return 0;
   }
   strcpy(key_val.key,key_name.toAscii().constData());
-  key_val.t=(hive_type)this->StringToKeyValueType(key_type);
+  key_val.t=(hive_type)this->StringToKeyValueType(key_value_type);
   key_val.len=key_value.size();
   strncpy(key_val.value,key_value.constData(),key_value.size());
 
   // Create/Update key
   if(hivex_node_set_value(this->p_hive,parent_node,&key_val,0)!=0) {
     // TODO: Set error
-    return false;
+    return 0;
   }
 
   // Free the hive_set_value structure
   free(key_val.key);
   free(key_val.value);
 
-  // To make sure everything worked, the key is now requeried from hive and then
-  // returned in the ptsRegistryKey struct
-  return this->GetKey(parent_node_path,key_name,resulting_key);
+  // To make sure everything worked, a hadle to the new key is now requeried
+  // from hive and then returned
+  hive_value_h key;
+  if(!this->GetKeyHandle(parent_node_path,key_name,&key)) {
+    // TODO: Set error
+    return 0;
+  }
+
+  this->has_changes_to_commit=true;
+  return key;
 }

@@ -57,6 +57,9 @@ class RegistryKeyTableModel : public QAbstractTableModel {
     int columnCount(const QModelIndex &parent=QModelIndex()) const;
 
     int GetKeyRow(QString key_name) const;
+    QModelIndex AddKey(RegistryHive *p_hive, int new_key_id);
+    QModelIndex UpdateKey(RegistryHive *p_hive, int new_key_id);
+    QModelIndex RemoveKey(const QModelIndex &index);
 
   private:
     RegistryKey *p_keys;

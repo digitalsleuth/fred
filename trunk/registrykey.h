@@ -32,6 +32,7 @@ class RegistryKey {
     ~RegistryKey();
 
     void Append(RegistryKey *p_key);
+    void SetData(const QList<QVariant> &data);
     RegistryKey *Key(uint64_t row);
     uint64_t RowCount();
     QVariant Data(int column) const;

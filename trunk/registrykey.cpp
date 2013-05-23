@@ -32,6 +32,10 @@ void RegistryKey::Append(RegistryKey *p_key) {
   this->keys.append(p_key);
 }
 
+void RegistryKey::SetData(const QList<QVariant> &data) {
+  this->key_data=data;
+}
+
 RegistryKey* RegistryKey::Key(uint64_t row) {
   return this->keys.value(row);
 }
