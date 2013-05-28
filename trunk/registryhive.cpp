@@ -619,7 +619,7 @@ QStringList RegistryHive::GetKeyValueTypes() {
 /*
  * KeyTypeToString
  */
-QString RegistryHive::KeyTypeToString(int value_type) {
+QString RegistryHive::KeyValueTypeToString(int value_type) {
   QString ret="";
 
   switch(value_type) {

@@ -59,7 +59,7 @@ QVariant RegistryKeyTableModel::data(const QModelIndex &index, int role) const {
         case RegistryKeyTableModel::ColumnContent_KeyType: {
           int value_type=p_key->Data(index.column()).toInt(&ok);
           if(!ok) return QVariant();
-          return RegistryHive::KeyTypeToString(value_type);
+          return RegistryHive::KeyValueTypeToString(value_type);
           break;
         }
         case RegistryKeyTableModel::ColumnContent_KeyValue: {

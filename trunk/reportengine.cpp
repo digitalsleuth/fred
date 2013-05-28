@@ -470,7 +470,7 @@ QScriptValue ReportEngine::RegistryKeyTypeToString(QScriptContext *context,
   // This function needs one argument, key type
   if(context->argumentCount()!=1) return engine->undefinedValue();
 
-  ret=RegistryHive::KeyTypeToString(context->argument(0).toInt32());
+  ret=RegistryHive::KeyValueTypeToString(context->argument(0).toInt32());
 
   return engine->newVariant(ret);
 }
