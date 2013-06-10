@@ -21,6 +21,8 @@
 #ifndef DLGKEYDETAILS_H
 #define DLGKEYDETAILS_H
 
+// TODO: Is this dialog still needed in any ways????
+
 #include <QDialog>
 #include <QByteArray>
 

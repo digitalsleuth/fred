@@ -17,6 +17,9 @@
    <iconset resource="fred.qrc">
     <normaloff>:/icons/resources/fred.png</normaloff>:/icons/resources/fred.png</iconset>
   </property>
+  <property name="sizeGripEnabled">
+   <bool>true</bool>
+  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QTabWidget" name="tabWidget">
