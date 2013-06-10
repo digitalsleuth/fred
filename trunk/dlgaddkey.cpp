@@ -127,11 +127,14 @@ void DlgAddKey::on_CmbKeyType_currentIndexChanged(const QString &arg1) {
   {
     this->ui->gridLayout->addWidget(this->p_binary_widget,2,1);
     this->p_current_widget=this->p_binary_widget;
-    this->p_current_widget->setVisible(true);
   }
 
-  if(arg1!="REG_NONE") this->p_current_widget->setVisible(true);
-
+  if(arg1!="REG_NONE") {
+    this->p_current_widget->setVisible(true);
+    this->ui->LblKeyValue->setVisible(true);
+  } else {
+    this->ui->LblKeyValue->setVisible(false);
+  }
 }
 
 void DlgAddKey::CreateWidgets() {
