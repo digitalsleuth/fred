@@ -392,27 +392,27 @@ void MainWindow::on_ActionSearch_triggered() {
  */
 void MainWindow::on_ActionEnableWriteSupport_triggered() {
   // There might be unsaved changes, give the user the chance to save them
-  // TODO: If saving failed, give the user the chance to cancel switching
-  this->SaveHiveChanges();
+  if(!this->SaveHiveChanges()) return;
 
   // Reopen hive
   // Reopen has read_only as parameter. Thus we need to pass
   // !this->is_hive_writable which is the case when passing
   // this->is_hive_writable as long as we do it before actually changing our
   // internal state.
-  if(this->p_hive->Reopen(this->is_hive_writable)) {
-    // Switch internal state
-    this->is_hive_writable=!this->is_hive_writable;
-    this->UpdateEnableWriteSupportMenu();
-    this->p_node_tree->SetWritable(this->is_hive_writable);
-    this->p_key_table->SetWritable(this->is_hive_writable);
-    this->UpdateWindowTitle(this->p_hive->Filename());
-  } else {
+  if(!this->p_hive->Reopen(this->is_hive_writable)) {
     // TODO: get error message from RegistryHive
     QMessageBox::critical(this,
                           tr("Error"),
                           tr("Unable to switch write-support!"));
+    return;
   }
+
+  // Switch internal state
+  this->is_hive_writable=!this->is_hive_writable;
+  this->UpdateEnableWriteSupportMenu();
+  this->p_node_tree->SetWritable(this->is_hive_writable);
+  this->p_key_table->SetWritable(this->is_hive_writable);
+  this->UpdateWindowTitle(this->p_hive->Filename());
 }
 
 /*
@@ -1031,17 +1031,28 @@ bool MainWindow::SaveHiveChanges() {
   if(!this->p_hive->HasChangesToCommit()) return true;
 
   // There are unsaved changes, ask user if we should commit them
-  if(QMessageBox::warning(this,
-                          tr("Save changes"),
-                          tr("If you don't save your changes now, they will be lost. Do you want to save them?"),
-                          QMessageBox::Yes,
-                          QMessageBox::No)==QMessageBox::Yes)
+  switch(QMessageBox::information(this,
+                                  tr("Hive contains unsaved data"),
+                                  tr("Do you want to save them now?"),
+                                  QMessageBox::Yes,
+                                  QMessageBox::No,
+                                  QMessageBox::Cancel))
   {
-    if(!this->p_hive->CommitChanges()) {
-      // TODO: Get error message
-      QMessageBox::critical(this,
-                            tr("Saving changes"),
-                            tr("Unable to save changes!"));
+    case QMessageBox::Yes: {
+      if(!this->p_hive->CommitChanges()) {
+        // TODO: Get error message
+        QMessageBox::critical(this,
+                              tr("Saving changes"),
+                              tr("Unable to save changes!"));
+        return false;
+      }
+      break;
+    }
+    case QMessageBox::No: {
+      // TODO: Discard any changes if we are changing to read-only!
+      break;
+    }
+    default: {
       return false;
     }
   }
