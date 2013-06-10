@@ -55,6 +55,8 @@ ReportEngine::ReportEngine(RegistryHive *p_hive) : QScriptEngine() {
   this->globalObject().setProperty("ByteArray",
                                    this->p_type_byte_array->constructor());
 
+  // TODO: Is it really necessary to explicitly export these functions
+  // here ??????????
   // Add our functions
   // print
   QScriptValue func_print=this->newFunction(this->Print);

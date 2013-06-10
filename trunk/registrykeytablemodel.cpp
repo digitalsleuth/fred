@@ -266,7 +266,7 @@ void RegistryKeyTableModel::SetupModelData(RegistryHive *p_hive,
                                   &key_value_len);
     if(p_hive->GetErrorMsg()!="") continue;
     p_key=new RegistryKey(QList<QVariant>()<<
-                            QString(i.key().length() ? i.key() : "(default)")<<
+                            QString(i.key().length() ? i.key() : tr("(default)"))<<
                             QVariant(key_value_type)<<
                             key_value);
     this->p_keys->Append(p_key);
