@@ -395,12 +395,24 @@ void MainWindow::on_ActionEnableWriteSupport_triggered() {
   // TODO: If saving failed, give the user the chance to cancel switching
   this->SaveHiveChanges();
 
-  // Switch write support
-  this->is_hive_writable=!this->is_hive_writable;
-  this->UpdateEnableWriteSupportMenu();
-  this->p_node_tree->SetWritable(this->is_hive_writable);
-  this->p_key_table->SetWritable(this->is_hive_writable);
-  this->UpdateWindowTitle(this->p_hive->Filename());
+  // Reopen hive
+  // Reopen has read_only as parameter. Thus we need to pass
+  // !this->is_hive_writable which is the case when passing
+  // this->is_hive_writable as long as we do it before actually changing our
+  // internal state.
+  if(this->p_hive->Reopen(this->is_hive_writable)) {
+    // Switch internal state
+    this->is_hive_writable=!this->is_hive_writable;
+    this->UpdateEnableWriteSupportMenu();
+    this->p_node_tree->SetWritable(this->is_hive_writable);
+    this->p_key_table->SetWritable(this->is_hive_writable);
+    this->UpdateWindowTitle(this->p_hive->Filename());
+  } else {
+    // TODO: get error message from RegistryHive
+    QMessageBox::critical(this,
+                          tr("Error"),
+                          tr("Unable to switch write-support!"));
+  }
 }
 
 /*

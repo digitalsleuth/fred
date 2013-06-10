@@ -131,8 +131,7 @@ void DlgAddKey::on_CmbKeyType_currentIndexChanged(const QString &arg1) {
   }
 
   if(arg1!="REG_NONE") this->p_current_widget->setVisible(true);
-  //QSize size=this->sizeHint();
-  //this->resize(size);
+
 }
 
 void DlgAddKey::CreateWidgets() {

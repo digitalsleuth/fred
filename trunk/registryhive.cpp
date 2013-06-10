@@ -972,8 +972,6 @@ QMap<QString,int> RegistryHive::GetKeysHelper(hive_node_h parent_node) {
   keys.clear();
   i=0;
 
-  qDebug()<<p_keys;
-
   while(p_keys[i]) {
     p_name=hivex_value_key(this->p_hive,p_keys[i]);
     if(p_name==NULL) {
