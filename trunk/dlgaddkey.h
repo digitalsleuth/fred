@@ -48,8 +48,10 @@ class DlgAddKey : public QDialog {
     QWidget *p_binary_widget;
     QHBoxLayout *p_binary_widget_layout;
 
-    void CreateWidgets();
-    void DestroyWidgets();
+    void CreateValueWidgets();
+    void DestroyValueWidgets();
+    void SetValueWidgetData(QByteArray &key_value, QString &key_value_type);
+    QByteArray GetValueWidgetData();
 };
 
 #endif // DLGADDKEY_H
