@@ -73,7 +73,7 @@ SOURCES   += main.cpp\
              reportengine.cpp \
              dlgreportchooser.cpp \
              dlgpreferences.cpp \
-    dlgaddkey.cpp
+             dlgaddkey.cpp
 
 HEADERS   += mainwindow.h \
              registrynode.h \
@@ -107,7 +107,8 @@ HEADERS   += mainwindow.h \
              reportengine.h \
              dlgreportchooser.h \
              dlgpreferences.h \
-    dlgaddkey.h
+             dlgaddkey.h \
+             macros.h
 
 FORMS     += mainwindow.ui \
              dlgabout.ui \
@@ -116,7 +117,7 @@ FORMS     += mainwindow.ui \
              dlgsearch.ui \
              dlgreportchooser.ui \
              dlgpreferences.ui \
-    dlgaddkey.ui
+             dlgaddkey.ui
 
 #LIBS      += -lhivex
 LIBS      += $$PWD/hivex/lib/.libs/libhivex.a
