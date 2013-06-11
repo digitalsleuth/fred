@@ -1,12 +1,38 @@
+/*******************************************************************************
+* fred Copyright (c) 2011-2013 by Gillen Daniel <gillen.dan@pinguin.lu>        *
+*                                                                              *
+* Forensic Registry EDitor (fred) is a cross-platform M$ registry hive editor  *
+* with special feautures useful during forensic analysis.                      *
+*                                                                              *
+* This program is free software: you can redistribute it and/or modify it      *
+* under the terms of the GNU General Public License as published by the Free   *
+* Software Foundation, either version 3 of the License, or (at your option)    *
+* any later version.                                                           *
+*                                                                              *
+* This program is distributed in the hope that it will be useful, but WITHOUT  *
+* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or        *
+* FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for     *
+* more details.                                                                *
+*                                                                              *
+* You should have received a copy of the GNU General Public License along with *
+* this program. If not, see <http://www.gnu.org/licenses/>.                    *
+*******************************************************************************/
+
+#include <QString>
+#include <QStringList>
+#include <QMessageBox>
+#include <QRegExp>
+#include <stdlib.h>
+
+#include <QDebug>
+
 #include "dlgaddkey.h"
 #include "ui_dlgaddkey.h"
 
 #include "registryhive.h"
 
-#include <QString>
-#include <QStringList>
-
-#include <QDebug>
+#define MACROS_ENDIANNESS
+#include "macros.h"
 
 DlgAddKey::DlgAddKey(QWidget *p_parent,
                      QString key_name,
@@ -64,8 +90,63 @@ void DlgAddKey::on_BtnCancel_clicked() {
   this->reject();
 }
 
-void DlgAddKey::on_BtnOk_clicked()
-{
+void DlgAddKey::on_BtnOk_clicked() {
+  QString key_value_type=this->KeyType();
+
+  // Check entered data for correctness
+  if(key_value_type=="REG_MULTI_SZ") {
+    // REG_MULTI_SZ's can't contain empty sub-strings
+    QString cur_data=this->p_text_widget_text_edit->toPlainText();
+    QString new_data=cur_data;
+    // TODO: Do we need to check for \r\n on Windows??
+    new_data.replace(QRegExp("\n\n*"),"\n");
+    if(new_data.startsWith("\n")) new_data.remove(0,1);
+    if(new_data.endsWith("\n")) new_data.chop(1);
+    if(cur_data!=new_data) {
+      if(QMessageBox::information(this,
+                                  tr("Invalid data"),
+                                  tr("A REG_MULTI_SZ can not contain empty sub-strings! If you continue, they will be removed."),
+                                  QMessageBox::Yes,
+                                  QMessageBox::No)==QMessageBox::Yes)
+      {
+        this->p_text_widget_text_edit->setPlainText(new_data);
+      } else {
+        return;
+      }
+    }
+  } else if(key_value_type=="REG_DWORD" ||
+            key_value_type=="REG_DWORD_BIG_ENDIAN")
+  {
+    bool ok=false;
+    if(this->p_number_widget_rb_decimal->isChecked()) {
+      this->p_number_widget_line_edit->text().toInt(&ok);
+    } else {
+      // TODO: There seems to be a problem with 0xFFFFFFFF
+      this->p_number_widget_line_edit->text().toInt(&ok,16);
+    }
+    if(!ok) {
+      QMessageBox::information(this,
+                               tr("Invalid data"),
+                               tr("The value you entered could not be converted to a %1! Please correct it.").arg(key_value_type),
+                               QMessageBox::Ok);
+      return;
+    }
+  } else if(key_value_type=="REG_QWORD") {
+    bool ok=false;
+    if(this->p_number_widget_rb_decimal->isChecked()) {
+      this->p_number_widget_line_edit->text().toLongLong(&ok);
+    } else {
+      this->p_number_widget_line_edit->text().toLongLong(&ok,16);
+    }
+    if(!ok) {
+      QMessageBox::information(this,
+                               tr("Invalid data"),
+                               tr("The value you entered could not be converted to a %1! Please correct it.").arg(key_value_type),
+                               QMessageBox::Ok);
+      return;
+    }
+  }
+
   this->accept();
 }
 
@@ -168,21 +249,23 @@ void DlgAddKey::SetValueWidgetData(QByteArray &key_value,
                                    QString &key_value_type)
 {
   if(key_value_type=="REG_SZ" || key_value_type=="REG_EXPAND_SZ") {
-    p_line_widget_line_edit->setText(
+    this->p_line_widget_line_edit->setText(
       RegistryHive::KeyValueToString(key_value,
                                      RegistryHive::StringToKeyValueType(
                                        key_value_type)));
   } else if(key_value_type=="REG_MULTI_SZ") {
-    // TODO: How should text be splitted? Ascii, utfxx ??????
-    // p_text_widget_text_edit
+    // TODO: Identify if this is UTF16 or UTF8 and remember it
+    QStringList strings=RegistryHive::KeyValueToStringList(key_value,
+                                                           key_value_type);
+    this->p_text_widget_text_edit->setPlainText(strings.join("\n"));
   } else if(key_value_type=="REG_DWORD") {
-    p_number_widget_line_edit->setText(
+    this->p_number_widget_line_edit->setText(
       RegistryHive::KeyValueToString(key_value,"int32"));
   } else if(key_value_type=="REG_DWORD_BIG_ENDIAN") {
-    p_number_widget_line_edit->setText(
+    this->p_number_widget_line_edit->setText(
       RegistryHive::KeyValueToString(key_value,"int32",0,0,false));
   } else if(key_value_type=="REG_QWORD") {
-    p_number_widget_line_edit->setText(
+    this->p_number_widget_line_edit->setText(
       RegistryHive::KeyValueToString(key_value,"int64",0,0,false));
   } else if(key_value_type=="REG_BINARY" ||
             key_value_type=="REG_LINK" ||
@@ -198,33 +281,64 @@ QByteArray DlgAddKey::GetValueWidgetData() {
   QString key_value_type=this->KeyType();
 
   if(key_value_type=="REG_SZ" || key_value_type=="REG_EXPAND_SZ") {
-    // TODO: Won't work! Normally UTF16_LE, but??????
-    return QByteArray(p_line_widget_line_edit->text().toLocal8Bit().constData());
+    // TODO: Wouldn't it be wise to let the user choose the encoding?
+    // Get data
+    QString data=this->p_line_widget_line_edit->text();
+    // Convert data to UTF16LE buffer
+    uint16_t *p_buf=NULL;
+    int buf_len=this->ToUtf16LeBuf(&p_buf,data.utf16(),data.size());
+    if(p_buf==NULL || buf_len==0) {
+      // TODO: Inform user there was an error???
+      return QByteArray("\x00\x00",2);
+    }
+    // Construct ByteArray, free buffer and return
+    QByteArray ret=QByteArray((char*)p_buf,buf_len);
+    free(p_buf);
+    return ret;
   } else if(key_value_type=="REG_MULTI_SZ") {
-    // TODO: How should text be concatenated? Ascii, utfxx ??????
-    // p_text_widget_text_edit
-    return QByteArray();
-  } else if(key_value_type=="REG_DWORD") {
-    // TODO: When pressing ok, we need to check if conversion to number works!
-    // TODO: We need host_to_le32 here!
+    // TODO: Wouldn't it be wise to let the user choose the encoding?
+    // TODO: When editing, use same encoding as original data
+    QString data=this->p_text_widget_text_edit->toPlainText();
+    // Convert data to UTF16LE buffer
+    uint16_t *p_buf=NULL;
+    int buf_len=this->ToUtf16LeBuf(&p_buf,data.utf16(),data.size());
+    if(p_buf==NULL || buf_len==0) {
+      // TODO: Inform user there was an error???
+      return QByteArray("\x00\x00\x00\x00",4);
+    }
+    // Replace \n in buffer with \0 which actually converts it to a
+    // semi REG_MULTI_SZ :-)
+    // TODO: Do we need to check for \r\n on Windows??
+    for(int i=0;i<buf_len;i++) {
+      if(LE32TOH(p_buf[i])==10) p_buf[i]=0;
+    }
+    // Construct ByteArray
+    QByteArray ret=QByteArray((char*)p_buf,buf_len);
+    // Append \0\0 to the end to make a real REG_MULTI_SZ
+    ret.append("\x00\x00",2);
+    // Free buffer and return
+    free(p_buf);
+    return ret;
+  } else if(key_value_type=="REG_DWORD" ||
+            key_value_type=="REG_DWORD_BIG_ENDIAN")
+  {
     int32_t val;
-    if(p_number_widget_rb_decimal->isChecked()) {
-      val=p_number_widget_line_edit->text().toInt();
+    if(this->p_number_widget_rb_decimal->isChecked()) {
+      val=this->p_number_widget_line_edit->text().toInt();
     } else {
-      val=p_number_widget_line_edit->text().toInt(0,16);
+      val=this->p_number_widget_line_edit->text().toInt(0,16);
     }
+    if(key_value_type=="REG_DWORD") val=HTOLE32(val);
+    else val=HTOBE32(val);
     return QByteArray((char*)&val,4);
-  } else if(key_value_type=="REG_DWORD_BIG_ENDIAN") {
-    // TODO: Convert to big endian
-    return QByteArray();
   } else if(key_value_type=="REG_QWORD") {
-    // TODO: We need host_to_le64 here!
     int64_t val;
-    if(p_number_widget_rb_decimal->isChecked()) {
-      val=p_number_widget_line_edit->text().toLongLong();
+    if(this->p_number_widget_rb_decimal->isChecked()) {
+      val=this->p_number_widget_line_edit->text().toLongLong();
     } else {
-      val=p_number_widget_line_edit->text().toLongLong(0,16);
+      val=this->p_number_widget_line_edit->text().toLongLong(0,16);
     }
+    val=HTOLE64(val);
     return QByteArray((char*)&val,8);
   } else if(key_value_type=="REG_BINARY" ||
             key_value_type=="REG_LINK" ||
@@ -236,4 +350,30 @@ QByteArray DlgAddKey::GetValueWidgetData() {
     return QByteArray();
   }
   return QByteArray();
+}
+
+int DlgAddKey::ToUtf16LeBuf(uint16_t **pp_buf,
+                            const uint16_t *p_data,
+                            int ascii_len)
+{
+  // Calculate utf16 buffer size
+  // TODO: This fails if there are chars that need more than 16bit!!
+  int buf_len=(ascii_len*2)+2;
+
+  // Alloc buffer and set to 0x00h
+  *pp_buf=(uint16_t*)malloc(buf_len);
+  if(*pp_buf==NULL) return 0;
+  memset(*pp_buf,0,buf_len);
+  if(ascii_len==0) {
+    // Empty string, we're done (buffer contains \0\0)
+    return buf_len;
+  }
+  // Fill buffer with UTF16 string (ignoring \0\0 at the end)
+  memcpy(*pp_buf,p_data,buf_len-2);
+  // Make sure endianness is LE
+  for(int i=0;i<ascii_len;i++) {
+    (*pp_buf)[i]=HTOLE16((*pp_buf)[i]);
+  }
+
+  return buf_len;
 }
