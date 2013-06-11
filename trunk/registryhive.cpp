@@ -574,7 +574,9 @@ QString RegistryHive::KeyValueToString(QByteArray key_value,
 /*
  * KeyValueToStringList
  */
-QStringList RegistryHive::KeyValueToStringList(QByteArray value, int value_type) {
+QStringList RegistryHive::KeyValueToStringList(QByteArray value,
+                                               int value_type)
+{
   QStringList result;
   const char str_sep[2]={0x00,0x00};
   int last_pos=0,cur_pos=0;
@@ -596,6 +598,17 @@ QStringList RegistryHive::KeyValueToStringList(QByteArray value, int value_type)
   }
 
   return result;
+}
+
+/*
+ * KeyValueToStringList
+ */
+QStringList RegistryHive::KeyValueToStringList(QByteArray value,
+                                               QString value_type)
+{
+  return RegistryHive::KeyValueToStringList(value,
+                                            RegistryHive::StringToKeyValueType(
+                                              value_type));
 }
 
 /*
