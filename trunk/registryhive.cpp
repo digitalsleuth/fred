@@ -789,9 +789,9 @@ int RegistryHive::AddKey(QString parent_node_path,
  * UpdateKey
  */
 int RegistryHive::UpdateKey(QString parent_node_path,
-                             QString key_name,
-                             QString key_value_type,
-                             QByteArray key_value)
+                            QString key_name,
+                            QString key_value_type,
+                            QByteArray key_value)
 {
   if(!this->is_hive_open || !this->is_hive_writable) {
     // TODO: Set error
@@ -1149,7 +1149,7 @@ int RegistryHive::SetKey(QString &parent_node_path,
   strcpy(key_val.key,key_name.toAscii().constData());
   key_val.t=(hive_type)this->StringToKeyValueType(key_value_type);
   key_val.len=key_value.size();
-  strncpy(key_val.value,key_value.constData(),key_value.size());
+  memcpy(key_val.value,key_value.constData(),key_value.size());
 
   // Create/Update key
   if(hivex_node_set_value(this->p_hive,parent_node,&key_val,0)!=0) {
