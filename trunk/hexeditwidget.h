@@ -34,7 +34,9 @@ class HexEditWidget : public QWidget {
   Q_OBJECT
 
   public:
-    explicit HexEditWidget(QWidget *p_parent=0);
+    explicit HexEditWidget(QWidget *p_parent=0,
+                           bool with_data_interpreter=true,
+                           bool is_read_only=true);
     ~HexEditWidget();
 
     void SetData(QByteArray const &data);
@@ -54,8 +56,9 @@ class HexEditWidget : public QWidget {
     QLabel *p_hex_edit_status_bar;
     DataInterpreterWidget *p_data_interpreter_widget;
     // Vars
-    QByteArray data;
+    bool has_data_interpreter;
     bool read_only;
+    QByteArray data;
 
   private slots:
     void SlotHexEditOffsetChanged(int offset);

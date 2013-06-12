@@ -23,63 +23,77 @@
 
 #include "hexeditwidget.h"
 
-HexEditWidget::HexEditWidget(QWidget *p_parent) : QWidget(p_parent) {
+HexEditWidget::HexEditWidget(QWidget *p_parent,
+                             bool with_data_interpreter,
+                             bool is_read_only) : QWidget(p_parent)
+{
   // Init private vars
+  this->has_data_interpreter=with_data_interpreter;
+  this->read_only=is_read_only;
   this->data=QByteArray();
-  this->read_only=true;
 
   // Set widget layout. Setting it's parent to "this" will also call
   // this->SetLayout.
   this->p_widget_layout=new QVBoxLayout(this);
 
   // Create sub-widgets
-  this->p_widget_splitter=new QSplitter(this);
-  this->p_hex_edit_layout_widget=new QWidget(this->p_widget_splitter);
-  this->p_hex_edit_layout=new QVBoxLayout(this->p_hex_edit_layout_widget);
-  this->p_hex_edit=new QHexEdit(this->p_hex_edit_layout_widget);
-  this->p_hex_edit_status_bar=new QLabel();
-  this->p_data_interpreter_widget=
-    new DataInterpreterWidget(this);
+  if(this->has_data_interpreter) {
+    // Widget should include a data interpreter
+    this->p_widget_splitter=new QSplitter(this);
+    this->p_hex_edit_layout_widget=new QWidget(this->p_widget_splitter);
+    this->p_hex_edit_layout=new QVBoxLayout(this->p_hex_edit_layout_widget);
+    this->p_hex_edit=new QHexEdit(this->p_hex_edit_layout_widget);
+    this->p_hex_edit_status_bar=new QLabel(this);
+    this->p_data_interpreter_widget=new DataInterpreterWidget(this);
 
-  // Add hex edit and hex edit status bar to their layout
-  this->p_hex_edit_layout->addWidget(this->p_hex_edit);
-  this->p_hex_edit_layout->addWidget(this->p_hex_edit_status_bar);
+    // Add hex edit and hex edit status bar to their layout
+    this->p_hex_edit_layout->addWidget(this->p_hex_edit);
+    this->p_hex_edit_layout->addWidget(this->p_hex_edit_status_bar);
 
-  // Add sub-widgets to splitter and splitter to our layout
-  this->p_widget_splitter->addWidget(this->p_hex_edit_layout_widget);
-  this->p_widget_splitter->addWidget(this->p_data_interpreter_widget);
-  this->p_widget_layout->addWidget(this->p_widget_splitter);
+    // Add sub-widgets to splitter and splitter to our layout
+    this->p_widget_splitter->addWidget(this->p_hex_edit_layout_widget);
+    this->p_widget_splitter->addWidget(this->p_data_interpreter_widget);
+    this->p_widget_layout->addWidget(this->p_widget_splitter);
+
+    // Configure sub-widgets
+    this->p_widget_splitter->setOrientation(Qt::Horizontal);
+    this->p_hex_edit_layout_widget->setContentsMargins(0,0,0,0);
+    this->p_hex_edit_layout->setContentsMargins(0,0,0,0);
+
+    // Set size policies of sub-widgets
+    QSizePolicy hex_edit_layout_widget_policy=
+      this->p_hex_edit_layout_widget->sizePolicy();
+    hex_edit_layout_widget_policy.setVerticalStretch(2);
+    hex_edit_layout_widget_policy.setHorizontalStretch(200);
+    this->p_hex_edit_layout_widget->setSizePolicy(hex_edit_layout_widget_policy);
+
+    QSizePolicy data_interpreter_widget_policy=
+        this->p_data_interpreter_widget->sizePolicy();
+    data_interpreter_widget_policy.setVerticalStretch(2);
+    data_interpreter_widget_policy.setHorizontalStretch(0);
+    this->p_data_interpreter_widget->
+        setSizePolicy(data_interpreter_widget_policy);
+  } else {
+    // Widget shouldn't include a data interpreter
+    this->p_hex_edit=new QHexEdit(this);
+    this->p_hex_edit_status_bar=new QLabel(this);
+    this->p_widget_layout->addWidget(this->p_hex_edit);
+    this->p_widget_layout->addWidget(this->p_hex_edit_status_bar);
+  }
 
   // Configure widget and sub-widgets
   this->setContentsMargins(0,0,0,0);
   this->p_widget_layout->setContentsMargins(0,0,0,0);
-  this->p_widget_splitter->setOrientation(Qt::Horizontal);
-  this->p_hex_edit_layout_widget->setContentsMargins(0,0,0,0);
-  this->p_hex_edit_layout->setContentsMargins(0,0,0,0);
   this->p_hex_edit->setContentsMargins(0,0,0,0);
   // 5 pixel bottom margin makes hex edit and data interpreter lignup correctly
   this->p_hex_edit_status_bar->setContentsMargins(0,0,0,5);
   this->p_hex_edit->setReadOnly(this->read_only);
-  this->setEnabled(false);
+  //this->setEnabled(false);
 
   // Make sure hex edit font is monospaced.
   QFont mono_font("Monospace");
   mono_font.setStyleHint(QFont::TypeWriter);
   this->p_hex_edit->setFont(mono_font);
-
-  // Set size policies of sub-widgets
-  QSizePolicy hex_edit_layout_widget_policy=
-    this->p_hex_edit_layout_widget->sizePolicy();
-  hex_edit_layout_widget_policy.setVerticalStretch(2);
-  hex_edit_layout_widget_policy.setHorizontalStretch(200);
-  this->p_hex_edit_layout_widget->setSizePolicy(hex_edit_layout_widget_policy);
-
-  QSizePolicy data_interpreter_widget_policy=
-      this->p_data_interpreter_widget->sizePolicy();
-  data_interpreter_widget_policy.setVerticalStretch(2);
-  data_interpreter_widget_policy.setHorizontalStretch(0);
-  this->p_data_interpreter_widget->
-      setSizePolicy(data_interpreter_widget_policy);
 
   // Connect signals
   this->connect(this->p_hex_edit,
@@ -89,12 +103,14 @@ HexEditWidget::HexEditWidget(QWidget *p_parent) : QWidget(p_parent) {
 }
 
 HexEditWidget::~HexEditWidget() {
-  delete this->p_data_interpreter_widget;
   delete this->p_hex_edit_status_bar;
   delete this->p_hex_edit;
-  delete this->p_hex_edit_layout;
-  delete this->p_hex_edit_layout_widget;
-  delete this->p_widget_splitter;
+  if(this->has_data_interpreter) {
+    delete this->p_data_interpreter_widget;
+    delete this->p_hex_edit_layout;
+    delete this->p_hex_edit_layout_widget;
+    delete this->p_widget_splitter;
+  }
   delete this->p_widget_layout;
 }
 
@@ -121,5 +137,7 @@ void HexEditWidget::SlotHexEditOffsetChanged(int offset) {
                                               QChar('0'))
                                          .arg(offset));
   // Update data interpreter
-  this->p_data_interpreter_widget->SetData(this->data.mid(offset,8));
+  if(this->has_data_interpreter) {
+    this->p_data_interpreter_widget->SetData(this->data.mid(offset,8));
+  }
 }
