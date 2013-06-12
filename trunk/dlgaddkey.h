@@ -30,6 +30,8 @@
 
 #include <inttypes.h>
 
+#include "hexeditwidget.h"
+
 namespace Ui {
   class DlgAddKey;
 }
@@ -69,6 +71,7 @@ class DlgAddKey : public QDialog {
     QRadioButton *p_number_widget_rb_hex;
     QWidget *p_binary_widget;
     QHBoxLayout *p_binary_widget_layout;
+    HexEditWidget *p_binary_widget_hex_edit;
 
     void CreateValueWidgets();
     void DestroyValueWidgets();

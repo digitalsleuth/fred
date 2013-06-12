@@ -222,8 +222,10 @@ void DlgAddKey::CreateValueWidgets() {
 
   this->p_binary_widget=new QWidget();
   this->p_binary_widget_layout=new QHBoxLayout(this->p_binary_widget);
+  this->p_binary_widget_hex_edit=new HexEditWidget(this,false,false);
   this->p_binary_widget->setContentsMargins(0,0,0,0);
   this->p_binary_widget_layout->setContentsMargins(0,0,0,0);
+  this->p_binary_widget_layout->addWidget(this->p_binary_widget_hex_edit);
 }
 
 void DlgAddKey::DestroyValueWidgets() {
@@ -241,6 +243,7 @@ void DlgAddKey::DestroyValueWidgets() {
   delete this->p_number_widget_layout;
   delete this->p_number_widget;
 
+  delete this->p_binary_widget_hex_edit;
   delete this->p_binary_widget_layout;
   delete this->p_binary_widget;
 }
@@ -273,7 +276,7 @@ void DlgAddKey::SetValueWidgetData(QByteArray &key_value,
             key_value_type=="REG_FULL_RESOURCE_DESC" ||
             key_value_type=="REG_RESOURCE_REQ_LIST")
   {
-    // TODO: Set binary data
+    this->p_binary_widget_hex_edit->SetData(key_value);
   }
 }
 
@@ -346,8 +349,7 @@ QByteArray DlgAddKey::GetValueWidgetData() {
             key_value_type=="REG_FULL_RESOURCE_DESC" ||
             key_value_type=="REG_RESOURCE_REQ_LIST")
   {
-    // TODO: Return binary data
-    return QByteArray();
+    return this->p_binary_widget_hex_edit->GetData();
   }
   return QByteArray();
 }
