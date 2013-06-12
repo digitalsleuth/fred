@@ -113,6 +113,7 @@ MainWindow::MainWindow(ArgParser *p_arg_parser) :
   this->p_tab_widget=new TabWidget(this->p_vertical_splitter);
 
   this->p_hex_edit_widget=new HexEditWidget();
+  this->p_hex_edit_widget->setEnabled(false);
 
   // Add hexedit page to tab_widget
   this->p_tab_widget->addTab(this->p_hex_edit_widget,tr("Hex viewer"));
