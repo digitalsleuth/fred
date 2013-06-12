@@ -40,6 +40,7 @@ class HexEditWidget : public QWidget {
     ~HexEditWidget();
 
     void SetData(QByteArray const &data);
+    QByteArray GetData();
 
   signals:
 

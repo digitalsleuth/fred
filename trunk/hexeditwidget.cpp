@@ -88,7 +88,8 @@ HexEditWidget::HexEditWidget(QWidget *p_parent,
   // 5 pixel bottom margin makes hex edit and data interpreter lignup correctly
   this->p_hex_edit_status_bar->setContentsMargins(0,0,0,5);
   this->p_hex_edit->setReadOnly(this->read_only);
-  //this->setEnabled(false);
+  // If we're not read only, it should also be possible to add data
+  this->p_hex_edit->setOverwriteMode(this->read_only);
 
   // Make sure hex edit font is monospaced.
   QFont mono_font("Monospace");
@@ -126,6 +127,10 @@ void HexEditWidget::SetData(QByteArray const &new_data) {
     this->p_hex_edit_status_bar->setText("");
     this->p_data_interpreter_widget->SetData(QByteArray());
   }
+}
+
+QByteArray HexEditWidget::GetData() {
+  return this->p_hex_edit->data();
 }
 
 void HexEditWidget::SlotHexEditOffsetChanged(int offset) {
