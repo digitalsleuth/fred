@@ -47,7 +47,6 @@ SOURCES   += main.cpp\
              registrykey.cpp \
              registrykeytablemodel.cpp \
              dlgabout.cpp \
-             dlgkeydetails.cpp \
              qhexedit/qhexedit_p.cpp \
              qhexedit/qhexedit.cpp \
              reporttemplate.cpp \
@@ -81,7 +80,6 @@ HEADERS   += mainwindow.h \
              registrykey.h \
              registrykeytablemodel.h \
              dlgabout.h \
-             dlgkeydetails.h \
              qhexedit/qhexedit_p.h \
              qhexedit/qhexedit.h \
              reporttemplate.h \
@@ -112,7 +110,6 @@ HEADERS   += mainwindow.h \
 
 FORMS     += mainwindow.ui \
              dlgabout.ui \
-             dlgkeydetails.ui \
              dlgreportviewer.ui \
              dlgsearch.ui \
              dlgreportchooser.ui \

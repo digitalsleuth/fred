@@ -40,7 +40,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "dlgabout.h"
-#include "dlgkeydetails.h"
 #include "dlgreportchooser.h"
 #include "dlgreportviewer.h"
 #include "dlgsearch.h"
@@ -537,49 +536,10 @@ void MainWindow::SlotKeyTableClicked(QModelIndex index) {
  * SlotKeyTableDoubleClicked
  */
 void MainWindow::SlotKeyTableDoubleClicked(QModelIndex index) {
-  Q_UNUSED(index);
-  /*
-  QModelIndex key_index;
-  QModelIndex node_index;
-  QStringList nodes;
-
-  QString key_name;
-  QString key_type;
-  QByteArray key_value;
-
   if(!index.isValid()) return;
+  if(!this->is_hive_open) return;
 
-  // Get key name, type and value
-  key_index=this->p_reg_key_table_model->index(index.row(),0);
-  key_name=this->p_reg_key_table_model->data(key_index,Qt::DisplayRole)
-    .toString();
-  key_index=this->p_reg_key_table_model->index(index.row(),1);
-  key_type=this->p_reg_key_table_model->data(key_index,Qt::DisplayRole)
-    .toString();ThreadSearch
-  key_index=this->p_reg_key_table_model->index(index.row(),2);
-  key_value=this->p_reg_key_table_model->data(key_index,
-                                              RegistryKeyTableModel::
-                                                AdditionalRoles_GetRawData)
-    .toByteArray();
-
-  // Get current node
-  node_index=this->p_node_tree->currentIndex();
-
-  //Built node path
-  nodes.clear();
-  nodes.append(this->p_reg_node_tree_model->
-                 data(node_index,Qt::DisplayRole).toString());
-  while(this->p_reg_node_tree_model->parent(node_index)!=QModelIndex()) {
-    // Prepend all parent nodes
-    node_index=this->p_reg_node_tree_model->parent(node_index);
-    nodes.prepend(this->p_reg_node_tree_model->
-                  data(node_index,Qt::DisplayRole).toString());
-  }
-
-  DlgKeyDetails dlg_key_details(this);
-  dlg_key_details.SetValues(nodes,key_name,key_type,key_value);
-  dlg_key_details.exec();
-  */
+  if(this->is_hive_writable) this->SlotEditKey(index);
 }
 
 /*
@@ -780,6 +740,9 @@ void MainWindow::SlotDeleteNode(QModelIndex index) {
   }
 }
 
+/*
+ * SlotAddKey
+ */
 void MainWindow::SlotAddKey() {
   DlgAddKey dlg_add_key(this);
   if(dlg_add_key.exec()==QDialog::Accepted) {
@@ -812,6 +775,9 @@ void MainWindow::SlotAddKey() {
   }
 }
 
+/*
+ * SlotEditKey
+ */
 void MainWindow::SlotEditKey(QModelIndex index) {
   if(!index.isValid()) return;
 
@@ -864,10 +830,16 @@ void MainWindow::SlotEditKey(QModelIndex index) {
     this->p_key_table->scrollTo(new_key_index,
                                 QAbstractItemView::PositionAtCenter);
     this->p_key_table->selectRow(new_key_index.row());
+    // TODO: Update geometry in case data has been added and is now expanding
+    // behind the right border
+    // Update HexEditWidget
     this->SlotKeyTableClicked(new_key_index);
   }
 }
 
+/*
+ * SlotDeleteKey
+ */
 void MainWindow::SlotDeleteKey(QModelIndex index) {
   // TODO
 }
