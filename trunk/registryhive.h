@@ -30,13 +30,6 @@ class RegistryHive : public QObject {
   Q_OBJECT
 
   public:
-    typedef struct sRegistryKey {
-      QString name;
-      int type;
-      size_t value_len;
-      QByteArray value;
-    } tsRegistryKey, *ptsRegistryKey;
-
     typedef enum eHiveType {
       eHiveType_UNKNOWN=0,
       eHiveType_SYSTEM,
@@ -112,6 +105,7 @@ class RegistryHive : public QObject {
     bool is_hive_writable;
     bool has_changes_to_commit;
 
+    QString HivexError2String(int error);
     void SetError(QString msg);
     bool GetNodeHandle(QString &path, hive_node_h *p_node);
     bool GetKeyHandle(QString &parent_node_path,
@@ -123,11 +117,6 @@ class RegistryHive : public QObject {
                                  int *p_value_type,
                                  size_t *p_value_len);
     bool PathExists(QString path);
-    bool GetKey(QString &parent_node_path,
-                QString &key_name,
-                ptsRegistryKey *key_value);
-    bool GetKeys(QString &parent_node_path,
-                 QList<ptsRegistryKey> *p_key_values);
     int SetKey(QString &parent_node_path,
                QString &key_name,
                QString &key_value_type,

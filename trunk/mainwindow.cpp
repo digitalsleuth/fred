@@ -827,12 +827,14 @@ void MainWindow::SlotEditKey(QModelIndex index) {
     QModelIndex new_key_index=
       this->p_reg_key_table_model->UpdateKey(this->p_hive,new_key);
     this->p_key_table->clearSelection();
-    this->p_key_table->scrollTo(new_key_index,
-                                QAbstractItemView::PositionAtCenter);
-    this->p_key_table->selectRow(new_key_index.row());
-    // TODO: Update geometry in case data has been added and is now expanding
-    // behind the right border
-    // Update HexEditWidget
+    if(new_key_index.isValid()) {
+      this->p_key_table->scrollTo(new_key_index,
+                                  QAbstractItemView::PositionAtCenter);
+      this->p_key_table->selectRow(new_key_index.row());
+      // TODO: Update geometry in case data has been added and is now expanding
+      // behind the right border
+      // Update HexEditWidget
+    }
     this->SlotKeyTableClicked(new_key_index);
   }
 }
@@ -841,7 +843,46 @@ void MainWindow::SlotEditKey(QModelIndex index) {
  * SlotDeleteKey
  */
 void MainWindow::SlotDeleteKey(QModelIndex index) {
-  // TODO
+  if(!index.isValid()) return;
+
+  // Get selected key name
+  QString key_name=
+    this->p_reg_key_table_model->data(this->p_reg_key_table_model->
+                                        index(index.row(),
+                                              RegistryKeyTableModel::
+                                                ColumnContent_KeyName),
+                                      Qt::DisplayRole).toString();
+
+  // Get selected parent node
+  QModelIndex parent_node=this->p_node_tree->currentIndex();
+  parent_node=this->p_reg_node_tree_model_proxy->mapToSource(parent_node);
+  QString parent_node_path=this->p_reg_node_tree_model->GetNodePath(parent_node);
+
+  if(QMessageBox::warning(this,
+                          tr("Delete key"),
+                          tr("Are you sure you want to remove the key '%1\\%2'?")
+                            .arg(parent_node_path,key_name),
+                          QMessageBox::Yes,
+                          QMessageBox::No)==QMessageBox::Yes)
+  {
+    // Remove key from hive
+    if(!this->p_hive->DeleteKey(parent_node_path,key_name)) {
+      // TODO: Get error message and display it
+      QMessageBox::critical(this,
+                            tr("Error"),
+                            tr("Unable to delete key '%1\\%2'!")
+                              .arg(parent_node_path,key_name));
+      return;
+    }
+    // Remove key from table model and update selection
+    QModelIndex new_key_index=this->p_reg_key_table_model->RemoveKey(index);
+    this->p_key_table->clearSelection();
+    if(new_key_index.isValid()) {
+      this->p_key_table->scrollTo(new_key_index,
+                                  QAbstractItemView::PositionAtCenter);
+      this->p_key_table->selectRow(new_key_index.row());
+    }
+  }
 }
 
 /*******************************************************************************

@@ -782,9 +782,9 @@ bool RegistryHive::DeleteNode(QString node_path) {
  * AddKey
  */
 int RegistryHive::AddKey(QString parent_node_path,
-                          QString key_name,
-                          QString key_value_type,
-                          QByteArray key_value)
+                         QString key_name,
+                         QString key_value_type,
+                         QByteArray key_value)
 {
   if(!this->is_hive_open || !this->is_hive_writable) {
     // TODO: Set error
@@ -839,27 +839,133 @@ bool RegistryHive::DeleteKey(QString parent_node_path, QString key_name) {
     return false;
   }
 
-  // Get all keys
-  QMap<QString,int> node_keys;
-  node_keys=this->GetKeys(parent_node);
-  if(node_keys.empty()) {
-    // TODO: Set error
+  // Get all child keys
+  hive_value_h *p_keys=hivex_node_values(this->p_hive,parent_node);
+  if(p_keys==NULL) {
+    this->SetError(tr("Unable to enumerate child keys for parent '%1'!")
+                     .arg(parent_node_path));
     return false;
   }
 
-  // Get all key values
-  QList<QByteArray> node_key_values;
-  QMapIterator<QString,int> node_keys_it(node_keys);
-  while(node_keys_it.hasNext()) {
-    node_keys_it.next();
-    // TODO
-   // node_key_values.append(this->GetKeyValue());
+  // Get all child key values except the one that should be deleted
+  int i=0;
+  char *p_name;
+  int node_keys_count=0;
+  hive_set_value *node_keys=NULL;
+
+#define FREE_NODE_KEYS() {             \
+  for(int x=0;x<node_keys_count;x++) { \
+    free(node_keys[x].key);            \
+    free(node_keys[x].value);          \
+  }                                    \
+  free(node_keys);                     \
+}
+
+  while(p_keys[i]) {
+    p_name=hivex_value_key(this->p_hive,p_keys[i]);
+    if(p_name==NULL) {
+      this->SetError(tr("Unable to get key name for a child of '%1'!")
+                       .arg(parent_node_path));
+      return false;
+    }
+    if(QString(p_name)!=key_name) {
+      // Current key is not the one that should be deleted, save it
+      // Alloc mem for new hive_set_value struct in node_keys array
+      node_keys=(hive_set_value*)realloc(node_keys,
+                                         sizeof(hive_set_value)*
+                                           (node_keys_count+1));
+      if(node_keys==NULL) {
+        this->SetError(tr("Unable to alloc enough memory for all child keys!"));
+        return false;
+      }
+      // Save key name in hive_set_value struct
+      node_keys[node_keys_count].key=p_name;
+      // Get key value, key value type and key value len and save to
+      // hive_set_value struct
+      node_keys[node_keys_count].value=
+        hivex_value_value(this->p_hive,
+                          p_keys[i],
+                          &(node_keys[node_keys_count].t),
+                          &(node_keys[node_keys_count].len));
+      if(node_keys[node_keys_count].value==NULL) {
+        this->SetError(tr("Unable to get value for key '%1'!").arg(p_name));
+        free(p_name);
+        // Free all temporary stored keys
+        FREE_NODE_KEYS();
+        return false;
+      }
+      node_keys_count++;
+    } else {
+      // Current key is to be deleted, ignore it
+      free(p_name);
+    }
+    i++;
   }
+
+  // Save all stored keys to hive, which will discard the one that should be
+  // deleted
+  if(hivex_node_set_values(this->p_hive,
+                           parent_node,
+                           node_keys_count,
+                           node_keys,
+                           0)!=0)
+  {
+    this->SetError(tr("Unable to re-save all child keys! Please discard any "
+                      "changes you made and start over. No doing so might end "
+                      "in data loss!"));
+    // Free all temporary stored keys
+    FREE_NODE_KEYS();
+    return false;
+  }
+
+  // Free all temporary stored keys and return
+  FREE_NODE_KEYS();
+
+#undef FREE_NODE_KEYS
+
+  this->has_changes_to_commit=true;
+  return true;
 }
 
 /*******************************************************************************
  * Private
  ******************************************************************************/
+
+/*
+ * HivexError2String
+ */
+QString RegistryHive::HivexError2String(int error) {
+  switch(error) {
+    case ENOTSUP:
+      return QString("Corrupt or unsupported Registry file format.");
+      break;
+    case HIVEX_NO_KEY:
+      return QString("Missing root key.");
+      break;
+    case EINVAL:
+      return QString("Passed an invalid argument to the function.");
+      break;
+    case EFAULT:
+      return QString("Followed a Registry pointer which goes outside the "
+                       "registry or outside a registry block.");
+      break;
+    case ELOOP:
+      return QString("Registry contains cycles.");
+      break;
+    case ERANGE:
+      return QString("Field in the registry out of range.");
+      break;
+    case EEXIST:
+      return QString("Registry key already exists.");
+      break;
+    case EROFS:
+      return QString("Tried to write to a registry which is not opened for "
+                       "writing.");
+      break;
+    default:
+      return QString("Unknown error.");
+  }
+}
 
 /*
  * SetError
@@ -890,7 +996,6 @@ bool RegistryHive::GetNodeHandle(QString &path, hive_node_h *p_node) {
 
     // Iterate to the correct parent node
     for(i=0;i<nodes.count();i++) {
-//      printf("Spotting node '%s'\n",nodes.value(i).toAscii().constData());
       *p_node=hivex_node_get_child(this->p_hive,
                                    *p_node,
                                    nodes.value(i).toAscii().constData());
@@ -1042,82 +1147,6 @@ bool RegistryHive::PathExists(QString path) {
   }
 
   return true;
-}
-
-/*
- * GetKey
- */
-bool RegistryHive::GetKey(QString &parent_node_path,
-                          QString &key_name,
-                          ptsRegistryKey *key_value)
-{
-  // Get handle to parent node
-  hive_node_h parent_node;
-  if(!this->GetNodeHandle(parent_node_path,&parent_node)) {
-    // TODO: Set error
-    return false;
-  }
-
-  // Get handle to key
-  hive_value_h key=hivex_node_get_value(this->p_hive,
-                                        parent_node,
-                                        key_name.toAscii().constData());
-  if(key==0) {
-    // TODO: Set error
-    return false;
-  }
-
-  // Alloc memory for the ptsRegistryKey struct
-  *key_value=(ptsRegistryKey)malloc(sizeof(tsRegistryKey));
-  if(*key_value==NULL) {
-    // TODO: Set error
-    return false;
-  }
-
-  // Get key name from hive (We could also simply use the specified name, but
-  // this allows to us to get the actual upper/lowercase name from hive.
-  char *buf;
-  buf=hivex_value_key(this->p_hive,key);
-  if(buf==NULL) {
-    // TODO: Set error
-    return false;
-  }
-  // Store name in ptsRegistryKey struct
-  (*key_value)->name=QString().fromLocal8Bit(buf);
-  free(buf);
-
-  // Get key value
-  buf=hivex_value_value(this->p_hive,
-                        key,
-                        (hive_type*)&((*key_value)->type),
-                        &((*key_value)->value_len));
-  if(buf==NULL) {
-    // TODO: Set error
-    return false;
-  }
-  // Store value in ptsRegistryKey struct
-  (*key_value)->value=QByteArray(buf,(*key_value)->value_len);
-  free(buf);
-
-  return true;
-}
-
-/*
- * GetKeys
- */
-bool RegistryHive::GetKeys(QString &parent_node_path,
-                           QList<ptsRegistryKey> *p_key_values)
-{
-  // Get handle to parent node
-  hive_node_h parent_node;
-  if(!this->GetNodeHandle(parent_node_path,&parent_node)) {
-    // TODO: Set error
-    return false;
-  }
-
-  // TODO: Check if this is really needed
-  // hive_value_h *hivex_node_values (hive_h *h, hive_node_h node);
-  return false;
 }
 
 /*

@@ -222,7 +222,7 @@ QModelIndex RegistryKeyTableModel::UpdateKey(RegistryHive *p_hive,
   }
   if(key_row==-1) return QModelIndex();
 
-  // TODO: Update values
+  // Update values
   this->p_keys->Key(key_row)->SetData(QList<QVariant>()<<
                                         QString(key_name.length() ?
                                                   key_name : "(default)")<<
@@ -237,7 +237,19 @@ QModelIndex RegistryKeyTableModel::UpdateKey(RegistryHive *p_hive,
 }
 
 QModelIndex RegistryKeyTableModel::RemoveKey(const QModelIndex &index) {
-  // TODO
+  // Tell users of this model that a row is going to be removed
+  emit(RegistryKeyTableModel::beginRemoveRows(QModelIndex(),
+                                              index.row(),
+                                              index.row()));
+  // Remove row
+  this->p_keys->Remove(index.row());
+  // Tell users of this model that a row has been removed
+  emit(RegistryKeyTableModel::endRemoveRows());
+  // Return a valid index to be selected
+  if(this->rowCount()==0) return QModelIndex();
+  else if(index.row()==0) return this->index(0,0);
+  else if(index.row()<this->rowCount()) return this->index(index.row(),0);
+  else return this->index(index.row()-1,0);
 }
 
 /*******************************************************************************
