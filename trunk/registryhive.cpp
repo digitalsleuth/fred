@@ -407,6 +407,7 @@ QString RegistryHive::KeyValueToString(QByteArray value, int value_type) {
       break;
     case hive_t_REG_EXPAND_SZ:
       // A Windows string that contains %env% (environment variable expansion)
+      // TODO: Same as above, what happens if....
       ret=value.size() ? QString().fromUtf16((ushort*)(value.constData())) : "";
       break;
     case hive_t_REG_BINARY:
@@ -415,10 +416,12 @@ QString RegistryHive::KeyValueToString(QByteArray value, int value_type) {
       break;
     case hive_t_REG_DWORD:
       // DWORD (32 bit integer), little endian
+      // TODO: What about LE32TOH ?
       ret=QString().sprintf("0x%08X",*(uint32_t*)value.constData());
       break;
     case hive_t_REG_DWORD_BIG_ENDIAN:
       // DWORD (32 bit integer), big endian
+      // TODO: What about BE32TOH ?
       ret=QString().sprintf("0x%08X",*(uint32_t*)value.constData());
       break;
     case hive_t_REG_LINK:
@@ -428,6 +431,8 @@ QString RegistryHive::KeyValueToString(QByteArray value, int value_type) {
     case hive_t_REG_MULTI_SZ:
       // Multiple Windows strings.
       // See http://blogs.msdn.com/oldnewthing/archive/2009/10/08/9904646.aspx
+      // TODO: Shouldn't this be decoded here? If so, how to know if it is ASCII
+      // or UTF16XX??? Some magic is needed!
       ToHexStr();
       break;
     case hive_t_REG_RESOURCE_LIST:
@@ -444,8 +449,12 @@ QString RegistryHive::KeyValueToString(QByteArray value, int value_type) {
       break;
     case hive_t_REG_QWORD:
       // QWORD (64 bit integer). Usually little endian.
+      // TODO: What about LE64TOH? And what if not LE?
       ret=
-        QString("0x%1").arg((quint64)(*(uint64_t*)value.constData()),16,16,QChar('0'));
+        QString("0x%1").arg((quint64)(*(uint64_t*)value.constData()),
+                            16,
+                            16,
+                            QChar('0'));
       break;
     default:
       ToHexStr();
@@ -481,6 +490,8 @@ QString RegistryHive::KeyValueToString(QByteArray key_value,
   p_data+=offset;
 
   // TODO: This will fail on platforms with different endianness!
+  // Use/add functions from/to macros.h!!!!
+  // TODO: In addition, converting to host endianness is missing!
 #define bswap_16(value) ((((value) & 0xff) << 8) | ((value) >> 8))
 #define bswap_32(value)                                       \
   (((uint32_t)bswap_16((uint16_t)((value) & 0xffff)) << 16) | \
@@ -577,6 +588,7 @@ QString RegistryHive::KeyValueToString(QByteArray key_value,
 QStringList RegistryHive::KeyValueToStringList(QByteArray value,
                                                int value_type)
 {
+  // TODO: Fails bad if string is ASCCI and not UTF16XX!!!
   QStringList result;
   const char str_sep[2]={0x00,0x00};
   int last_pos=0,cur_pos=0;

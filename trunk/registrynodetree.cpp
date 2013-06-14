@@ -18,12 +18,14 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#include "registrynodetree.h"
-#include "registrynodetreemodel.h"
-
 #include <QHeaderView>
 #include <QApplication>
 #include <QClipboard>
+
+#include <QDebug>
+
+#include "registrynodetree.h"
+#include "registrynodetreemodel.h"
 
 /*******************************************************************************
  * Public
@@ -40,12 +42,14 @@ RegistryNodeTree::RegistryNodeTree(QWidget *p_parent) : QTreeView(p_parent) {
   this->setSortingEnabled(true);
 
   // Create context menu items
-  this->p_action_add_node=new QAction(tr("Add node"),this);
-  this->p_action_delete_node=new QAction(tr("Delete node"),this);
+  this->p_action_add_node=new QAction(tr("Add new node"),this);
+  this->p_action_delete_node=new QAction(tr("Delete selected node"),this);
   this->p_menu_copy=new QMenu(tr("Copy"),this);
-  this->p_action_copy_node_name=new QAction(tr("Node name"),this->p_menu_copy);
+  this->p_action_copy_node_name=
+    new QAction(tr("Selected node name"),this->p_menu_copy);
   this->p_menu_copy->addAction(this->p_action_copy_node_name);
-  this->p_action_copy_node_path=new QAction(tr("Node path"),this->p_menu_copy);
+  this->p_action_copy_node_path=
+    new QAction(tr("Selected node path"),this->p_menu_copy);
   this->p_menu_copy->addAction(this->p_action_copy_node_path);
 
   // Connect context menu signals
@@ -105,8 +109,8 @@ void RegistryNodeTree::contextMenuEvent(QContextMenuEvent *p_event) {
   // Only show context menu when a node is selected
   if(this->selectedIndexes().count()!=2) return;
   // Only show context menu when user clicked on selected row
-  // TODO: Does not work when clicking on column 2
-  if(this->indexAt(p_event->pos())!=this->selectedIndexes().at(0)) return;
+  if(this->indexAt(p_event->pos()).row()!=this->selectedIndexes().at(0).row())
+    return;
 
   // Emit a click signal
   emit(this->clicked(this->indexAt(p_event->pos())));

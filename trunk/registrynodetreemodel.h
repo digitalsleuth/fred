@@ -32,6 +32,11 @@ class RegistryNodeTreeModel : public QAbstractItemModel {
   Q_OBJECT
 
   public:
+    enum ColumnContent {
+      ColumnContent_NodeName=0,
+      ColumnContent_NodeModTime
+    };
+
     RegistryNodeTreeModel(RegistryHive *p_hive, QObject *p_parent=0);
     ~RegistryNodeTreeModel();
 
@@ -47,24 +52,20 @@ class RegistryNodeTreeModel : public QAbstractItemModel {
     int rowCount(const QModelIndex &parent=QModelIndex()) const;
     int columnCount(const QModelIndex &parent=QModelIndex()) const;
 
-    QList<QModelIndex> GetIndexListOf(QString path) const;
-    QString GetNodePath(QModelIndex child_index) const;
-    QModelIndex AddNode(RegistryHive *p_hive, const QModelIndex &parent_index,
+    QList<QModelIndex> GetIndexListOf(QString path);
+    QString GetNodePath(QModelIndex child_index);
+    QModelIndex AddNode(RegistryHive *p_hive, QModelIndex parent_index,
                         int new_node_id,
                         QString new_node_name);
-    QModelIndex RemoveNode(const QModelIndex &index);
+    QModelIndex RemoveNode(QModelIndex index);
 
   private:
-    enum ColumnContent {
-      ColumnContent_NodeName=0,
-      ColumnContent_NodeModTime
-    };
-
     RegistryNode *p_root_node;
 
     void SetupModelData(RegistryHive *p_hive,
                         RegistryNode *p_parent,
                         int hive_node=0);
+    QModelIndex GetNodeNameIndex(QModelIndex index);
 };
 
 #endif // REGISTRYNODETREEMODEL_H

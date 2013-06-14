@@ -40,13 +40,15 @@ RegistryKeyTable::RegistryKeyTable(QWidget *p_parent) : QTableView(p_parent) {
   this->setTextElideMode(Qt::ElideNone);
 
   // Create context menu item
-  this->p_action_add_key=new QAction(tr("Add key"),this);
-  this->p_action_edit_key=new QAction(tr("Edit key"),this);
-  this->p_action_delete_key=new QAction(tr("Delete key"),this);
+  this->p_action_add_key=new QAction(tr("Add new key"),this);
+  this->p_action_edit_key=new QAction(tr("Edit selected key"),this);
+  this->p_action_delete_key=new QAction(tr("Delete selected key"),this);
   this->p_menu_copy=new QMenu(tr("Copy"),this);
-  this->p_action_copy_key_name=new QAction(tr("Key name"),this->p_menu_copy);
+  this->p_action_copy_key_name=
+    new QAction(tr("Selected key name"),this->p_menu_copy);
   this->p_menu_copy->addAction(this->p_action_copy_key_name);
-  this->p_action_copy_key_value=new QAction(tr("Key value"),this->p_menu_copy);
+  this->p_action_copy_key_value=
+    new QAction(tr("Selected key value"),this->p_menu_copy);
   this->p_menu_copy->addAction(this->p_action_copy_key_value);
 
   // Connect context menu signals
@@ -140,20 +142,26 @@ int RegistryKeyTable::sizeHintForColumn(int column) const {
 }
 
 void RegistryKeyTable::contextMenuEvent(QContextMenuEvent *p_event) {
-  // Only show context menu when a row is selected
-  if(this->selectedIndexes().count()!=3) return;
-  // Only show context menu when user clicked on selected row
-  if(!(this->indexAt(p_event->pos())==this->selectedIndexes().at(0) ||
-       this->indexAt(p_event->pos())==this->selectedIndexes().at(1) ||
-       this->indexAt(p_event->pos())==this->selectedIndexes().at(2)))
-  {
-    return;
+  // Only show context menu if a hive is open (a model was set)
+  if(this->model()==NULL) return;
+
+  // Decide what menus should be enabled
+  if(this->selectedIndexes().count()==3) {
+    // A row is selected, enable full context menu
+    this->p_action_edit_key->setEnabled(true);
+    this->p_action_delete_key->setEnabled(true);
+    this->p_menu_copy->setEnabled(true);
+  } else {
+    // No row is selected, disable all menu items except AddKey
+    this->p_action_edit_key->setEnabled(false);
+    this->p_action_delete_key->setEnabled(false);
+    this->p_menu_copy->setEnabled(false);
   }
 
-  // Emit a click signal
+  // Emit clicked signal (makes sure item under cursor is selected if it wasn't)
   emit(this->clicked(this->indexAt(p_event->pos())));
 
-  // Create context menu and add actions
+  // Create context menu, add actions and show it
   QMenu context_menu(this);
   context_menu.addAction(this->p_action_add_key);
   context_menu.addAction(this->p_action_edit_key);

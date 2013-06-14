@@ -163,7 +163,7 @@ int RegistryNodeTreeModel::columnCount(const QModelIndex &parent) const {
   return 2;
 }
 
-QList<QModelIndex> RegistryNodeTreeModel::GetIndexListOf(QString path) const {
+QList<QModelIndex> RegistryNodeTreeModel::GetIndexListOf(QString path) {
   RegistryNode *p_parent_node=this->p_root_node;
   QList<QModelIndex> ret;
   QStringList nodes=path.split("\\",QString::SkipEmptyParts);
@@ -190,9 +190,11 @@ QList<QModelIndex> RegistryNodeTreeModel::GetIndexListOf(QString path) const {
   return ret;
 }
 
-QString RegistryNodeTreeModel::GetNodePath(QModelIndex child_index) const
-{
+QString RegistryNodeTreeModel::GetNodePath(QModelIndex child_index) {
   QString path;
+
+  // Make the specified index point to the ColumnContent_NodeName column!
+  child_index=this->GetNodeNameIndex(child_index);
 
   // Get current node name
   path=this->data(child_index,Qt::DisplayRole).toString().prepend("\\");
@@ -207,13 +209,16 @@ QString RegistryNodeTreeModel::GetNodePath(QModelIndex child_index) const
 }
 
 QModelIndex RegistryNodeTreeModel::AddNode(RegistryHive *p_hive,
-                                           const QModelIndex &parent_index,
+                                           QModelIndex parent_index,
                                            int new_node_id,
                                            QString new_node_name)
 {
   RegistryNode *p_parent_node;
   int64_t key_mod_time;
   RegistryNode *p_node;
+
+  // Make the specified index point to the ColumnContent_NodeName column!
+  parent_index=this->GetNodeNameIndex(parent_index);
 
   // Get pointer to parent node
   p_parent_node=static_cast<RegistryNode*>(parent_index.internalPointer());
@@ -237,11 +242,14 @@ QModelIndex RegistryNodeTreeModel::AddNode(RegistryHive *p_hive,
   return this->createIndex(p_parent_node->ChildCount()-1,0,p_node);
 }
 
-QModelIndex RegistryNodeTreeModel::RemoveNode(const QModelIndex &index) {
+QModelIndex RegistryNodeTreeModel::RemoveNode(QModelIndex index) {
   RegistryNode *p_node;
   RegistryNode *p_parent_node;
   int node_row;
   QModelIndex parent_node_index;
+
+  // Make the specified index point to the ColumnContent_NodeName column!
+  index=this->GetNodeNameIndex(index);
 
   // Get pointers to current node and its parent
   p_node=static_cast<RegistryNode*>(index.internalPointer());
@@ -310,4 +318,10 @@ void RegistryNodeTreeModel::SetupModelData(RegistryHive *p_hive,
     p_parent->AppendChild(p_node);
     this->SetupModelData(p_hive,p_node,i.value());
   }
+}
+
+QModelIndex RegistryNodeTreeModel::GetNodeNameIndex(QModelIndex index) {
+  return this->index(index.row(),
+                     RegistryNodeTreeModel::ColumnContent_NodeName,
+                     index.parent());
 }
