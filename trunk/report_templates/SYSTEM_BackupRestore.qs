@@ -29,7 +29,7 @@ function ListValues(root_key) {
         println("      <tr>");
         println("        <td>",values[i],"</td>");
         println("        <td>");
-        var strings=RegistryKeyValueToStringList(val.value,val.type);
+        var strings=RegistryKeyValueToStringList(val.value);
         for(var ii=0;ii<strings.length;ii++) {
           println("          ",strings[ii],"<br />");
         }

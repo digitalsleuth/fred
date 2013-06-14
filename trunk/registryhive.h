@@ -73,11 +73,14 @@ class RegistryHive : public QObject {
     static QString KeyValueToString(QByteArray value,
                                     QString format,
                                     int offset=0,
-                                    int length=0,
+                                    int length=-1,
                                     bool little_endian=true);
-    static QStringList KeyValueToStringList(QByteArray value, int value_type);
     static QStringList KeyValueToStringList(QByteArray value,
-                                            QString value_type);
+                                            bool little_endian=true,
+                                            bool *p_ansi_encoded=NULL);
+    static QByteArray StringListToKeyValue(QStringList strings,
+                                           bool little_endian=true,
+                                           bool ansi_encoded=false);
     static QStringList GetKeyValueTypes();
     static QString KeyValueTypeToString(int value_type);
     static int StringToKeyValueType(QString value_type);

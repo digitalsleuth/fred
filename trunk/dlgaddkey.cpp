@@ -257,9 +257,9 @@ void DlgAddKey::SetValueWidgetData(QByteArray &key_value,
                                      RegistryHive::StringToKeyValueType(
                                        key_value_type)));
   } else if(key_value_type=="REG_MULTI_SZ") {
+    // TODO: Switch to RegistryHive::KeyValueStringList
     // TODO: Identify if this is UTF16 or UTF8 and remember it
-    QStringList strings=RegistryHive::KeyValueToStringList(key_value,
-                                                           key_value_type);
+    QStringList strings=RegistryHive::KeyValueToStringList(key_value);
     this->p_text_widget_text_edit->setPlainText(strings.join("\n"));
   } else if(key_value_type=="REG_DWORD") {
     this->p_number_widget_line_edit->setText(
@@ -299,6 +299,7 @@ QByteArray DlgAddKey::GetValueWidgetData() {
     free(p_buf);
     return ret;
   } else if(key_value_type=="REG_MULTI_SZ") {
+    // TODO: Switch to RegistryHive::StringListToKeyValue
     // TODO: Wouldn't it be wise to let the user choose the encoding?
     // TODO: When editing, use same encoding as original data
     QString data=this->p_text_widget_text_edit->toPlainText();
