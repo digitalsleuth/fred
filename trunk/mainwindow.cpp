@@ -400,10 +400,10 @@ void MainWindow::on_ActionEnableWriteSupport_triggered() {
   // this->is_hive_writable as long as we do it before actually changing our
   // internal state.
   if(!this->p_hive->Reopen(this->is_hive_writable)) {
-    // TODO: get error message from RegistryHive
     QMessageBox::critical(this,
                           tr("Error"),
-                          tr("Unable to switch write-support!"));
+                          tr("Unable to switch write-support: %1")
+                            .arg(this->p_hive->GetErrorMsg()));
     return;
   }
 
@@ -607,7 +607,6 @@ void MainWindow::SlotSearchResultWidgetDoubleClicked(QModelIndex index) {
              QItemSelectionModel::ClearAndSelect |
                QItemSelectionModel::Rows |
                QItemSelectionModel::Current);
-    // TODO: This does not work!!
     this->SlotNodeTreeClicked(indexes.at(indexes.count()-1));
   }
 
@@ -665,11 +664,12 @@ void MainWindow::SlotAddNode(QModelIndex index) {
                                           &ok);
   if(ok) {
     if((new_node_id=this->p_hive->AddNode(node_path,node_name))==0) {
-      // TODO: Get error message and display it
       QMessageBox::critical(this,
                             tr("Error"),
-                            tr("Unable to create node '%1\\%2'!")
-                              .arg(node_path,node_name));
+                            tr("Unable to create node '%1\\%2': %3!")
+                              .arg(node_path,
+                                   node_name,
+                                   this->p_hive->GetErrorMsg()));
     } else {
       // Add node to model. We have to pass node_name as Ascii as utf8 names are
       // not supported inside hives!
@@ -717,11 +717,10 @@ void MainWindow::SlotDeleteNode(QModelIndex index) {
   {
     // Remove node from hive
     if(!this->p_hive->DeleteNode(node_path)) {
-      // TODO: Get error message and display it
       QMessageBox::critical(this,
                             tr("Error"),
-                            tr("Unable to delete node '%1'!")
-                              .arg(node_path));
+                            tr("Unable to delete node '%1': %2!")
+                              .arg(node_path,this->p_hive->GetErrorMsg()));
       return;
     }
 
@@ -759,10 +758,10 @@ void MainWindow::SlotAddKey() {
                                      dlg_add_key.KeyType(),
                                      dlg_add_key.KeyValue());
     if(new_key==0) {
-      // TODO: Get error
       QMessageBox::critical(this,
                             tr("Error"),
-                            tr("Unable to add key!"));
+                            tr("Unable to add key: %1")
+                              .arg(this->p_hive->GetErrorMsg()));
       return;
     }
 
@@ -820,10 +819,10 @@ void MainWindow::SlotEditKey(QModelIndex index) {
                                         dlg_update_key.KeyType(),
                                         dlg_update_key.KeyValue());
     if(new_key==0) {
-      // TODO: Get error
       QMessageBox::critical(this,
                             tr("Error"),
-                            tr("Unable to update key!"));
+                            tr("Unable to update key: %1")
+                              .arg(this->p_hive->GetErrorMsg()));
       return;
     }
 
@@ -871,11 +870,12 @@ void MainWindow::SlotDeleteKey(QModelIndex index) {
   {
     // Remove key from hive
     if(!this->p_hive->DeleteKey(parent_node_path,key_name)) {
-      // TODO: Get error message and display it
       QMessageBox::critical(this,
                             tr("Error"),
-                            tr("Unable to delete key '%1\\%2'!")
-                              .arg(parent_node_path,key_name));
+                            tr("Unable to delete key '%1\\%2': %3")
+                              .arg(parent_node_path,
+                                   key_name,
+                                   this->p_hive->GetErrorMsg()));
       return;
     }
     // Remove key from table model and update selection
@@ -1058,10 +1058,10 @@ bool MainWindow::SaveHiveChanges() {
   {
     case QMessageBox::Yes: {
       if(!this->p_hive->CommitChanges()) {
-        // TODO: Get error message
         QMessageBox::critical(this,
                               tr("Saving changes"),
-                              tr("Unable to save changes!"));
+                              tr("Unable to save changes: %1")
+                                .arg(this->p_hive->GetErrorMsg()));
         return false;
       }
       break;

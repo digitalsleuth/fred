@@ -327,7 +327,6 @@ void ReportEngine::RegistryKeyValueFromScript(const QScriptValue &obj,
 {
   s.type=obj.property("type").toInt32();
   s.length=obj.property("length").toInt32();
-  // TODO: Don't know if this works, but it probably does ;)
   s.value=qvariant_cast<QByteArray>(obj.property("value").data().toVariant());
 }
 
@@ -441,15 +440,19 @@ QScriptValue ReportEngine::RegistryKeyValueToStringList(QScriptContext *context,
   QStringList strings;
   QScriptValue ret;
   int i=0;
+  bool little_endian=true;
 
-  // This function needs two arguments, key value and key type
-  if(context->argumentCount()!=2) return engine->undefinedValue();
+  // This function needs one arguments, key value, and may have a second
+  // specifying endianness
+  if(context->argumentCount()==0 || context->argumentCount()>2)
+    return engine->undefinedValue();
+  if(context->argumentCount()==2) {
+    little_endian=context->argument(2).toBool();
+  }
 
   // Cast ByteArray argument to QByteArray and convert
   value=qvariant_cast<QByteArray>(context->argument(0).data().toVariant());
-  strings=RegistryHive::KeyValueToStringList(value,
-                                             context->argument(1)
-                                               .toInt32());
+  strings=RegistryHive::KeyValueToStringList(value,little_endian);
 
   // Build script array
   ret=engine->newArray(strings.count());
