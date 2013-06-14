@@ -727,14 +727,16 @@ void MainWindow::SlotDeleteNode(QModelIndex index) {
 
     // Remove node from tree model and select nearest node
     QModelIndex next_node_index=this->p_reg_node_tree_model->RemoveNode(index);
-    next_node_index=
-      this->p_reg_node_tree_model_proxy->mapFromSource(next_node_index);
-    this->p_node_tree->selectionModel()->clear();
-    this->p_node_tree->selectionModel()->
-      select(next_node_index,
-             QItemSelectionModel::ClearAndSelect |
-               QItemSelectionModel::Rows |
-               QItemSelectionModel::Current);
+    if(next_node_index.isValid()) {
+      next_node_index=
+        this->p_reg_node_tree_model_proxy->mapFromSource(next_node_index);
+      this->p_node_tree->selectionModel()->clear();
+      this->p_node_tree->selectionModel()->
+        select(next_node_index,
+               QItemSelectionModel::ClearAndSelect |
+                 QItemSelectionModel::Rows |
+                 QItemSelectionModel::Current);
+    }
     // And finally update key table
     this->SlotNodeTreeClicked(next_node_index);
   }
@@ -767,10 +769,12 @@ void MainWindow::SlotAddKey() {
     // Add new key to the key table model
     QModelIndex new_key_index=
       this->p_reg_key_table_model->AddKey(this->p_hive,new_key);
-    this->p_key_table->clearSelection();
-    this->p_key_table->scrollTo(new_key_index,
-                                QAbstractItemView::PositionAtCenter);
-    this->p_key_table->selectRow(new_key_index.row());
+    if(new_key_index.isValid()) {
+      this->p_key_table->clearSelection();
+      this->p_key_table->scrollTo(new_key_index,
+                                  QAbstractItemView::PositionAtCenter);
+      this->p_key_table->selectRow(new_key_index.row());
+    }
     this->SlotKeyTableClicked(new_key_index);
   }
 }

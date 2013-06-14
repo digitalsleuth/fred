@@ -276,8 +276,10 @@ QModelIndex RegistryNodeTreeModel::RemoveNode(const QModelIndex &index) {
       return this->createIndex(node_row-1,0,p_parent_node->Child(node_row-1));
     }
   }
-  // If no child nodes are left, return parent node
-  return parent_node_index;
+  // If no child nodes are left, return parent node except if it is our root
+  // node!
+  if(p_parent_node->Parent()!=NULL) return parent_node_index;
+  else return QModelIndex();
 }
 
 /*******************************************************************************
