@@ -125,6 +125,7 @@ class RegistryHive : public QObject {
                QString &key_value_type,
                QByteArray &key_value,
                bool create_key);
+    static int FindUnicodeStringEnd(QByteArray data, int offset=0);
 
 };
 

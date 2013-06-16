@@ -388,34 +388,42 @@ int64_t RegistryHive::GetNodeModTime(int node) {
  */
 QString RegistryHive::KeyValueToString(QByteArray value, int value_type) {
   QString ret="";
-  int i=0;
 
-  #define ToHexStr() {                                                      \
-    for(i=0;i<value.size();i++) {                                           \
-    ret.append(QString().sprintf("%02X ",(uint8_t)(value.constData()[i]))); \
-    }                                                                       \
-    ret.chop(1);                                                            \
+  #define ToHexStr() {                                                        \
+    for(int i=0;i<value.size();i++) {                                         \
+      ret.append(QString().sprintf("%02X ",(uint8_t)(value.constData()[i]))); \
+    }                                                                         \
+    ret.chop(1);                                                              \
   }
 
+  // Convert value according to it's type
   switch(value_type) {
-    case hive_t_REG_NONE:
-      // Just a key without a value, but to be certain...
-      ToHexStr();
-      break;
     case hive_t_REG_SZ:
-      // A Windows string (encoding is unknown, but often UTF16-LE)
-      // TODO: What happens if encoding is not UTF16-LE ??? Thx Billy!!!
-      ret=value.size() ? QString().fromUtf16((ushort*)(value.constData())) : "";
-      break;
     case hive_t_REG_EXPAND_SZ:
-      // A Windows string (encoding is unknown, but often UTF16-LE) that may
-      // contain %env% (environment variable expansion) elements
-      // TODO: What happens if encoding is not UTF16-LE ??? Thx Billy!!!
-      ret=value.size() ? QString().fromUtf16((ushort*)(value.constData())) : "";
+      // A Windows string (REG_SZ), or a Windows string containing %env%
+      // (environment variable expansion) elements (REG_EXPAND_SZ).
+      // Encoding is unknown, but often UTF16-LE (isn't this great?)
+      // Try to detect ANSI vs UNICODE encoding
+      if(value.size()==0) {
+        ret=QString();
+      } else if(value.size()>=2 && value.endsWith(QByteArray("\x00\x00",2))) {
+        // Seems to be a unicode string, convert to host endianness and return
+        // TODO: What if it is UTF16-BE?? Thx Billy!
+        QByteArray buf=value;
+        UTF16LETOH(buf.data(),buf.size());
+        ret=QString().fromUtf16((ushort*)(buf.constData()));
+      } else if(value.endsWith(QByteArray("\x00",1))) {
+        // Seems to be an ansi string
+        ret=QString().fromAscii((char*)value.constData());
+      } else {
+        // If we can't detect encoding, return string as hex
+        ToHexStr();
+      }
       break;
-    case hive_t_REG_BINARY:
-      // A blob of binary
-      ToHexStr();
+    case hive_t_REG_MULTI_SZ:
+      // Multiple Windows strings.
+      // I suppose this is always LE encoded! M$ devs really suck!
+      ret=RegistryHive::KeyValueToStringList(value).join("\n");
       break;
     case hive_t_REG_DWORD:
       // DWORD (32 bit integer), little endian
@@ -425,36 +433,27 @@ QString RegistryHive::KeyValueToString(QByteArray value, int value_type) {
       // DWORD (32 bit integer), big endian
       ret=QString().sprintf("0x%08X",BE32TOH(*(uint32_t*)value.constData()));
       break;
-    case hive_t_REG_LINK:
-      // Symbolic link to another part of the registry tree
-      ToHexStr();
-      break;
-    case hive_t_REG_MULTI_SZ:
-      // Multiple Windows strings.
-      // I suppose this is always LE encoded! M$ devs really suck!
-      ret=RegistryHive::KeyValueToStringList(value).join("\n");
-      break;
-    case hive_t_REG_RESOURCE_LIST:
-      // Resource list
-      ToHexStr();
-      break;
-    case hive_t_REG_FULL_RESOURCE_DESCRIPTOR:
-      // Resource descriptor
-      ToHexStr();
-      break;
-    case hive_t_REG_RESOURCE_REQUIREMENTS_LIST:
-      // Resouce requirements list
-      ToHexStr();
-      break;
     case hive_t_REG_QWORD:
-      // QWORD (64 bit integer). Usually little endian.
+      // QWORD (64 bit integer). Usually little endian (grrrr).
       ret=
         QString("0x%1").arg((quint64)LE64TOH(*(uint64_t*)value.constData()),
                             16,
                             16,
                             QChar('0'));
       break;
+    case hive_t_REG_NONE:
+    case hive_t_REG_BINARY:
+    case hive_t_REG_LINK:
+    case hive_t_REG_RESOURCE_LIST:
+    case hive_t_REG_FULL_RESOURCE_DESCRIPTOR:
+    case hive_t_REG_RESOURCE_REQUIREMENTS_LIST:
     default:
+      // A key without a value (REG_NONE), a blob of binary (REG_BINARY), a
+      // symbolic link to another part of the registry tree (REG_LINK), a
+      // resource list (REG_RESOURCE_LIST), a resource descriptor
+      // (FULL_RESOURCE_DESCRIPTOR), a resource requirements list
+      // (REG_RESOURCE_REQUIREMENTS_LIST) or something unknown.
+      // All these are converted to hex.
       ToHexStr();
   }
 
@@ -579,22 +578,36 @@ QString RegistryHive::KeyValueToString(QByteArray key_value,
       }
     }
   } else if(format=="utf16" && remaining_data_len>=2) {
+    QByteArray buf;
     if(length!=-1) {
       // User specified how many bytes to convert
-      ret=QString().fromUtf16((ushort*)p_data,length);
+      buf=key_value.mid(offset,(length%2)==0 ? length : length-1);
+      buf.append("\x00\x00",2);
     } else {
       // User did not specify how many bytes to convert, make sure data is
       // double 0 terminated
-      if(key_value.indexOf(QByteArray("\x00\x00",2),offset)!=-1) {
+      int null_offset=RegistryHive::FindUnicodeStringEnd(key_value.mid(offset));
+      if(null_offset!=-1) {
         // Data is double 0 terminated
-        ret=QString().fromUtf16((ushort*)p_data);
+        buf=key_value.mid(offset,null_offset+2);
       } else {
         // Data is not double 0 terminated, convert all remaining_data_len bytes
-        ret=QString().fromUtf16((ushort*)p_data,remaining_data_len);
+        buf=key_value.mid(offset,
+                          (remaining_data_len%2)==0 ?
+                            remaining_data_len : remaining_data_len-1);
+        buf.append("\x00\x00",2);
       }
     }
+    // Convert from requested endianness to host
+    if(little_endian) {
+      UTF16LETOH(buf.data(),buf.size());
+    } else {
+      UTF16BETOH(buf.data(),buf.size());
+    }
+    ret=QString().fromUtf16((ushort*)buf.constData());
   } else {
     // Unknown variant type or another error
+    // TODO: Maybe return an error
     return QString();
   }
 
@@ -635,14 +648,14 @@ QStringList RegistryHive::KeyValueToStringList(QByteArray value,
       is_ansi=true;
     }
   } else if((uint32_t)*((uint32_t*)(value.right(4).constData()))==0) {
-    // Value end with 4 \0 chars, it must be unicode
+    // Value ends with 4 \0 chars, it must be unicode
     is_ansi=false;
   } else if((uint32_t)*((uint32_t*)(value.right(3).constData()))==0) {
-    // Value end with 3 \0 chars. Not possible according to the specs, but
+    // Value ends with 3 \0 chars. Not possible according to the specs, but
     // already seen in values M$ is storing! Those were unicode.
     is_ansi=false;
   } else if((uint16_t)*((uint16_t*)(value.right(2).constData()))==0) {
-    // Value only end with 2 \0 chars, it must be ansi
+    // Value only ends with 2 \0 chars, it must be ansi
     is_ansi=true;
   } else {
     // Value has more than 4 chars but does not end in 2 or 4 \0 chars. This
@@ -657,23 +670,19 @@ QStringList RegistryHive::KeyValueToStringList(QByteArray value,
   if(!is_ansi) {
     // Extract unicode strings
     while(last_pos<value.size() &&
-          (cur_pos=value.indexOf(QByteArray("\x00\x00",2),last_pos))!=-1)
+          (cur_pos=RegistryHive::FindUnicodeStringEnd(value,last_pos))!=-1)
     {
       if(cur_pos==last_pos) break;
-      buf=value.mid(last_pos,(cur_pos-last_pos)+3);
+      buf=value.mid(last_pos,(cur_pos-last_pos)+2);
       if(little_endian) {
         // Convert from LE to host
-        for(int i=0;i<buf.size();i+=2) {
-          *((uint16_t*)(buf.data()+i))=LE16TOH(*((uint16_t*)(buf.data()+i)));
-        }
+        UTF16LETOH(buf.data(),buf.size());
       } else {
         // Convert from BE to host
-        for(int i=0;i<buf.size();i+=2) {
-          *((uint16_t*)(buf.data()+i))=BE16TOH(*((uint16_t*)(buf.data()+i)));
-        }
+        UTF16BETOH(buf.data(),buf.size());
       }
       result.append(QString().fromUtf16((ushort*)buf.constData()));
-      last_pos=cur_pos+3;
+      last_pos=cur_pos+2;
     }
   } else {
     // Extract ansi strings
@@ -723,13 +732,9 @@ QByteArray RegistryHive::StringListToKeyValue(QStringList strings,
       buf=QByteArray((char*)(cur_string.utf16()),cur_string.size()*2);
       // Then convert to correct endianness
       if(little_endian) {
-        for(int i=0;i<buf.size();i+=2) {
-          *((uint16_t*)(buf.data()+i))=HTOLE16(*((uint16_t*)(buf.data()+i)));
-        }
+        HTOUTF16LE(buf.data(),buf.size());
       } else {
-        for(int i=0;i<buf.size();i+=2) {
-          *((uint16_t*)(buf.data()+i))=HTOBE16(*((uint16_t*)(buf.data()+i)));
-        }
+        HTOUTF16BE(buf.data(),buf.size());
       }
       // And finally append converted value and terminating \0\0 to result
       result.append(buf);
@@ -1340,4 +1345,15 @@ int RegistryHive::SetKey(QString &parent_node_path,
 
   this->has_changes_to_commit=true;
   return key;
+}
+
+/*
+ * FindUnicodeStringEnd
+ */
+int RegistryHive::FindUnicodeStringEnd(QByteArray data, int offset) {
+  int end_pos;
+  for(end_pos=offset;end_pos<(data.size()-1);end_pos+=2) {
+    if(*((uint16_t*)(data.constData()+end_pos))==0) break;
+  }
+  return end_pos<(data.size()-1) ? end_pos : -1;
 }

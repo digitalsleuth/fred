@@ -66,9 +66,6 @@ function ListService(service_node) {
 function fred_report_html() {
   var val;
 
-//  println("<html>");
-//  println("  <head><title>Services</title></head>");
-//  println("  <body style=\"font-size:12\">");
   println("  <h2>Services</h2>");
 
   // Get current controlset
@@ -106,6 +103,4 @@ function fred_report_html() {
     println("    Are you sure you are running this report against the correct registry hive?");
     println("  </font></p>");
   }
-
-//  println("</html>");
 }

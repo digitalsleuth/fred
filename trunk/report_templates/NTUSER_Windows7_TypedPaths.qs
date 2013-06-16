@@ -15,9 +15,6 @@ function IsValid(val) {
 }
 
 function fred_report_html() {
-//  println("<html>");
-//  println("  <head><title>Typed Paths</title></head>");
-//  println("  <body style=\"font-size:12\">");
   println("  <h2>Typed paths</h2>");
 
   // Iterate over all typed paths
@@ -44,6 +41,4 @@ function fred_report_html() {
     println("    This registry hive does not contain a list of typed paths!");
     println("  </font></p>");
   }
-
-//  println("</html>");
 }

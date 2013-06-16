@@ -15,9 +15,6 @@ function IsValid(val) {
 }
 
 function fred_report_html() {
-//  println("<html>");
-//  println("  <head><title>Windows Live Accounts</title></head>");
-//  println("  <body style=\"font-size:12\">");
   println("  <h2>Windows live accounts</h2>");
 
   // Iterate over all contacts
@@ -43,6 +40,4 @@ function fred_report_html() {
     println("    This registry hive does not contain a list of Windows Live Accounts!");
     println("  </font></p>");
   }
-
-//  println("</html>");
 }

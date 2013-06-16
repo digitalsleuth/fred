@@ -29,9 +29,6 @@ function fred_report_html() {
   // http://technet.microsoft.com/de-de/library/cc739819%28v=WS.10%29.aspx
   var val;
 
-//  println("<html>");
-//  println("  <head><title>Current Network Settings (Tcp/Ip)</title></head>");
-//  println("  <body style=\"font-size:12\">");
   println("  <h2>Current network settings (Tcp/Ip)</h2>");
 
   // Get current controlset
@@ -136,6 +133,4 @@ function fred_report_html() {
     println("    Are you sure you are running this report against the correct registry hive?");
     println("  </font></p>");
   }
-
-//  println("</html>");
 }

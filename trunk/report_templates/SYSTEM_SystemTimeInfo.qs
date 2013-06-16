@@ -39,9 +39,6 @@ function ZeroPad(number,padlen) {
 function fred_report_html() {
   var val;
 
-//  println("<html>");
-//  println("  <head><title>System Time Info</title></head>");
-//  println("  <body style=\"font-size:12\">");
   println("  <h2>System time info</h2>");
 
   // Get current controlset
@@ -117,6 +114,4 @@ function fred_report_html() {
     println("    Are you sure you are running this report against the correct registry hive?");
     println("  </font></p>");
   }
-
-//  println("</html>");
 }

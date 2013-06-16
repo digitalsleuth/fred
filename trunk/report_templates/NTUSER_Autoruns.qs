@@ -41,9 +41,6 @@ function ListAutoruns(autorun_path,autorun_key) {
 function fred_report_html() {
   var val;
 
-//  println("<html>");
-//  println("  <head><title>User Autoruns</title></head>");
-//  println("  <body style=\"font-size:12\">");
   println("  <h2>User Autoruns</h2>");
 
   // Run
@@ -56,6 +53,4 @@ function fred_report_html() {
   ListAutoruns("\\Microsoft\\Windows\\CurrentVersion\\","RunOnceEx");
 
   // TODO: There might be a Run under WindowsNT\CurrentVersion\Run too!
-
-//  println("</html>");
 }

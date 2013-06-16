@@ -18,14 +18,6 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#ifndef FRED_REPORT_TEMPLATE_DIR
-  #ifndef __MINGW32__
-    #define FRED_REPORT_TEMPLATE_DIR "/usr/share/fred/report_templates/"
-  #else
-    #define FRED_REPORT_TEMPLATE_DIR ".\\report_templates\\"
-  #endif
-#endif
-
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QStringList>
@@ -961,11 +953,11 @@ void MainWindow::UpdateWindowTitle(QString filename) {
 void MainWindow::UpdateMenuStates() {
   if(this->is_hive_open) {
     this->ui->action_Close_hive->setEnabled(true);
-    this->ui->ActionEnableWriteSupport->setEnabled(true);
     this->ui->ActionSearch->setEnabled(true);
     this->ui->ActionEnableWriteSupport->setEnabled(true);
     this->ui->ActionGenerateReport->setEnabled(true);
     this->ui->ActionReloadReportTemplates->setEnabled(true);
+    this->UpdateEnableWriteSupportMenu();
   } else {
     this->ui->action_Close_hive->setEnabled(false);
     this->ui->ActionEnableWriteSupport->setEnabled(false);
@@ -1034,7 +1026,7 @@ void MainWindow::UpdateEnableWriteSupportMenu() {
     this->p_node_tree->SetWritable(false);
     this->p_key_table->SetWritable(false);
   } else {
-    this->ui->ActionEnableWriteSupport->setText(tr("Disable &write support"));
+    this->ui->ActionEnableWriteSupport->setEnabled(false);
     this->p_node_tree->SetWritable(true);
     this->p_key_table->SetWritable(true);
   }

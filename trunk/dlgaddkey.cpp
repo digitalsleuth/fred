@@ -43,6 +43,7 @@ DlgAddKey::DlgAddKey(QWidget *p_parent,
 {
   this->p_current_widget=NULL;
   ui->setupUi(this);
+  this->ansi_encoded=false;
 
   // Create widgets
   this->CreateValueWidgets();
@@ -105,7 +106,9 @@ void DlgAddKey::on_BtnOk_clicked() {
     if(cur_data!=new_data) {
       if(QMessageBox::information(this,
                                   tr("Invalid data"),
-                                  tr("A REG_MULTI_SZ can not contain empty sub-strings! If you continue, they will be removed."),
+                                  tr("A REG_MULTI_SZ can not contain empty "
+                                       "sub-strings! If you continue, they "
+                                       "will be removed."),
                                   QMessageBox::Yes,
                                   QMessageBox::No)==QMessageBox::Yes)
       {
@@ -127,7 +130,9 @@ void DlgAddKey::on_BtnOk_clicked() {
     if(!ok) {
       QMessageBox::information(this,
                                tr("Invalid data"),
-                               tr("The value you entered could not be converted to a %1! Please correct it.").arg(key_value_type),
+                               tr("The value you entered could not be "
+                                    "converted to a %1! Please correct it.")
+                                 .arg(key_value_type),
                                QMessageBox::Ok);
       return;
     }
@@ -141,7 +146,9 @@ void DlgAddKey::on_BtnOk_clicked() {
     if(!ok) {
       QMessageBox::information(this,
                                tr("Invalid data"),
-                               tr("The value you entered could not be converted to a %1! Please correct it.").arg(key_value_type),
+                               tr("The value you entered could not be "
+                                    "converted to a %1! Please correct it.")
+                                 .arg(key_value_type),
                                QMessageBox::Ok);
       return;
     }
@@ -196,10 +203,15 @@ void DlgAddKey::on_CmbKeyType_currentIndexChanged(const QString &arg1) {
 void DlgAddKey::CreateValueWidgets() {
   this->p_line_widget=new QWidget();
   this->p_line_widget_layout=new QHBoxLayout(this->p_line_widget);
+  //this->p_line_widget_layout_rb_ansi=new QRadioButton(tr("Ansi"));
+  //this->p_line_widget_layout_rb_unicode=new QRadioButton(tr("Unicode"));
+  //this->p_line_widget_layout_rb_unicode->setChecked(true);
   this->p_line_widget_line_edit=new QLineEdit();
   this->p_line_widget->setContentsMargins(0,0,0,0);
   this->p_line_widget_layout->setContentsMargins(0,0,0,0);
   this->p_line_widget_layout->addWidget(this->p_line_widget_line_edit);
+  //this->p_line_widget_layout->addWidget(this->p_line_widget_layout_rb_ansi);
+  //this->p_line_widget_layout->addWidget(this->p_line_widget_layout_rb_unicode);
 
   this->p_text_widget=new QWidget();
   this->p_text_widget_layout=new QHBoxLayout(this->p_text_widget);
@@ -229,6 +241,8 @@ void DlgAddKey::CreateValueWidgets() {
 }
 
 void DlgAddKey::DestroyValueWidgets() {
+  //delete this->p_line_widget_layout_rb_ansi;
+  //delete this->p_line_widget_layout_rb_unicode;
   delete this->p_line_widget_line_edit;
   delete this->p_line_widget_layout;
   delete this->p_line_widget;
@@ -257,9 +271,8 @@ void DlgAddKey::SetValueWidgetData(QByteArray &key_value,
                                      RegistryHive::StringToKeyValueType(
                                        key_value_type)));
   } else if(key_value_type=="REG_MULTI_SZ") {
-    // TODO: Switch to RegistryHive::KeyValueStringList
-    // TODO: Identify if this is UTF16 or UTF8 and remember it
-    QStringList strings=RegistryHive::KeyValueToStringList(key_value);
+    QStringList strings=
+      RegistryHive::KeyValueToStringList(key_value,&(this->ansi_encoded));
     this->p_text_widget_text_edit->setPlainText(strings.join("\n"));
   } else if(key_value_type=="REG_DWORD") {
     this->p_number_widget_line_edit->setText(
@@ -299,30 +312,14 @@ QByteArray DlgAddKey::GetValueWidgetData() {
     free(p_buf);
     return ret;
   } else if(key_value_type=="REG_MULTI_SZ") {
-    // TODO: Switch to RegistryHive::StringListToKeyValue
-    // TODO: Wouldn't it be wise to let the user choose the encoding?
-    // TODO: When editing, use same encoding as original data
-    QString data=this->p_text_widget_text_edit->toPlainText();
-    // Convert data to UTF16LE buffer
-    uint16_t *p_buf=NULL;
-    int buf_len=this->ToUtf16LeBuf(&p_buf,data.utf16(),data.size());
-    if(p_buf==NULL || buf_len==0) {
-      // TODO: Inform user there was an error???
-      return QByteArray("\x00\x00\x00\x00",4);
-    }
-    // Replace \n in buffer with \0 which actually converts it to a
-    // semi REG_MULTI_SZ :-)
+    // TODO: Let the user choose the encoding / endianness
     // TODO: Do we need to check for \r\n on Windows??
-    for(int i=0;i<buf_len;i++) {
-      if(LE32TOH(p_buf[i])==10) p_buf[i]=0;
-    }
-    // Construct ByteArray
-    QByteArray ret=QByteArray((char*)p_buf,buf_len);
-    // Append \0\0 to the end to make a real REG_MULTI_SZ
-    ret.append("\x00\x00",2);
-    // Free buffer and return
-    free(p_buf);
-    return ret;
+    return RegistryHive::StringListToKeyValue(
+      this->p_text_widget_text_edit->
+        toPlainText().split("\n",
+                            QString::SkipEmptyParts),
+      true,
+      this->ansi_encoded);
   } else if(key_value_type=="REG_DWORD" ||
             key_value_type=="REG_DWORD_BIG_ENDIAN")
   {

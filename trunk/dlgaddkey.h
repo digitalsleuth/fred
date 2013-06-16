@@ -60,6 +60,8 @@ class DlgAddKey : public QDialog {
     QWidget *p_current_widget;
     QWidget *p_line_widget;
     QHBoxLayout *p_line_widget_layout;
+    //QRadioButton *p_line_widget_layout_rb_ansi;
+    //QRadioButton *p_line_widget_layout_rb_unicode;
     QLineEdit *p_line_widget_line_edit;
     QWidget *p_text_widget;
     QHBoxLayout *p_text_widget_layout;
@@ -72,6 +74,7 @@ class DlgAddKey : public QDialog {
     QWidget *p_binary_widget;
     QHBoxLayout *p_binary_widget_layout;
     HexEditWidget *p_binary_widget_hex_edit;
+    bool ansi_encoded;
 
     void CreateValueWidgets();
     void DestroyValueWidgets();

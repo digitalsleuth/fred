@@ -28,9 +28,6 @@ function fred_report_html() {
   // TODO: There is more here. Check http://www.forensicswiki.org/wiki/USB_History_Viewing
   var val;
 
-//  println("<html>");
-//  println("  <head><title>USB Storage Devices</title></head>");
-//  println("  <body style=\"font-size:12\">");
   println("  <h2>USB storage devices</h2>");
 
   // Preload MountedDevices to possibly identify mount points of USB storage devices
@@ -145,6 +142,4 @@ function fred_report_html() {
     println("    Are you sure you are running this report against the correct registry hive?");
     println("  </font></p>");
   }
-
-//  println("</html>");
 }

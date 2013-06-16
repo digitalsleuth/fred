@@ -148,11 +148,13 @@ void RegistryKeyTable::contextMenuEvent(QContextMenuEvent *p_event) {
   // Decide what menus should be enabled
   if(this->selectedIndexes().count()==3) {
     // A row is selected, enable full context menu
-    this->p_action_edit_key->setEnabled(true);
-    this->p_action_delete_key->setEnabled(true);
+    this->p_action_add_key->setEnabled(this->is_writable);
+    this->p_action_edit_key->setEnabled(this->is_writable);
+    this->p_action_delete_key->setEnabled(this->is_writable);
     this->p_menu_copy->setEnabled(true);
   } else {
     // No row is selected, disable all menu items except AddKey
+    this->p_action_add_key->setEnabled(this->is_writable);
     this->p_action_edit_key->setEnabled(false);
     this->p_action_delete_key->setEnabled(false);
     this->p_menu_copy->setEnabled(false);

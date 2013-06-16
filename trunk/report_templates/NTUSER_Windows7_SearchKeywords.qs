@@ -15,9 +15,6 @@ function IsValid(val) {
 }
 
 function fred_report_html() {
-//  println("<html>");
-//  println("  <head><title>Document And Folder Search Keywords</title></head>");
-//  println("  <body style=\"font-size:12\">");
   println("  <h2>Document and folder search keywords</h2>");
 
   // Get list of search keys
@@ -49,6 +46,4 @@ function fred_report_html() {
     println("    This registry hive does not contain a list of document and folder search keywords!");
     println("  </font></p>");
   }
-
-//  println("</html>");
 }

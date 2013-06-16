@@ -133,6 +133,7 @@
  * Macros for endianness conversion
  */
 #ifdef MACROS_ENDIANNESS
+  #include <inttypes.h>
   #include <endian.h>
 
   #undef LE16TOH
@@ -159,6 +160,30 @@
   #define HTOLE64(var) htole64(var)
   #undef HTOBE64
   #define HTOBE64(var) htobe64(var)
+  #undef UTF16LETOH
+  #define UTF16LETOH(buf,buf_len) {                                         \
+    for(int buf_off=0;buf_off<((buf_len)-1);buf_off+=2) {                   \
+      *((uint16_t*)((buf)+buf_off))=LE16TOH(*((uint16_t*)((buf)+buf_off))); \
+    }                                                                       \
+  }
+  #undef UTF16BETOH
+  #define UTF16BETOH(buf,buf_len) {                                         \
+    for(int buf_off=0;buf_off<((buf_len)-1);buf_off+=2) {                   \
+      *((uint16_t*)((buf)+buf_off))=BE16TOH(*((uint16_t*)((buf)+buf_off))); \
+    }                                                                       \
+  }
+  #undef HTOUTF16LE
+  #define HTOUTF16LE(buf,buf_len) {                                         \
+    for(int buf_off=0;buf_off<((buf_len)-1);buf_off+=2) {                   \
+      *((uint16_t*)((buf)+buf_off))=HTOLE16(*((uint16_t*)((buf)+buf_off))); \
+    }                                                                       \
+  }
+  #undef HTOUTF16BE
+  #define HTOUTF16BE(buf,buf_len) {                                         \
+    for(int buf_off=0;buf_off<((buf_len)-1);buf_off+=2) {                   \
+      *((uint16_t*)((buf)+buf_off))=HTOBE16(*((uint16_t*)((buf)+buf_off))); \
+    }                                                                       \
+  }
 #endif
 
 /*
