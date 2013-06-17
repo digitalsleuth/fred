@@ -54,6 +54,8 @@ class DlgAddKey : public QDialog {
     void on_BtnCancel_clicked();
     void on_BtnOk_clicked();
     void on_CmbKeyType_currentIndexChanged(const QString &arg1);
+    void SlotNumberWidgetRbDecClicked(bool checked);
+    void SlotNumberWidgetRbHexClicked(bool checked);
 
   private:
     Ui::DlgAddKey *ui;
@@ -69,7 +71,7 @@ class DlgAddKey : public QDialog {
     QWidget *p_number_widget;
     QHBoxLayout *p_number_widget_layout;
     QLineEdit *p_number_widget_line_edit;
-    QRadioButton *p_number_widget_rb_decimal;
+    QRadioButton *p_number_widget_rb_dec;
     QRadioButton *p_number_widget_rb_hex;
     QWidget *p_binary_widget;
     QHBoxLayout *p_binary_widget_layout;
@@ -81,6 +83,7 @@ class DlgAddKey : public QDialog {
     void SetValueWidgetData(QByteArray &key_value, QString &key_value_type);
     QByteArray GetValueWidgetData();
     int ToUtf16LeBuf(uint16_t **pp_buf,const uint16_t *p_data, int ascii_len);
+    void SetNumberWidgetLineEditInputMask();
 };
 
 #endif // DLGADDKEY_H
