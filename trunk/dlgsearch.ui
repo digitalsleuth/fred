@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string> Search</string>
+   <string>Find</string>
   </property>
   <property name="windowIcon">
    <iconset resource="fred.qrc">

@@ -18,14 +18,14 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#include "reports.h"
-
 #include <QStringList>
 #include <QListIterator>
 #include <QDir>
 #include <QMap>
 
 #include <QDebug>
+
+#include "reports.h"
 
 /*******************************************************************************
  * Public
@@ -161,7 +161,9 @@ void Reports::LoadReportTemplatesFromDir(QString dir) {
        FRED_REPORTENGINE_API_VERSION)
     {
       // TODO: Inform user
-      qDebug()<<"Report '"<<report_template<<"' is not compatible with current API!";
+      qDebug()<<"Report '"<<report_template
+        <<"' is not compatible with current API!";
+      continue;
     }
 
     // Extract info values. If a value isn't present, it will be set to ""

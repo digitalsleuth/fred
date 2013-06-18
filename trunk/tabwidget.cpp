@@ -18,13 +18,13 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#include "tabwidget.h"
-
 #include <QTabBar>
 #include <QPushButton>
 #include <QIcon>
 #include <QSize>
 #include <QPoint>
+
+#include "tabwidget.h"
 
 TabWidget::TabWidget(QWidget *p_parent) : QTabWidget(p_parent) {}
 

@@ -18,14 +18,14 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#include "dlgreportviewer.h"
-#include "ui_dlgreportviewer.h"
-
 #include <QPrinter>
 #include <QPrintDialog>
 #include <QFileDialog>
 #include <QTextDocument>
 #include <QTextDocumentWriter>
+
+#include "dlgreportviewer.h"
+#include "ui_dlgreportviewer.h"
 
 DlgReportViewer::DlgReportViewer(QString &report_data,
                                  Settings *p_sets,

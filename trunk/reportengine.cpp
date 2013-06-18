@@ -18,14 +18,14 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#include "reportengine.h"
-
 #include <QFile>
 #include <QTextStream>
 #include <QDateTime>
 #include <QStringList>
 
 #include <QtDebug>
+
+#include "reportengine.h"
 
 /*******************************************************************************
  * Public

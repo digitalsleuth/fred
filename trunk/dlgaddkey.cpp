@@ -132,10 +132,9 @@ void DlgAddKey::on_BtnOk_clicked() {
   {
     bool ok=false;
     if(this->p_number_widget_rb_dec->isChecked()) {
-      this->p_number_widget_line_edit->text().toInt(&ok);
+      this->p_number_widget_line_edit->text().toUInt(&ok);
     } else {
-      // TODO: There seems to be a problem with 0xFFFFFFFF
-      this->p_number_widget_line_edit->text().toInt(&ok,16);
+      this->p_number_widget_line_edit->text().toUInt(&ok,16);
     }
     if(!ok) {
       QMessageBox::information(this,
@@ -149,9 +148,9 @@ void DlgAddKey::on_BtnOk_clicked() {
   } else if(key_value_type=="REG_QWORD") {
     bool ok=false;
     if(this->p_number_widget_rb_dec->isChecked()) {
-      this->p_number_widget_line_edit->text().toLongLong(&ok);
+      this->p_number_widget_line_edit->text().toULongLong(&ok);
     } else {
-      this->p_number_widget_line_edit->text().toLongLong(&ok,16);
+      this->p_number_widget_line_edit->text().toULongLong(&ok,16);
     }
     if(!ok) {
       QMessageBox::information(this,
@@ -207,6 +206,59 @@ void DlgAddKey::on_CmbKeyType_currentIndexChanged(const QString &arg1) {
     this->ui->LblKeyValue->setVisible(true);
   } else {
     this->ui->LblKeyValue->setVisible(false);
+  }
+}
+
+void DlgAddKey::SlotNumberWidgetRbDecClicked(bool checked) {
+  if(checked) {
+    bool ok=false;
+    if(this->KeyType()=="REG_QWORD") {
+      uint64_t num=this->p_number_widget_line_edit->text().toULongLong(&ok,16);
+      if(ok) {
+        // Convert number to dec
+        this->p_number_widget_line_edit->setText(QString().sprintf("%u",num));
+      }
+    } else {
+      uint32_t num=this->p_number_widget_line_edit->text().toUInt(&ok,16);
+      if(ok) {
+        // Convert number to dec
+        this->p_number_widget_line_edit->setText(QString().sprintf("%u",num));
+      }
+    }
+    if(!ok) {
+      QMessageBox::warning(this,
+                           tr("Errror"),
+                           tr("Unable to convert entered value to decimal!"),
+                           QMessageBox::Ok);
+      this->p_number_widget_rb_hex->setChecked(true);
+    }
+  }
+}
+
+void DlgAddKey::SlotNumberWidgetRbHexClicked(bool checked) {
+  if(checked) {
+    bool ok=false;
+    if(this->KeyType()=="REG_QWORD") {
+      uint64_t num=this->p_number_widget_line_edit->text().toULongLong(&ok);
+      if(ok) {
+        // Convert number to hex
+        this->p_number_widget_line_edit->setText(QString().sprintf("%016X",
+                                                                   num));
+      }
+    } else {
+      uint32_t num=this->p_number_widget_line_edit->text().toUInt(&ok);
+      if(ok) {
+        // Convert number to hex
+        this->p_number_widget_line_edit->setText(QString().sprintf("%08X",num));
+      }
+    }
+    if(!ok) {
+      QMessageBox::warning(this,
+                           tr("Errror"),
+                           tr("Unable to convert entered value to hex!"),
+                           QMessageBox::Ok);
+      this->p_number_widget_rb_dec->setChecked(true);
+    }
   }
 }
 
@@ -286,13 +338,13 @@ void DlgAddKey::SetValueWidgetData(QByteArray &key_value,
     this->p_text_widget_text_edit->setPlainText(strings.join("\n"));
   } else if(key_value_type=="REG_DWORD") {
     this->p_number_widget_line_edit->setText(
-      RegistryHive::KeyValueToString(key_value,"int32"));
+      RegistryHive::KeyValueToString(key_value,"uint32"));
   } else if(key_value_type=="REG_DWORD_BIG_ENDIAN") {
     this->p_number_widget_line_edit->setText(
-      RegistryHive::KeyValueToString(key_value,"int32",0,0,false));
+      RegistryHive::KeyValueToString(key_value,"uint32",0,0,false));
   } else if(key_value_type=="REG_QWORD") {
     this->p_number_widget_line_edit->setText(
-      RegistryHive::KeyValueToString(key_value,"int64",0,0,false));
+      RegistryHive::KeyValueToString(key_value,"uint64",0,0,false));
   } else if(key_value_type=="REG_BINARY" ||
             key_value_type=="REG_LINK" ||
             key_value_type=="REG_RESOURCE_LIST" ||
@@ -333,21 +385,21 @@ QByteArray DlgAddKey::GetValueWidgetData() {
   } else if(key_value_type=="REG_DWORD" ||
             key_value_type=="REG_DWORD_BIG_ENDIAN")
   {
-    int32_t val;
+    uint32_t val;
     if(this->p_number_widget_rb_dec->isChecked()) {
-      val=this->p_number_widget_line_edit->text().toInt();
+      val=this->p_number_widget_line_edit->text().toUInt();
     } else {
-      val=this->p_number_widget_line_edit->text().toInt(0,16);
+      val=this->p_number_widget_line_edit->text().toUInt(0,16);
     }
     if(key_value_type=="REG_DWORD") val=HTOLE32(val);
     else val=HTOBE32(val);
     return QByteArray((char*)&val,4);
   } else if(key_value_type=="REG_QWORD") {
-    int64_t val;
+    uint64_t val;
     if(this->p_number_widget_rb_dec->isChecked()) {
-      val=this->p_number_widget_line_edit->text().toLongLong();
+      val=this->p_number_widget_line_edit->text().toULongLong();
     } else {
-      val=this->p_number_widget_line_edit->text().toLongLong(0,16);
+      val=this->p_number_widget_line_edit->text().toULongLong(0,16);
     }
     val=HTOLE64(val);
     return QByteArray((char*)&val,8);
@@ -386,61 +438,4 @@ int DlgAddKey::ToUtf16LeBuf(uint16_t **pp_buf,
   }
 
   return buf_len;
-}
-
-void DlgAddKey::SetNumberWidgetLineEditInputMask() {
-  QString value_type=this->KeyType();
-
-  //if() TODO
-}
-
-void DlgAddKey::SlotNumberWidgetRbDecClicked(bool checked) {
-  if(checked) {
-    bool ok=false;
-    if(this->KeyType()=="REG_QWORD") {
-      int64_t num=this->p_number_widget_line_edit->text().toLongLong(&ok,16);
-      if(ok) {
-        // Convert number to dec
-        this->p_number_widget_line_edit->setText(QString().arg(num));
-        // Set input mask to 17 digit chars, 16 optional, 1 required
-        this->p_number_widget_line_edit->setInputMask("#000000000000000009;0");
-      }
-    } else {
-      int32_t num=this->p_number_widget_line_edit->text().toLong(&ok,16);
-      if(ok) {
-        // Convert number to dec
-        this->p_number_widget_line_edit->setText(QString().arg(num));
-        // Set input mask to 10 digit chars, 9 optional, 1 required
-        this->p_number_widget_line_edit->setInputMask("#0000000009;0");
-      }
-    }
-  }
-}
-
-void DlgAddKey::SlotNumberWidgetRbHexClicked(bool checked) {
-  if(checked) {
-    bool ok=false;
-    if(this->KeyType()=="REG_QWORD") {
-      uint64_t num=this->p_number_widget_line_edit->text().toULongLong(&ok);
-      if(ok) {
-        // Convert number to hex
-        this->p_number_widget_line_edit->setText(QString().sprintf("%016X",
-                                                                   num));
-        // Set input mask to 16 hex chars, 15 optional, 1 required
-        this->p_number_widget_line_edit->setInputMask("hhhhhhhhhhhhhhhH;0");
-      }
-    } else {
-      uint32_t num=this->p_number_widget_line_edit->text().toULong(&ok);
-      if(ok) {
-        // Convert number to hex
-        this->p_number_widget_line_edit->setText(QString().sprintf("%08X",num));
-        // Set input mask to 8 hex chars, 7 optional, 1 required
-        this->p_number_widget_line_edit->setInputMask("hhhhhhhH;0");
-      }
-    }
-    if(!ok) {
-      // TODO: Display error
-      this->p_number_widget_rb_dec->setChecked(true);
-    }
-  }
 }

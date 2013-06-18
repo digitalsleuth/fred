@@ -20,10 +20,11 @@
 
 #include <QStringList>
 #include <QDateTime>
-#include <stdlib.h>
-#include <stdio.h>
 
 #include <QDebug>
+
+#include <stdlib.h>
+#include <stdio.h>
 
 #include "registryhive.h"
 
@@ -149,6 +150,8 @@ bool RegistryHive::CommitChanges() {
   if(hivex_commit(this->p_hive,NULL,0)!=0) {
     return false;
   }
+
+  this->has_changes_to_commit=false;
   return true;
 }
 

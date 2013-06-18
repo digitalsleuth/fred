@@ -27,11 +27,10 @@
 #include <QTabWidget>
 #include <QVBoxLayout>
 #include <QSplitter>
-
 #include <QString>
 #include <QByteArray>
 
-#include <hivex.h>
+//#include <hivex.h>
 
 #include "argparser.h"
 #include "registryhive.h"
@@ -62,17 +61,16 @@ class MainWindow : public QMainWindow {
     void closeEvent(QCloseEvent *p_event);
 
   private slots:
-    void on_action_Open_hive_triggered();
-    void on_action_Close_hive_triggered();
-    void on_action_Quit_triggered();
-    void on_ActionSearch_triggered();
+    void on_ActionOpenHive_triggered();
+    void on_ActionCloseHive_triggered();
+    void on_ActionQuit_triggered();
     void on_ActionEnableWriteSupport_triggered();
     void on_ActionPreferences_triggered();
     void on_ActionGenerateReport_triggered();
     void on_ActionReloadReportTemplates_triggered();
-    void on_actionAbout_Qt_triggered();
-    void on_actionAbout_fred_triggered();
-
+    void on_ActionAboutQt_triggered();
+    void on_ActionAboutFred_triggered();
+    void on_ActionFind_triggered();
     void SlotNodeTreeClicked(QModelIndex index);
     void SlotKeyTableClicked(QModelIndex index);
     void SlotKeyTableDoubleClicked(QModelIndex index);
@@ -85,6 +83,8 @@ class MainWindow : public QMainWindow {
     void SlotAddKey();
     void SlotEditKey(QModelIndex index);
     void SlotDeleteKey(QModelIndex index);
+
+    void on_ActionSave_triggered();
 
   private:
     Ui::MainWindow *ui;
@@ -121,7 +121,7 @@ class MainWindow : public QMainWindow {
     void ClearRecentlyOpenedMenu();
     void UpdateRecentlyOpenedMenu();
     void UpdateEnableWriteSupportMenu();
-    bool SaveHiveChanges();
+    bool SaveHiveChanges(bool force=false);
 };
 
 #endif // MAINWINDOW_H

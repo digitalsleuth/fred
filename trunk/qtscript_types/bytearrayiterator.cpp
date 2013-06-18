@@ -21,9 +21,9 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#include "bytearrayiterator.h"
-
 #include <QtScript/QScriptEngine>
+
+#include "bytearrayiterator.h"
 
 Q_DECLARE_METATYPE(QByteArray*)
 

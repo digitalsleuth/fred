@@ -18,14 +18,14 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#include "searchresultwidget.h"
-
 #include <QHeaderView>
 #include <QAbstractItemView>
 #include <QStringList>
 #include <QTableWidgetItem>
 #include <QFontMetrics>
 //#include <QTextEdit>
+
+#include "searchresultwidget.h"
 
 SearchResultWidget::SearchResultWidget(QWidget *p_parent)
   : QTableWidget(p_parent)

@@ -21,11 +21,11 @@
 #ifndef DLGREPORTVIEWER_H
 #define DLGREPORTVIEWER_H
 
-#include "settings.h"
-
 #include <QMainWindow>
 #include <QEventLoop>
 #include <QCloseEvent>
+
+#include "settings.h"
 
 namespace Ui {
   class DlgReportViewer;

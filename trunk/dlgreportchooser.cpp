@@ -18,14 +18,14 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#include "dlgreportchooser.h"
-#include "ui_dlgreportchooser.h"
-
 #include <QString>
 #include <QStringList>
 #include <QListIterator>
 
 #include <QDebug>
+
+#include "dlgreportchooser.h"
+#include "ui_dlgreportchooser.h"
 
 DlgReportChooser::DlgReportChooser(Reports *p_reps,
                                    QString hive_type_string,

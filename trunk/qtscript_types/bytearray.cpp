@@ -23,11 +23,11 @@
 
 #include <QtScript/QScriptEngine>
 
+#include <stdlib.h>
+
 #include "bytearray.h"
 #include "bytearrayiterator.h"
 #include "bytearrayprototype.h"
-
-#include <stdlib.h>
 
 Q_DECLARE_METATYPE(QByteArray*)
 Q_DECLARE_METATYPE(ByteArray*)

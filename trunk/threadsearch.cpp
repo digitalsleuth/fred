@@ -18,11 +18,11 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#include "threadsearch.h"
-#include "registryhive.h"
-
 #include <QStringList>
 #include <QMetaType>
+
+#include "threadsearch.h"
+#include "registryhive.h"
 
 ThreadSearch::ThreadSearch(QObject *p_parent) : QThread(p_parent) {
   this->hive_file="";

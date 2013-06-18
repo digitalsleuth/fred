@@ -21,12 +21,12 @@
 #ifndef DLGREPORTCHOOSER_H
 #define DLGREPORTCHOOSER_H
 
-#include "reports.h"
-#include "settings.h"
-
 #include <QDialog>
 #include <QList>
 #include <QTreeWidgetItem>
+
+#include "reports.h"
+#include "settings.h"
 
 namespace Ui {
   class DlgReportChooser;

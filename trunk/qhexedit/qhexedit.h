@@ -24,6 +24,7 @@
 #define QHEXEDIT_H
 
 #include <QtGui>
+
 #include "qhexedit_p.h"
 
 /** \mainpage

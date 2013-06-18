@@ -18,11 +18,11 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#include "registrykeytable.h"
-
 #include <QHeaderView>
 #include <QApplication>
 #include <QClipboard>
+
+#include "registrykeytable.h"
 
 /*******************************************************************************
  * Public

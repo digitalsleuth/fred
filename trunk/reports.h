@@ -21,13 +21,13 @@
 #ifndef REPORTS_H
 #define REPORTS_H
 
-#include "reporttemplate.h"
-#include "reportengine.h"
-#include "settings.h"
-
 #include <QList>
 #include <QString>
 #include <QStringList>
+
+#include "reporttemplate.h"
+#include "reportengine.h"
+#include "settings.h"
 
 class Reports {
   public:

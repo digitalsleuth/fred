@@ -18,10 +18,11 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
+#include <QMessageBox>
+
 #include "dlgsearch.h"
 #include "ui_dlgsearch.h"
 
-#include <QMessageBox>
 
 DlgSearch::DlgSearch(QWidget *parent) : QDialog(parent), ui(new Ui::DlgSearch)
 {

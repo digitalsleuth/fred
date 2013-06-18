@@ -18,13 +18,13 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#include "datainterpretertable.h"
-
 #include <QHeaderView>
 #include <QFontMetrics>
 #include <QMenu>
 #include <QApplication>
 #include <QClipboard>
+
+#include "datainterpretertable.h"
 
 DataInterpreterTable::DataInterpreterTable(QWidget *p_parent)
   : QTableWidget(p_parent)

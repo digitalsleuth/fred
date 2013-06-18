@@ -18,9 +18,9 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#include "settings.h"
-
 #include <QDir>
+
+#include "settings.h"
 
 #ifndef FRED_REPORT_TEMPLATE_DIR
   #ifndef __MINGW32__

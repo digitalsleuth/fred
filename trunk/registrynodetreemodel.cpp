@@ -17,14 +17,14 @@
 * You should have received a copy of the GNU General Public License along with *
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
-#include "registrynodetreemodel.h"
-
 #include <QList>
 #include <QStringList>
 #include <QVariant>
 #include <QDateTime>
 
 #include <inttypes.h>
+
+#include "registrynodetreemodel.h"
 
 /*******************************************************************************
  * Public
