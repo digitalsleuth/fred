@@ -13,7 +13,7 @@ configure: configure-stamp
 configure-stamp:
 	dh_testdir
 	# Add here commands to configure the package.
-	qmake-qt4 DEFINES+="FRED_REPORT_TEMPLATE_DIR=\'\\\"/usr/share/fred/report_templates\\\"\'"
+	qmake-qt4 DEFINES+="SYSTEM_REPORT_TEMPLATE_DIR=\'\\\"/usr/share/fred/report_templates\\\"\'"
 
 	touch configure-stamp
 
