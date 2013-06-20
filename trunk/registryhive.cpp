@@ -20,6 +20,7 @@
 
 #include <QStringList>
 #include <QDateTime>
+#include <QtEndian>
 
 #include <QDebug>
 
@@ -27,9 +28,6 @@
 #include <stdio.h>
 
 #include "registryhive.h"
-
-#define MACROS_ENDIANNESS
-#include "macros.h"
 
 // TODO: __WORDSIZE is not defined under mingw and I currently have no idea how
 // to identify a 64bit windows
@@ -42,6 +40,31 @@
 #else
   #define EPOCH_DIFF 0x19DB1DED53E8000LL
 #endif
+
+#undef UTF16LETOH
+#define UTF16LETOH(buf,buf_len) {                                                 \
+  for(int buf_off=0;buf_off<((buf_len)-1);buf_off+=2) {                           \
+    *((quint16*)((buf)+buf_off))=qFromLittleEndian(*((quint16*)((buf)+buf_off))); \
+  }                                                                               \
+}
+#undef UTF16BETOH
+#define UTF16BETOH(buf,buf_len) {                                              \
+  for(int buf_off=0;buf_off<((buf_len)-1);buf_off+=2) {                        \
+    *((quint16*)((buf)+buf_off))=qFromBigEndian(*((quint16*)((buf)+buf_off))); \
+  }                                                                            \
+}
+#undef HTOUTF16LE
+#define HTOUTF16LE(buf,buf_len) {                                               \
+  for(int buf_off=0;buf_off<((buf_len)-1);buf_off+=2) {                         \
+    *((quint16*)((buf)+buf_off))=qToLittleEndian(*((quint16*)((buf)+buf_off))); \
+  }                                                                             \
+}
+#undef HTOUTF16BE
+#define HTOUTF16BE(buf,buf_len) {                                            \
+  for(int buf_off=0;buf_off<((buf_len)-1);buf_off+=2) {                      \
+    *((quint16*)((buf)+buf_off))=qToBigEndian(*((quint16*)((buf)+buf_off))); \
+  }                                                                          \
+}
 
 /*******************************************************************************
  * Public
@@ -360,7 +383,7 @@ QByteArray RegistryHive::GetKeyValue(int hive_key,
 /*
  * GetKeyModTime
  */
-int64_t RegistryHive::GetNodeModTime(QString path) {
+qint64 RegistryHive::GetNodeModTime(QString path) {
   hive_node_h node;
 
   // Get handle to last node in path
@@ -376,7 +399,7 @@ int64_t RegistryHive::GetNodeModTime(QString path) {
 /*
  * GetKeyModTime
  */
-int64_t RegistryHive::GetNodeModTime(int node) {
+qint64 RegistryHive::GetNodeModTime(int node) {
   if(node==0) {
     this->SetError(tr("Invalid node handle specified!"));
     return 0;
@@ -392,11 +415,12 @@ int64_t RegistryHive::GetNodeModTime(int node) {
 QString RegistryHive::KeyValueToString(QByteArray value, int value_type) {
   QString ret="";
 
-  #define ToHexStr() {                                                        \
-    for(int i=0;i<value.size();i++) {                                         \
-      ret.append(QString().sprintf("%02X ",(uint8_t)(value.constData()[i]))); \
-    }                                                                         \
-    ret.chop(1);                                                              \
+  #define ToHexStr() {                                              \
+    for(int i=0;i<value.size();i++) {                               \
+      ret.append(QString("%1 ").arg((quint8)(value.constData()[i]), \
+                                    2,16,QChar('0')));              \
+    }                                                               \
+    ret.chop(1);                                                    \
   }
 
   // Convert value according to it's type
@@ -430,19 +454,21 @@ QString RegistryHive::KeyValueToString(QByteArray value, int value_type) {
       break;
     case hive_t_REG_DWORD:
       // DWORD (32 bit integer), little endian
-      ret=QString().sprintf("0x%08X",LE32TOH(*(uint32_t*)value.constData()));
+      ret=QString("0x%1")
+            .arg(qFromLittleEndian(*(quint32*)value.constData()),
+                 8,16,QChar('0'));
       break;
     case hive_t_REG_DWORD_BIG_ENDIAN:
       // DWORD (32 bit integer), big endian
-      ret=QString().sprintf("0x%08X",BE32TOH(*(uint32_t*)value.constData()));
+      ret=QString("0x%1")
+            .arg(qFromBigEndian(*(quint32*)value.constData()),
+                 8,16,QChar('0'));
       break;
     case hive_t_REG_QWORD:
       // QWORD (64 bit integer). Usually little endian (grrrr).
-      ret=
-        QString("0x%1").arg((quint64)LE64TOH(*(uint64_t*)value.constData()),
-                            16,
-                            16,
-                            QChar('0'));
+      ret=QString("0x%1")
+            .arg(qFromLittleEndian(*(quint64*)value.constData()),
+                 16,16,QChar('0'));
       break;
     case hive_t_REG_NONE:
     case hive_t_REG_BINARY:
@@ -491,33 +517,33 @@ QString RegistryHive::KeyValueToString(QByteArray key_value,
 
   // Convert value
   if(format=="int8" && remaining_data_len>=1) {
-    ret=QString().sprintf("%d",*(int8_t*)p_data);
+    ret=QString("%1").arg(*(qint8*)p_data);
   } else if(format=="uint8" && remaining_data_len>=1) {
-    ret=QString().sprintf("%u",*(uint8_t*)p_data);
+    ret=QString("%1").arg(*(quint8*)p_data);
   } else if(format=="int16" && remaining_data_len>=2) {
-    int16_t val;
-    if(little_endian) val=LE16TOH(*(int16_t*)p_data);
-    else val=BE16TOH(*(int16_t*)p_data);
-    ret=QString().sprintf("%d",val);
+    qint16 val;
+    if(little_endian) val=qFromLittleEndian(*(qint16*)p_data);
+    else val=qFromBigEndian(*(qint16*)p_data);
+    ret=QString("%1").arg(val);
   } else if(format=="uint16" && remaining_data_len>=2) {
-    uint16_t val;
-    if(little_endian) val=LE16TOH(*(uint16_t*)p_data);
-    else val=BE16TOH(*(uint16_t*)p_data);
-    ret=QString().sprintf("%u",val);
+    quint16 val;
+    if(little_endian) val=qFromLittleEndian(*(quint16*)p_data);
+    else val=qFromBigEndian(*(quint16*)p_data);
+    ret=QString("%1").arg(val);
   } else if(format=="int32" && remaining_data_len>=4) {
-    int32_t val;
-    if(little_endian) val=LE32TOH(*(int32_t*)p_data);
-    else val=BE32TOH(*(int32_t*)p_data);
-    ret=QString().sprintf("%d",val);
+    qint32 val;
+    if(little_endian) val=qFromLittleEndian(*(qint32*)p_data);
+    else val=qFromBigEndian(*(qint32*)p_data);
+    ret=QString("%1").arg(val);
   } else if(format=="uint32" && remaining_data_len>=4) {
-    uint32_t val;
-    if(little_endian) val=LE32TOH(*(uint32_t*)p_data);
-    else val=BE32TOH(*(uint32_t*)p_data);
-    ret=QString().sprintf("%u",val);
+    quint32 val;
+    if(little_endian) val=qFromLittleEndian(*(quint32*)p_data);
+    else val=qFromBigEndian(*(quint32*)p_data);
+    ret=QString("%1").arg(val);
   } else if(format=="unixtime" && remaining_data_len>=4) {
-    uint32_t val;
-    if(little_endian) val=LE32TOH(*(uint32_t*)p_data);
-    else val=BE32TOH(*(uint32_t*)p_data);
+    quint32 val;
+    if(little_endian) val=qFromLittleEndian(*(quint32*)p_data);
+    else val=qFromBigEndian(*(quint32*)p_data);
     if(val==0) {
       ret="n/a";
     } else {
@@ -527,22 +553,22 @@ QString RegistryHive::KeyValueToString(QByteArray key_value,
       ret=date_time.toString("yyyy/MM/dd hh:mm:ss");
     }
   } else if(format=="int64" && remaining_data_len>=8) {
-    int64_t val;
-    if(little_endian) val=LE64TOH(*(int64_t*)p_data);
-    else val=BE64TOH(*(int64_t*)p_data);
+    qint64 val;
+    if(little_endian) val=qFromLittleEndian(*(qint64*)p_data);
+    else val=qFromBigEndian(*(qint64*)p_data);
     ret=QString("%1").arg(val);
   } else if(format=="uint64" && remaining_data_len>=8) {
-    uint64_t val;
-    if(little_endian) val=LE64TOH(*(uint64_t*)p_data);
-    else val=BE64TOH(*(uint64_t*)p_data);
+    quint64 val;
+    if(little_endian) val=qFromLittleEndian(*(quint64*)p_data);
+    else val=qFromBigEndian(*(quint64*)p_data);
     ret=QString("%1").arg(val);
 /*
   // TODO: Check how one could implement this
   } else if(format=="unixtime64" && remaining_data_len>=8) {
-    if(*(uint64_t*)p_data==0) {
+    if(*(quint64*)p_data==0) {
       ret="n/a";
     } else {
-      uint64_t secs=*(uint64_t*)p_data;
+      quint64 secs=*(quint64*)p_data;
       QDateTime date_time;
       date_time.setTimeSpec(Qt::UTC);
       // Set 32bit part of date/time
@@ -553,9 +579,9 @@ QString RegistryHive::KeyValueToString(QByteArray key_value,
     }
 */
   } else if(format=="filetime" && remaining_data_len>=8) {
-    uint64_t val;
-    if(little_endian) val=LE64TOH(*(uint64_t*)p_data);
-    else val=BE64TOH(*(uint64_t*)p_data);
+    quint64 val;
+    if(little_endian) val=qFromLittleEndian(*(quint64*)p_data);
+    else val=qFromBigEndian(*(quint64*)p_data);
     if(val==0) {
       ret="n/a";
     } else {
@@ -638,9 +664,9 @@ QStringList RegistryHive::KeyValueToStringList(QByteArray value,
     // Only 3 chars, this can only be an ansi string consisting of 1 char and 2
     // \0 to terminate it
     return QStringList()
-      <<QString(QChar((char)*((uint8_t*)(value.constData()))));
+      <<QString(QChar((char)*((quint8*)(value.constData()))));
   } else if(value.size()==4) {
-    if((uint32_t)*((uint32_t*)(value.constData()))==0) {
+    if((quint32)*((quint32*)(value.constData()))==0) {
       // http://blogs.msdn.com/b/oldnewthing/archive/2009/10/08/9904646.aspx
       // Unicode version of a REG_MULTI_SZ needs to be terminated by 4 \0 chars.
       // So as long as the byte array has less or equal to 4 chars, and they are
@@ -650,14 +676,14 @@ QStringList RegistryHive::KeyValueToStringList(QByteArray value,
       // Must be the ansi version of REG_MULTI_SZ
       is_ansi=true;
     }
-  } else if((uint32_t)*((uint32_t*)(value.right(4).constData()))==0) {
+  } else if((quint32)*((quint32*)(value.right(4).constData()))==0) {
     // Value ends with 4 \0 chars, it must be unicode
     is_ansi=false;
-  } else if((uint32_t)*((uint32_t*)(value.right(3).constData()))==0) {
+  } else if((quint32)*((quint32*)(value.right(3).constData()))==0) {
     // Value ends with 3 \0 chars. Not possible according to the specs, but
     // already seen in values M$ is storing! Those were unicode.
     is_ansi=false;
-  } else if((uint16_t)*((uint16_t*)(value.right(2).constData()))==0) {
+  } else if((quint16)*((quint16*)(value.right(2).constData()))==0) {
     // Value only ends with 2 \0 chars, it must be ansi
     is_ansi=true;
   } else {
@@ -813,7 +839,7 @@ QString RegistryHive::KeyValueTypeToString(int value_type) {
       ret="REG_QWORD";
       break;
     default:
-      ret=QString().sprintf("0x%08X",(uint32_t)value_type);
+      ret=QString("%1").arg((quint32)value_type,8,16,QChar('0'));
   }
 
   return ret;
@@ -845,7 +871,7 @@ int RegistryHive::StringToKeyValueType(QString value_type) {
 /*
  * FiletimeToUnixtime
  */
-uint64_t RegistryHive::FiletimeToUnixtime(int64_t filetime) {
+quint64 RegistryHive::FiletimeToUnixtime(qint64 filetime) {
   return (unsigned)((filetime-EPOCH_DIFF)/10000000);
 }
 
@@ -1356,7 +1382,7 @@ int RegistryHive::SetKey(QString &parent_node_path,
 int RegistryHive::FindUnicodeStringEnd(QByteArray data, int offset) {
   int end_pos;
   for(end_pos=offset;end_pos<(data.size()-1);end_pos+=2) {
-    if(*((uint16_t*)(data.constData()+end_pos))==0) break;
+    if(*((quint16*)(data.constData()+end_pos))==0) break;
   }
   return end_pos<(data.size()-1) ? end_pos : -1;
 }

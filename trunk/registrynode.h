@@ -24,8 +24,6 @@
 #include <QList>
 #include <QVariant>
 
-#include <inttypes.h>
-
 class RegistryNode {
   public:
     RegistryNode(const QList<QVariant> &data,
@@ -33,11 +31,11 @@ class RegistryNode {
     ~RegistryNode();
 
     void AppendChild(RegistryNode *p_child);
-    void RemoveChild(uint64_t row);
-    RegistryNode *Child(uint64_t row);
-    uint64_t ChildCount() const;
+    void RemoveChild(quint64 row);
+    RegistryNode *Child(quint64 row);
+    quint64 ChildCount() const;
     QVariant Data(int column) const;
-    uint64_t Row() const;
+    quint64 Row() const;
     RegistryNode *Parent();
 
   private:

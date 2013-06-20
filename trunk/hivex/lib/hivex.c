@@ -30,29 +30,22 @@
 #include <unistd.h>
 #include <errno.h>
 #include <iconv.h>
-#ifndef __MINGW32__
-  #include <sys/mman.h>
-#else
-  #include <windows.h>
-#endif
 #include <sys/stat.h>
 #include <assert.h>
+
+#ifdef HAVE_MMAP
+#include <sys/mman.h>
+#else
+/* On systems without mmap (and munmap), use a replacement function. */
+#include "mmap.h"
+#endif
 
 #include "c-ctype.h"
 #include "full-read.h"
 #include "full-write.h"
 
-#define STREQ(a,b) (strcmp((a),(b)) == 0)
-#define STRCASEEQ(a,b) (strcasecmp((a),(b)) == 0)
-//#define STRNEQ(a,b) (strcmp((a),(b)) != 0)
-//#define STRCASENEQ(a,b) (strcasecmp((a),(b)) != 0)
-#define STREQLEN(a,b,n) (strncmp((a),(b),(n)) == 0)
-//#define STRCASEEQLEN(a,b,n) (strncasecmp((a),(b),(n)) == 0)
-//#define STRNEQLEN(a,b,n) (strncmp((a),(b),(n)) != 0)
-//#define STRCASENEQLEN(a,b,n) (strncasecmp((a),(b),(n)) != 0)
-#define STRPREFIX(a,b) (strncmp((a),(b),strlen((b))) == 0)
-
 #include "hivex.h"
+#include "hivex-internal.h"
 #include "byte_conversions.h"
 
 /* These limits are in place to stop really stupid stuff and/or exploits. */
@@ -63,50 +56,6 @@
 
 static char *windows_utf16_to_utf8 (/* const */ char *input, size_t len);
 static size_t utf16_string_len_in_bytes_max (const char *str, size_t len);
-
-struct hive_h {
-  char *filename;
-  int fd;
-#ifdef __MINGW32__
-  HANDLE winmap;
-#endif
-
-  size_t size;
-  int msglvl;
-  int writable;
-
-  /* Registry file, memory mapped if read-only, or malloc'd if writing. */
-  union {
-    char *addr;
-    struct ntreg_header *hdr;
-  };
-
-  /* Use a bitmap to store which file offsets are valid (point to a
-   * used block).  We only need to store 1 bit per 32 bits of the file
-   * (because blocks are 4-byte aligned).  We found that the average
-   * block size in a registry file is ~50 bytes.  So roughly 1 in 12
-   * bits in the bitmap will be set, making it likely a more efficient
-   * structure than a hash table.
-   */
-  char *bitmap;
-#define BITMAP_SET(bitmap,off) (bitmap[(off)>>5] |= 1 << (((off)>>2)&7))
-#define BITMAP_CLR(bitmap,off) (bitmap[(off)>>5] &= ~ (1 << (((off)>>2)&7)))
-#define BITMAP_TST(bitmap,off) (bitmap[(off)>>5] & (1 << (((off)>>2)&7)))
-#define IS_VALID_BLOCK(h,off)               \
-  (((off) & 3) == 0 &&                      \
-   (off) >= 0x1000 &&                       \
-   (off) < (h)->size &&                     \
-   BITMAP_TST((h)->bitmap,(off)))
-
-  /* Fields from the header, extracted from little-endianness hell. */
-  size_t rootoffs;              /* Root key offset (always an nk-block). */
-  size_t endpages;              /* Offset of end of pages. */
-  int64_t last_modified;        /* mtime of base block. */
-
-  /* For writing. */
-  size_t endblocks;             /* Offset to next block allocation (0
-                                   if not allocated anything yet). */
-};
 
 /* NB. All fields are little endian. */
 struct ntreg_header {
@@ -165,7 +114,7 @@ static size_t
 block_len (hive_h *h, size_t blkoff, int *used)
 {
   struct ntreg_hbin_block *block;
-  block = (struct ntreg_hbin_block *) (h->addr + blkoff);
+  block = (struct ntreg_hbin_block *) ((char *) h->addr + blkoff);
 
   int32_t len = le32toh (block->seg_len);
   if (len < 0) {
@@ -218,9 +167,9 @@ struct ntreg_lf_record {
 
 struct ntreg_ri_record {
   int32_t seg_len;
-  char id[2];                   /* "ri" */
-  uint16_t nr_offsets;          /* number of pointers to lh records */
-  uint32_t offset[1];           /* list of pointers to lh records */
+  char id[2];                   /* "ri"|"li" */
+  uint16_t nr_offsets;          /* number of pointers to lf/lh/li records */
+  uint32_t offset[1];           /* list of pointers to lf/lh/li records */
 } __attribute__((__packed__));
 
 /* This has no ID header. */
@@ -320,21 +269,9 @@ hivex_open (const char *filename, int flags)
   h->size = statbuf.st_size;
 
   if (!h->writable) {
-#ifndef __MINGW32__
     h->addr = mmap (NULL, h->size, PROT_READ, MAP_SHARED, h->fd, 0);
     if (h->addr == MAP_FAILED)
       goto error;
-#else
-    // Mingw / Gnulib does not support mmap, we have to use native win32api
-    // Create file mapping
-    h->winmap = CreateFileMapping ((HANDLE)_get_osfhandle(h->fd), NULL, PAGE_READONLY, 0, 0, NULL);
-    if (h->winmap == NULL)
-      goto error;
-    // Create map view
-    h->addr = MapViewOfFile (h->winmap, FILE_MAP_READ, 0, 0, h->size);
-    if (h->addr == NULL)
-      goto error;
-#endif
 
     if (h->msglvl >= 2)
       fprintf (stderr, "hivex_open: mapped file at %p\n", h->addr);
@@ -446,7 +383,7 @@ hivex_open (const char *filename, int flags)
     if (off >= h->endpages)
       break;
 
-    page = (struct ntreg_hbin_page *) (h->addr + off);
+    page = (struct ntreg_hbin_page *) ((char *) h->addr + off);
     if (page->magic[0] != 'h' ||
         page->magic[1] != 'b' ||
         page->magic[2] != 'i' ||
@@ -486,7 +423,7 @@ hivex_open (const char *filename, int flags)
       if (is_root)
         seen_root_block = 1;
 
-      block = (struct ntreg_hbin_block *) (h->addr + blkoff);
+      block = (struct ntreg_hbin_block *) ((char *) h->addr + blkoff);
       int used;
       seg_len = block_len (h, blkoff, &used);
       if (seg_len <= 4 || (seg_len & 3) != 0) {
@@ -552,23 +489,11 @@ hivex_open (const char *filename, int flags)
   int err = errno;
   if (h) {
     free (h->bitmap);
-#ifndef __MINGW32__
     if (h->addr && h->size && h->addr != MAP_FAILED) {
-#else
-    if (h->addr && h->size && h->addr != NULL) {
-#endif
-      if (!h->writable) {
-#ifndef __MINGW32__
+      if (!h->writable)
         munmap (h->addr, h->size);
-#else
-        UnmapViewOfFile (h->addr);
-#endif
-      } else
+      else
         free (h->addr);
-#ifdef __MINGW32__
-      if (!h->writable && h->winmap != NULL)
-        CloseHandle (h->winmap);
-#endif
     }
     if (h->fd >= 0)
       close (h->fd);
@@ -588,14 +513,9 @@ hivex_close (hive_h *h)
     fprintf (stderr, "hivex_close\n");
 
   free (h->bitmap);
-  if (!h->writable) {
-#ifndef __MINGW32__
+  if (!h->writable)
     munmap (h->addr, h->size);
-#else
-    UnmapViewOfFile (h->addr);
-    CloseHandle (h->winmap);
-#endif
-  } else
+  else
     free (h->addr);
   if (h->fd >= 0)
     r = close (h->fd);
@@ -622,6 +542,31 @@ hivex_root (hive_h *h)
   return ret;
 }
 
+size_t
+hivex_node_struct_length (hive_h *h, hive_node_h node)
+{
+  if (!IS_VALID_BLOCK (h, node) || !BLOCK_ID_EQ (h, node, "nk")) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  struct ntreg_nk_record *nk =
+    (struct ntreg_nk_record *) ((char *) h->addr + node);
+  size_t name_len = le16toh (nk->name_len);
+  /* -1 to avoid double-counting the first name character */
+  size_t ret = name_len + sizeof (struct ntreg_nk_record) - 1;
+  int used;
+  size_t seg_len = block_len (h, node, &used);
+  if (ret > seg_len) {
+    if (h->msglvl >= 2)
+      fprintf (stderr, "hivex_node_struct_length: returning EFAULT because"
+               " node name is too long (%zu, %zu)\n", name_len, seg_len);
+    errno = EFAULT;
+    return 0;
+  }
+  return ret;
+}
+
 char *
 hivex_node_name (hive_h *h, hive_node_h node)
 {
@@ -630,7 +575,8 @@ hivex_node_name (hive_h *h, hive_node_h node)
     return NULL;
   }
 
-  struct ntreg_nk_record *nk = (struct ntreg_nk_record *) (h->addr + node);
+  struct ntreg_nk_record *nk =
+    (struct ntreg_nk_record *) ((char *) h->addr + node);
 
   /* AFAIK the node name is always plain ASCII, so no conversion
    * to UTF-8 is necessary.  However we do need to nul-terminate
@@ -690,7 +636,8 @@ hivex_node_timestamp (hive_h *h, hive_node_h node)
     return -1;
   }
 
-  struct ntreg_nk_record *nk = (struct ntreg_nk_record *) (h->addr + node);
+  struct ntreg_nk_record *nk =
+    (struct ntreg_nk_record *) ((char *) h->addr + node);
 
   ret = le64toh (nk->timestamp);
   return timestamp_check (h, node, ret);
@@ -815,7 +762,8 @@ get_children (hive_h *h, hive_node_h node,
     return -1;
   }
 
-  struct ntreg_nk_record *nk = (struct ntreg_nk_record *) (h->addr + node);
+  struct ntreg_nk_record *nk =
+    (struct ntreg_nk_record *) ((char *) h->addr + node);
 
   size_t nr_subkeys_in_nk = le32toh (nk->nr_subkeys);
 
@@ -859,7 +807,7 @@ get_children (hive_h *h, hive_node_h node,
     goto error;
 
   struct ntreg_hbin_block *block =
-    (struct ntreg_hbin_block *) (h->addr + subkey_lf);
+    (struct ntreg_hbin_block *) ((char *) h->addr + subkey_lf);
 
   /* Points to lf-record?  (Note, also "lh" but that is basically the
    * same as "lf" as far as we are concerned here).
@@ -930,10 +878,12 @@ get_children (hive_h *h, hive_node_h node,
         errno = EFAULT;
         goto error;
       }
-      if (!BLOCK_ID_EQ (h, offset, "lf") && !BLOCK_ID_EQ (h, offset, "lh")) {
+      if (!BLOCK_ID_EQ (h, offset, "lf") &&
+          !BLOCK_ID_EQ (h, offset, "lh") &&
+          !BLOCK_ID_EQ (h, offset, "li")) {
         if (h->msglvl >= 2)
-          fprintf (stderr, "get_children: returning ENOTSUP"
-                   " because ri-record offset does not point to lf/lh (0x%zx)\n",
+          fprintf (stderr, "get_children: returning ENOTSUP because"
+                   " ri-record offset does not point to lf/lh/li (0x%zx)\n",
                    offset);
         errno = ENOTSUP;
         goto error;
@@ -943,7 +893,7 @@ get_children (hive_h *h, hive_node_h node,
         goto error;
 
       struct ntreg_lf_record *lf =
-        (struct ntreg_lf_record *) (h->addr + offset);
+        (struct ntreg_lf_record *) ((char *) h->addr + offset);
 
       count += le16toh (lf->nr_keys);
     }
@@ -972,34 +922,49 @@ get_children (hive_h *h, hive_node_h node,
         errno = EFAULT;
         goto error;
       }
-      if (!BLOCK_ID_EQ (h, offset, "lf") && !BLOCK_ID_EQ (h, offset, "lh")) {
-        if (h->msglvl >= 2)
-          fprintf (stderr, "get_children: returning ENOTSUP"
-                   " because ri-record offset does not point to lf/lh (0x%zx)\n",
-                   offset);
-        errno = ENOTSUP;
-        goto error;
-      }
+      if (BLOCK_ID_EQ (h, offset, "li")) {
+        /* "ri" and "li" are basically the same */
+        struct ntreg_ri_record *li =
+          (struct ntreg_ri_record *) ((char *) h->addr + offset);
 
-      struct ntreg_lf_record *lf =
-        (struct ntreg_lf_record *) (h->addr + offset);
-
-      size_t j;
-      for (j = 0; j < le16toh (lf->nr_keys); ++j) {
-        hive_node_h subkey = le32toh (lf->keys[j].offset);
-        subkey += 0x1000;
-        if (!(flags & GET_CHILDREN_NO_CHECK_NK)) {
-          if (!IS_VALID_BLOCK (h, subkey)) {
-            if (h->msglvl >= 2)
-              fprintf (stderr, "hivex_node_children: returning EFAULT"
-                       " because indirect subkey is not a valid block (0x%zx)\n",
-                       subkey);
-            errno = EFAULT;
-            goto error;
+        size_t j;
+        for (j = 0; j < le16toh (li->nr_offsets); ++j) {
+          hive_node_h subkey = le32toh (li->offset[j]);
+          subkey += 0x1000;
+          if (!(flags & GET_CHILDREN_NO_CHECK_NK)) {
+            if (!IS_VALID_BLOCK (h, subkey)) {
+              if (h->msglvl >= 2)
+                fprintf (stderr, "hivex_node_children: returning EFAULT because"
+                         " li indirect subkey is not a valid block (0x%zx)\n",
+                         subkey);
+              errno = EFAULT;
+              goto error;
+            }
           }
+          if (add_to_offset_list (&children, subkey) == -1)
+            goto error;
         }
-        if (add_to_offset_list (&children, subkey) == -1)
-          goto error;
+      } else { /* "lf" or "lh" block */
+        struct ntreg_lf_record *lf =
+          (struct ntreg_lf_record *) ((char *) h->addr + offset);
+
+        size_t j;
+        for (j = 0; j < le16toh (lf->nr_keys); ++j) {
+          hive_node_h subkey = le32toh (lf->keys[j].offset);
+          subkey += 0x1000;
+          if (!(flags & GET_CHILDREN_NO_CHECK_NK)) {
+            if (!IS_VALID_BLOCK (h, subkey)) {
+              if (h->msglvl >= 2)
+                fprintf (stderr, "hivex_node_children: returning EFAULT because"
+                         " lf/lh indirect subkey is not a valid block (0x%zx)\n",
+                         subkey);
+              errno = EFAULT;
+              goto error;
+            }
+          }
+          if (add_to_offset_list (&children, subkey) == -1)
+            goto error;
+        }
       }
     }
     goto ok;
@@ -1007,7 +972,7 @@ get_children (hive_h *h, hive_node_h node,
   /* else not supported, set errno and fall through */
   if (h->msglvl >= 2)
     fprintf (stderr, "get_children: returning ENOTSUP"
-             " because subkey block is not lf/lh/ri (0x%zx, %d, %d)\n",
+             " because subkey block is not lf/lh/li/ri (0x%zx, %d, %d)\n",
              subkey_lf, block->id[0], block->id[1]);
   errno = ENOTSUP;
  error:
@@ -1074,7 +1039,8 @@ hivex_node_parent (hive_h *h, hive_node_h node)
     return 0;
   }
 
-  struct ntreg_nk_record *nk = (struct ntreg_nk_record *) (h->addr + node);
+  struct ntreg_nk_record *nk =
+    (struct ntreg_nk_record *) ((char *) h->addr + node);
 
   hive_node_h ret = le32toh (nk->parent);
   ret += 0x1000;
@@ -1098,7 +1064,8 @@ get_values (hive_h *h, hive_node_h node,
     return -1;
   }
 
-  struct ntreg_nk_record *nk = (struct ntreg_nk_record *) (h->addr + node);
+  struct ntreg_nk_record *nk =
+    (struct ntreg_nk_record *) ((char *) h->addr + node);
 
   size_t nr_values = le32toh (nk->nr_values);
 
@@ -1142,7 +1109,7 @@ get_values (hive_h *h, hive_node_h node,
     goto error;
 
   struct ntreg_value_list *vlist =
-    (struct ntreg_value_list *) (h->addr + vlist_offset);
+    (struct ntreg_value_list *) ((char *) h->addr + vlist_offset);
 
   size_t len = block_len (h, vlist_offset, NULL);
   if (4 + nr_values * 4 > len) {
@@ -1226,6 +1193,47 @@ hivex_node_get_value (hive_h *h, hive_node_h node, const char *key)
   return ret;
 }
 
+size_t
+hivex_value_struct_length (hive_h *h, hive_value_h value)
+{
+  size_t key_len;
+
+  errno = 0;
+  key_len = hivex_value_key_len (h, value);
+  if (key_len == 0 && errno != 0)
+    return 0;
+
+  /* -1 to avoid double-counting the first name character */
+  return key_len + sizeof (struct ntreg_vk_record) - 1;
+}
+
+size_t
+hivex_value_key_len (hive_h *h, hive_value_h value)
+{
+  if (!IS_VALID_BLOCK (h, value) || !BLOCK_ID_EQ (h, value, "vk")) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  struct ntreg_vk_record *vk =
+    (struct ntreg_vk_record *) ((char *) h->addr + value);
+
+  /* vk->name_len is unsigned, 16 bit, so this is safe ...  However
+   * we have to make sure the length doesn't exceed the block length.
+   */
+  size_t ret = le16toh (vk->name_len);
+  size_t seg_len = block_len (h, value, NULL);
+  if (sizeof (struct ntreg_vk_record) + ret - 1 > seg_len) {
+    if (h->msglvl >= 2)
+      fprintf (stderr, "hivex_value_key_len: returning EFAULT"
+               " because key length is too long (%zu, %zu)\n",
+               ret, seg_len);
+    errno = EFAULT;
+    return 0;
+  }
+  return ret;
+}
+
 char *
 hivex_value_key (hive_h *h, hive_value_h value)
 {
@@ -1234,25 +1242,16 @@ hivex_value_key (hive_h *h, hive_value_h value)
     return 0;
   }
 
-  struct ntreg_vk_record *vk = (struct ntreg_vk_record *) (h->addr + value);
+  struct ntreg_vk_record *vk =
+    (struct ntreg_vk_record *) ((char *) h->addr + value);
 
   /* AFAIK the key is always plain ASCII, so no conversion to UTF-8 is
    * necessary.  However we do need to nul-terminate the string.
    */
-
-  /* vk->name_len is unsigned, 16 bit, so this is safe ...  However
-   * we have to make sure the length doesn't exceed the block length.
-   */
-  size_t len = le16toh (vk->name_len);
-  size_t seg_len = block_len (h, value, NULL);
-  if (sizeof (struct ntreg_vk_record) + len - 1 > seg_len) {
-    if (h->msglvl >= 2)
-      fprintf (stderr, "hivex_value_key: returning EFAULT"
-               " because key length is too long (%zu, %zu)\n",
-               len, seg_len);
-    errno = EFAULT;
+  errno = 0;
+  size_t len = hivex_value_key_len (h, value);
+  if (len == 0 && errno != 0)
     return NULL;
-  }
 
   char *ret = malloc (len + 1);
   if (ret == NULL)
@@ -1270,7 +1269,8 @@ hivex_value_type (hive_h *h, hive_value_h value, hive_type *t, size_t *len)
     return -1;
   }
 
-  struct ntreg_vk_record *vk = (struct ntreg_vk_record *) (h->addr + value);
+  struct ntreg_vk_record *vk =
+    (struct ntreg_vk_record *) ((char *) h->addr + value);
 
   if (t)
     *t = le32toh (vk->data_type);
@@ -1283,6 +1283,67 @@ hivex_value_type (hive_h *h, hive_value_h value, hive_type *t, size_t *len)
   return 0;
 }
 
+hive_value_h
+hivex_value_data_cell_offset (hive_h *h, hive_value_h value, size_t *len)
+{
+  if (!IS_VALID_BLOCK (h, value) || !BLOCK_ID_EQ (h, value, "vk")) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  if (h->msglvl >= 2)
+    fprintf (stderr, "hivex_value_data_cell_offset: value=0x%zx\n", value);
+  struct ntreg_vk_record *vk =
+    (struct ntreg_vk_record *) ((char *) h->addr + value);
+
+  size_t data_len;
+  int is_inline;
+
+  data_len = le32toh (vk->data_len);
+  is_inline = !!(data_len & 0x80000000);
+  data_len &= 0x7fffffff;
+
+  if (h->msglvl >= 2)
+    fprintf (stderr, "hivex_value_data_cell_offset: is_inline=%d\n", is_inline);
+
+  if (h->msglvl >= 2)
+    fprintf (stderr, "hivex_value_data_cell_offset: data_len=%zx\n", data_len);
+
+  if (is_inline && data_len > 4) {
+    errno = ENOTSUP;
+    return 0;
+  }
+
+  if (is_inline) {
+    /* There is no other location for the value data. */
+    if (len)
+      *len = 0;
+    return 0;
+  } else {
+    if (len)
+      *len = data_len + 4;  /* Include 4 header length bytes */
+  }
+
+  if (h->msglvl >= 2)
+    fprintf (stderr, "hivex_value_data_cell_offset: Proceeding with indirect data.\n");
+
+  size_t data_offset = le32toh (vk->data_offset);
+  data_offset += 0x1000;  /* Add 0x1000 because everything's off by 4KiB */
+  if (!IS_VALID_BLOCK (h, data_offset)) {
+    if (h->msglvl >= 2)
+      fprintf (stderr, "hivex_value_data_cell_offset: returning EFAULT because data "
+               "offset is not a valid block (0x%zx)\n",
+               data_offset);
+    errno = EFAULT;
+    return 0;
+  }
+
+  if (h->msglvl >= 2)
+    fprintf (stderr, "hivex_value_data_cell_offset: data_offset=%zx\n", data_offset);
+
+  return data_offset;
+}
+
 char *
 hivex_value_value (hive_h *h, hive_value_h value,
                    hive_type *t_rtn, size_t *len_rtn)
@@ -1292,7 +1353,8 @@ hivex_value_value (hive_h *h, hive_value_h value,
     return NULL;
   }
 
-  struct ntreg_vk_record *vk = (struct ntreg_vk_record *) (h->addr + value);
+  struct ntreg_vk_record *vk =
+    (struct ntreg_vk_record *) ((char *) h->addr + value);
 
   hive_type t;
   size_t len;
@@ -1369,7 +1431,7 @@ hivex_value_value (hive_h *h, hive_value_h value,
       *len_rtn = len;
   }
 
-  char *data = h->addr + data_offset + 4;
+  char *data = (char *) h->addr + data_offset + 4;
   memcpy (ret, data, len);
   return ret;
 }
@@ -1557,7 +1619,7 @@ hivex_value_dword (hive_h *h, hive_value_h value)
 {
   hive_type t;
   size_t len;
-  char *data = hivex_value_value (h, value, &t, &len);
+  void *data = hivex_value_value (h, value, &t, &len);
 
   if (data == NULL)
     return -1;
@@ -1568,7 +1630,7 @@ hivex_value_dword (hive_h *h, hive_value_h value)
     return -1;
   }
 
-  int32_t ret = *(int32_t*)data;
+  int32_t ret = * (int32_t *) data;
   free (data);
   if (t == hive_t_dword)        /* little endian */
     ret = le32toh (ret);
@@ -1583,7 +1645,7 @@ hivex_value_qword (hive_h *h, hive_value_h value)
 {
   hive_type t;
   size_t len;
-  char *data = hivex_value_value (h, value, &t, &len);
+  void *data = hivex_value_value (h, value, &t, &len);
 
   if (data == NULL)
     return -1;
@@ -1594,7 +1656,7 @@ hivex_value_qword (hive_h *h, hive_value_h value)
     return -1;
   }
 
-  int64_t ret = *(int64_t*)data;
+  int64_t ret = * (int64_t *) data;
   free (data);
   ret = le64toh (ret);          /* always little endian */
 
@@ -1922,7 +1984,7 @@ allocate_page (hive_h *h, size_t allocation_hint)
     h->size = newsize;
     h->bitmap = newbitmap;
 
-    memset (h->addr + oldsize, 0, newsize - oldsize);
+    memset ((char *) h->addr + oldsize, 0, newsize - oldsize);
     memset (h->bitmap + oldbitmapsize, 0, newbitmapsize - oldbitmapsize);
   }
 
@@ -1935,7 +1997,7 @@ allocate_page (hive_h *h, size_t allocation_hint)
 
   /* Write the hbin header. */
   struct ntreg_hbin_page *page =
-    (struct ntreg_hbin_page *) (h->addr + offset);
+    (struct ntreg_hbin_page *) ((char *) h->addr + offset);
   page->magic[0] = 'h';
   page->magic[1] = 'b';
   page->magic[2] = 'i';
@@ -2019,7 +2081,7 @@ allocate_block (hive_h *h, size_t seg_len, const char id[2])
              offset, seg_len);
 
   struct ntreg_hbin_block *blockhdr =
-    (struct ntreg_hbin_block *) (h->addr + offset);
+    (struct ntreg_hbin_block *) ((char *) h->addr + offset);
 
   memset (blockhdr, 0, seg_len);
 
@@ -2045,7 +2107,7 @@ allocate_block (hive_h *h, size_t seg_len, const char id[2])
 
     assert (rem >= 4);
 
-    blockhdr = (struct ntreg_hbin_block *) (h->addr + h->endblocks);
+    blockhdr = (struct ntreg_hbin_block *) ((char *) h->addr + h->endblocks);
     blockhdr->seg_len = htole32 ((int32_t) rem);
   }
 
@@ -2069,7 +2131,7 @@ mark_block_unused (hive_h *h, size_t offset)
     fprintf (stderr, "mark_block_unused: marking 0x%zx unused\n", offset);
 
   struct ntreg_hbin_block *blockhdr =
-    (struct ntreg_hbin_block *) (h->addr + offset);
+    (struct ntreg_hbin_block *) ((char *) h->addr + offset);
 
   size_t seg_len = block_len (h, offset, NULL);
   blockhdr->seg_len = htole32 (seg_len);
@@ -2096,7 +2158,7 @@ delete_values (hive_h *h, hive_node_h node)
 
   for (i = 0; values[i] != 0; ++i) {
     struct ntreg_vk_record *vk =
-      (struct ntreg_vk_record *) (h->addr + values[i]);
+      (struct ntreg_vk_record *) ((char *) h->addr + values[i]);
 
     size_t len;
     int is_inline;
@@ -2116,7 +2178,8 @@ delete_values (hive_h *h, hive_node_h node)
 
   free (values);
 
-  struct ntreg_nk_record *nk = (struct ntreg_nk_record *) (h->addr + node);
+  struct ntreg_nk_record *nk =
+    (struct ntreg_nk_record *) ((char *) h->addr + node);
   nk->nr_values = htole32 (0);
   nk->vallist = htole32 (0xffffffff);
 
@@ -2172,7 +2235,7 @@ hivex_commit (hive_h *h, const char *filename, int flags)
 /* Calculate the hash for a lf or lh record offset.
  */
 static void
-calc_hash (const char *type, const char *name, char *ret)
+calc_hash (const char *type, const char *name, void *ret)
 {
   size_t len = strlen (name);
 
@@ -2202,7 +2265,8 @@ new_lh_record (hive_h *h, const char *name, hive_node_h node)
   if (offset == 0)
     return 0;
 
-  struct ntreg_lf_record *lh = (struct ntreg_lf_record *) (h->addr + offset);
+  struct ntreg_lf_record *lh =
+    (struct ntreg_lf_record *) ((char *) h->addr + offset);
   lh->nr_keys = htole16 (1);
   lh->keys[0].offset = htole32 (node - 0x1000);
   calc_hash ("lh", name, lh->keys[0].hash);
@@ -2226,7 +2290,7 @@ insert_lf_record (hive_h *h, size_t old_offs, size_t posn,
   assert (test);
 
   struct ntreg_lf_record *old_lf =
-    (struct ntreg_lf_record *) (h->addr + old_offs);
+    (struct ntreg_lf_record *) ((char *) h->addr + old_offs);
   size_t nr_keys = le16toh (old_lf->nr_keys);
 
   nr_keys++; /* in new record ... */
@@ -2242,10 +2306,10 @@ insert_lf_record (hive_h *h, size_t old_offs, size_t posn,
     return 0;
 
   /* old_lf could have been invalidated by allocate_block. */
-  old_lf = (struct ntreg_lf_record *) (h->addr + old_offs);
+  old_lf = (struct ntreg_lf_record *) ((char *) h->addr + old_offs);
 
   struct ntreg_lf_record *new_lf =
-    (struct ntreg_lf_record *) (h->addr + new_offs);
+    (struct ntreg_lf_record *) ((char *) h->addr + new_offs);
   new_lf->nr_keys = htole16 (nr_keys);
 
   /* Copy the keys until we reach posn, insert the new key there, then
@@ -2322,7 +2386,8 @@ hivex_node_add_child (hive_h *h, hive_node_h parent, const char *name)
     fprintf (stderr, "hivex_node_add_child: allocated new nk-record"
              " for child at 0x%zx\n", node);
 
-  struct ntreg_nk_record *nk = (struct ntreg_nk_record *) (h->addr + node);
+  struct ntreg_nk_record *nk =
+    (struct ntreg_nk_record *) ((char *) h->addr + node);
   nk->flags = htole16 (0x0020); /* key is ASCII. */
   nk->parent = htole32 (parent - 0x1000);
   nk->subkey_lf = htole32 (0xffffffff);
@@ -2334,7 +2399,7 @@ hivex_node_add_child (hive_h *h, hive_node_h parent, const char *name)
 
   /* Inherit parent sk. */
   struct ntreg_nk_record *parent_nk =
-    (struct ntreg_nk_record *) (h->addr + parent);
+    (struct ntreg_nk_record *) ((char *) h->addr + parent);
   size_t parent_sk_offset = le32toh (parent_nk->sk);
   parent_sk_offset += 0x1000;
   if (!IS_VALID_BLOCK (h, parent_sk_offset) ||
@@ -2347,7 +2412,7 @@ hivex_node_add_child (hive_h *h, hive_node_h parent, const char *name)
     return 0;
   }
   struct ntreg_sk_record *sk =
-    (struct ntreg_sk_record *) (h->addr + parent_sk_offset);
+    (struct ntreg_sk_record *) ((char *) h->addr + parent_sk_offset);
   sk->refcount = htole32 (le32toh (sk->refcount) + 1);
   nk->sk = htole32 (parent_sk_offset - 0x1000);
 
@@ -2391,8 +2456,8 @@ hivex_node_add_child (hive_h *h, hive_node_h parent, const char *name)
     /* Recalculate pointers that could have been invalidated by
      * previous call to allocate_block (via new_lh_record).
      */
-    nk = (struct ntreg_nk_record *) (h->addr + node);
-    parent_nk = (struct ntreg_nk_record *) (h->addr + parent);
+    nk = (struct ntreg_nk_record *) ((char *) h->addr + node);
+    parent_nk = (struct ntreg_nk_record *) ((char *) h->addr + parent);
 
     if (h->msglvl >= 2)
       fprintf (stderr, "hivex_node_add_child: no keys, allocated new"
@@ -2409,7 +2474,7 @@ hivex_node_add_child (hive_h *h, hive_node_h parent, const char *name)
       if (BLOCK_ID_EQ (h, blocks[i], "lf") ||
           BLOCK_ID_EQ (h, blocks[i], "lh")) {
         old_offs = blocks[i];
-        old_lf = (struct ntreg_lf_record *) (h->addr + old_offs);
+        old_lf = (struct ntreg_lf_record *) ((char *) h->addr + old_offs);
         for (j = 0; j < le16toh (old_lf->nr_keys); ++j) {
           hive_node_h nk_offs = le32toh (old_lf->keys[j].offset);
           nk_offs += 0x1000;
@@ -2440,8 +2505,8 @@ hivex_node_add_child (hive_h *h, hive_node_h parent, const char *name)
     /* Recalculate pointers that could have been invalidated by
      * previous call to allocate_block (via insert_lf_record).
      */
-    nk = (struct ntreg_nk_record *) (h->addr + node);
-    parent_nk = (struct ntreg_nk_record *) (h->addr + parent);
+    nk = (struct ntreg_nk_record *) ((char *) h->addr + node);
+    parent_nk = (struct ntreg_nk_record *) ((char *) h->addr + parent);
 
     if (h->msglvl >= 2)
       fprintf (stderr, "hivex_node_add_child: new lh-record at 0x%zx\n",
@@ -2459,7 +2524,7 @@ hivex_node_add_child (hive_h *h, hive_node_h parent, const char *name)
       for (i = 0; blocks[i] != 0; ++i) {
         if (BLOCK_ID_EQ (h, blocks[i], "ri")) {
           struct ntreg_ri_record *ri =
-            (struct ntreg_ri_record *) (h->addr + blocks[i]);
+            (struct ntreg_ri_record *) ((char *) h->addr + blocks[i]);
           for (j = 0; j < le16toh (ri->nr_offsets); ++j)
             if (le32toh (ri->offset[j] + 0x1000) == old_offs) {
               ri->offset[j] = htole32 (new_offs - 0x1000);
@@ -2508,7 +2573,8 @@ delete_sk (hive_h *h, size_t sk_offset)
     return -1;
   }
 
-  struct ntreg_sk_record *sk = (struct ntreg_sk_record *) (h->addr + sk_offset);
+  struct ntreg_sk_record *sk =
+    (struct ntreg_sk_record *) ((char *) h->addr + sk_offset);
 
   if (sk->refcount == 0) {
     if (h->msglvl >= 2)
@@ -2532,9 +2598,9 @@ delete_sk (hive_h *h, size_t sk_offset)
      */
     if (sk_prev_offset != sk_offset && sk_next_offset != sk_offset) {
       struct ntreg_sk_record *sk_prev =
-        (struct ntreg_sk_record *) (h->addr + sk_prev_offset);
+        (struct ntreg_sk_record *) ((char *) h->addr + sk_prev_offset);
       struct ntreg_sk_record *sk_next =
-        (struct ntreg_sk_record *) (h->addr + sk_next_offset);
+        (struct ntreg_sk_record *) ((char *) h->addr + sk_next_offset);
 
       sk_prev->sk_next = htole32 (sk_next_offset - 0x1000);
       sk_next->sk_prev = htole32 (sk_prev_offset - 0x1000);
@@ -2578,7 +2644,8 @@ delete_node (hive_h *h, void *opaque, hive_node_h node, const char *name)
   if (delete_values (h, node) == -1)
     return -1;
 
-  struct ntreg_nk_record *nk = (struct ntreg_nk_record *) (h->addr + node);
+  struct ntreg_nk_record *nk =
+    (struct ntreg_nk_record *) ((char *) h->addr + node);
 
   /* If the NK references an SK, delete it. */
   size_t sk_offs = le32toh (nk->sk);
@@ -2647,7 +2714,7 @@ hivex_node_delete_child (hive_h *h, hive_node_h node)
   size_t i, j;
   for (i = 0; blocks[i] != 0; ++i) {
     struct ntreg_hbin_block *block =
-      (struct ntreg_hbin_block *) (h->addr + blocks[i]);
+      (struct ntreg_hbin_block *) ((char *) h->addr + blocks[i]);
 
     if (block->id[0] == 'l' && (block->id[1] == 'f' || block->id[1] == 'h')) {
       struct ntreg_lf_record *lf = (struct ntreg_lf_record *) block;
@@ -2670,7 +2737,8 @@ hivex_node_delete_child (hive_h *h, hive_node_h node)
   return -1;
 
  found:;
-  struct ntreg_nk_record *nk = (struct ntreg_nk_record *) (h->addr + parent);
+  struct ntreg_nk_record *nk =
+    (struct ntreg_nk_record *) ((char *) h->addr + parent);
   size_t nr_subkeys_in_nk = le32toh (nk->nr_subkeys);
   nk->nr_subkeys = htole32 (nr_subkeys_in_nk - 1);
 
@@ -2711,12 +2779,13 @@ hivex_node_set_values (hive_h *h, hive_node_h node,
   if (vallist_offs == 0)
     return -1;
 
-  struct ntreg_nk_record *nk = (struct ntreg_nk_record *) (h->addr + node);
+  struct ntreg_nk_record *nk =
+    (struct ntreg_nk_record *) ((char *) h->addr + node);
   nk->nr_values = htole32 (nr_values);
   nk->vallist = htole32 (vallist_offs - 0x1000);
 
   struct ntreg_value_list *vallist =
-    (struct ntreg_value_list *) (h->addr + vallist_offs);
+    (struct ntreg_value_list *) ((char *) h->addr + vallist_offs);
 
   size_t i;
   for (i = 0; i < nr_values; ++i) {
@@ -2730,12 +2799,13 @@ hivex_node_set_values (hive_h *h, hive_node_h node,
     /* Recalculate pointers that could have been invalidated by
      * previous call to allocate_block.
      */
-    nk = (struct ntreg_nk_record *) (h->addr + node);
-    vallist = (struct ntreg_value_list *) (h->addr + vallist_offs);
+    nk = (struct ntreg_nk_record *) ((char *) h->addr + node);
+    vallist = (struct ntreg_value_list *) ((char *) h->addr + vallist_offs);
 
     vallist->offset[i] = htole32 (vk_offs - 0x1000);
 
-    struct ntreg_vk_record *vk = (struct ntreg_vk_record *) (h->addr + vk_offs);
+    struct ntreg_vk_record *vk =
+      (struct ntreg_vk_record *) ((char *) h->addr + vk_offs);
     size_t name_len = strlen (values[i].key);
     vk->name_len = htole16 (name_len);
     strcpy (vk->name, values[i].key);
@@ -2756,11 +2826,11 @@ hivex_node_set_values (hive_h *h, hive_node_h node,
       /* Recalculate pointers that could have been invalidated by
        * previous call to allocate_block.
        */
-      nk = (struct ntreg_nk_record *) (h->addr + node);
-      vallist = (struct ntreg_value_list *) (h->addr + vallist_offs);
-      vk = (struct ntreg_vk_record *) (h->addr + vk_offs);
+      nk = (struct ntreg_nk_record *) ((char *) h->addr + node);
+      vallist = (struct ntreg_value_list *) ((char *) h->addr + vallist_offs);
+      vk = (struct ntreg_vk_record *) ((char *) h->addr + vk_offs);
 
-      memcpy (h->addr + offs + 4, values[i].value, values[i].len);
+      memcpy ((char *) h->addr + offs + 4, values[i].value, values[i].len);
       vk->data_offset = htole32 (offs - 0x1000);
     }
 
@@ -2778,77 +2848,84 @@ int
 hivex_node_set_value (hive_h *h, hive_node_h node,
                       const hive_set_value *val, int flags)
 {
-  hive_value_h *prev_values = hivex_node_values (h, node);
+  int retval = -1;
+  hive_value_h *prev_values;
+  hive_set_value *new_values;
+  size_t nr_values;
+  size_t i;
+  ssize_t idx_of_val;
+
+  prev_values = hivex_node_values (h, node);
   if (prev_values == NULL)
     return -1;
 
-  int retval = -1;
+  /* Count number of existing values in this node. */
+  nr_values = 0;
+  for (i = 0; prev_values[i] != 0; i++)
+    nr_values++;
 
-  size_t nr_values = 0;
-  for (hive_value_h *itr = prev_values; *itr != 0; ++itr)
-    ++nr_values;
+  /* Allocate a new hive_set_value list, with space for all existing
+   * values, plus 1 (for the new key if we're not replacing an
+   * existing key).
+   */
+  new_values = calloc (nr_values + 1, sizeof (hive_set_value));
+  if (new_values == NULL)
+    goto out1;
 
-  hive_set_value *values = malloc ((nr_values + 1) * (sizeof (hive_set_value)));
-  if (values == NULL)
-    goto leave_prev_values;
-
-  int alloc_ct = 0;
-  int idx_of_val = -1;
-  hive_value_h *prev_val;
-  for (prev_val = prev_values; *prev_val != 0; ++prev_val) {
+  /* Copy the old values to the new values.  If we find the key along
+   * the way, note its index in 'idx_of_val'.
+   */
+  idx_of_val = -1;
+  for (i = 0; prev_values[i] != 0; i++) {
     size_t len;
     hive_type t;
+    char *valkey, *valval;
 
-    hive_set_value *value = &values[prev_val - prev_values];
+    valval = hivex_value_value (h, prev_values[i], &t, &len);
+    if (valval == NULL) goto out2;
 
-    char *valval = hivex_value_value (h, *prev_val, &t, &len);
-    if (valval == NULL) goto leave_partial;
+    new_values[i].value = valval;
+    new_values[i].t = t;
+    new_values[i].len = len;
 
-    ++alloc_ct;
-    value->value = valval;
-    value->t = t;
-    value->len = len;
+    valkey = hivex_value_key (h, prev_values[i]);
+    if (valkey == NULL) goto out2;
 
-    char *valkey = hivex_value_key (h, *prev_val);
-    if (valkey == NULL) goto leave_partial;
-
-    ++alloc_ct;
-    value->key = valkey;
+    new_values[i].key = valkey;
 
     if (STRCASEEQ (valkey, val->key))
-      idx_of_val = prev_val - prev_values;
+      idx_of_val = i;
   }
 
   if (idx_of_val > -1) {
-    free (values[idx_of_val].key);
-    free (values[idx_of_val].value);
-  } else {
+    free (new_values[idx_of_val].key);
+    free (new_values[idx_of_val].value);
+  } else { /* insert it at the end */
     idx_of_val = nr_values;
-    ++nr_values;
+    nr_values++;
   }
 
-  hive_set_value *value = &values[idx_of_val];
-  *value = (hive_set_value){
-    .key = strdup (val->key),
-    .value = malloc (val->len),
-    .len = val->len,
-    .t = val->t
-  };
+  new_values[idx_of_val].key = strdup (val->key);
+  new_values[idx_of_val].value = malloc (val->len);
+  new_values[idx_of_val].len = val->len;
+  new_values[idx_of_val].t = val->t;
 
-  if (value->key == NULL || value->value == NULL) goto leave_partial;
-  memcpy (value->value, val->value, val->len);
+  if (new_values[idx_of_val].key == NULL ||
+      new_values[idx_of_val].value == NULL)
+    goto out2;
+  memcpy (new_values[idx_of_val].value, val->value, val->len);
 
-  retval = hivex_node_set_values (h, node, nr_values, values, 0);
+  retval = hivex_node_set_values (h, node, nr_values, new_values, 0);
 
- leave_partial:
-  for (int i = 0; i < alloc_ct; i += 2) {
-    free (values[i / 2].value);
-    if (i + 1 < alloc_ct && values[i / 2].key != NULL)
-      free (values[i / 2].key);
+ out2:
+  for (i = 0; i < nr_values; ++i) {
+    free (new_values[i].key);
+    free (new_values[i].value);
   }
-  free (values);
+  free (new_values);
 
- leave_prev_values:
+ out1:
   free (prev_values);
+
   return retval;
 }

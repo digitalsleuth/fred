@@ -36,16 +36,16 @@ void RegistryKey::SetData(const QList<QVariant> &data) {
   this->key_data=data;
 }
 
-void RegistryKey::Remove(uint64_t row) {
+void RegistryKey::Remove(quint64 row) {
   RegistryKey *p_key=this->keys.takeAt(row);
   delete p_key;
 }
 
-RegistryKey* RegistryKey::Key(uint64_t row) {
+RegistryKey* RegistryKey::Key(quint64 row) {
   return this->keys.value(row);
 }
 
-uint64_t RegistryKey::RowCount() {
+quint64 RegistryKey::RowCount() {
   return this->keys.count();
 }
 
@@ -57,7 +57,7 @@ QVariant RegistryKey::Data(int column) const {
   }
 }
 
-uint64_t RegistryKey::Row() const {
+quint64 RegistryKey::Row() const {
   return this->keys.indexOf(const_cast<RegistryKey*>(this));
 }
 

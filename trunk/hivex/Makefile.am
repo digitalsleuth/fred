@@ -20,7 +20,11 @@ ACLOCAL_AMFLAGS = -I m4
 # Work around broken libtool.
 export to_tool_file_cmd=func_convert_file_noop
 
-SUBDIRS = gnulib/lib generator lib images gnulib/tests po
+SUBDIRS = gnulib/lib generator lib images gnulib/tests xml po
+
+if HAVE_HIVEXSH
+SUBDIRS += sh
+endif
 
 if HAVE_OCAML
 SUBDIRS += ocaml
@@ -38,7 +42,7 @@ if HAVE_RUBY
 SUBDIRS += ruby
 endif
 
-EXTRA_DIST = hivex.pc hivex.pc.in README LICENSE
+EXTRA_DIST = hivex.pc hivex.pc.in LICENSE README tx-pull.sh
 
 # Generate the ChangeLog automatically from the gitlog.
 dist-hook:

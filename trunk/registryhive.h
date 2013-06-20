@@ -67,8 +67,8 @@ class RegistryHive : public QObject {
     QByteArray GetKeyValue(int hive_key,
                            int *p_value_type,
                            size_t *p_value_len);
-    int64_t GetNodeModTime(QString path);
-    int64_t GetNodeModTime(int node);
+    qint64 GetNodeModTime(QString path);
+    qint64 GetNodeModTime(int node);
     static QString KeyValueToString(QByteArray value, int value_type);
     static QString KeyValueToString(QByteArray value,
                                     QString format,
@@ -84,7 +84,7 @@ class RegistryHive : public QObject {
     static QStringList GetKeyValueTypes();
     static QString KeyValueTypeToString(int value_type);
     static int StringToKeyValueType(QString value_type);
-    static uint64_t FiletimeToUnixtime(int64_t filetime);
+    static quint64 FiletimeToUnixtime(qint64 filetime);
 
     int AddNode(QString parent_node_path, QString node_name);
     bool DeleteNode(QString node_path);

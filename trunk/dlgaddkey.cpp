@@ -22,17 +22,16 @@
 #include <QStringList>
 #include <QMessageBox>
 #include <QRegExp>
-#include <stdlib.h>
+#include <QtEndian>
 
 #include <QDebug>
+
+#include <stdlib.h>
 
 #include "dlgaddkey.h"
 #include "ui_dlgaddkey.h"
 
 #include "registryhive.h"
-
-#define MACROS_ENDIANNESS
-#include "macros.h"
 
 DlgAddKey::DlgAddKey(QWidget *p_parent,
                      QString key_name,
@@ -213,16 +212,16 @@ void DlgAddKey::SlotNumberWidgetRbDecClicked(bool checked) {
   if(checked) {
     bool ok=false;
     if(this->KeyType()=="REG_QWORD") {
-      uint64_t num=this->p_number_widget_line_edit->text().toULongLong(&ok,16);
+      quint64 num=this->p_number_widget_line_edit->text().toULongLong(&ok,16);
       if(ok) {
         // Convert number to dec
-        this->p_number_widget_line_edit->setText(QString().sprintf("%u",num));
+        this->p_number_widget_line_edit->setText(QString("%1").arg(num));
       }
     } else {
-      uint32_t num=this->p_number_widget_line_edit->text().toUInt(&ok,16);
+      quint32 num=this->p_number_widget_line_edit->text().toUInt(&ok,16);
       if(ok) {
         // Convert number to dec
-        this->p_number_widget_line_edit->setText(QString().sprintf("%u",num));
+        this->p_number_widget_line_edit->setText(QString("%1").arg(num));
       }
     }
     if(!ok) {
@@ -239,17 +238,18 @@ void DlgAddKey::SlotNumberWidgetRbHexClicked(bool checked) {
   if(checked) {
     bool ok=false;
     if(this->KeyType()=="REG_QWORD") {
-      uint64_t num=this->p_number_widget_line_edit->text().toULongLong(&ok);
+      quint64 num=this->p_number_widget_line_edit->text().toULongLong(&ok);
       if(ok) {
         // Convert number to hex
-        this->p_number_widget_line_edit->setText(QString().sprintf("%016X",
-                                                                   num));
+        this->p_number_widget_line_edit->setText(QString("%1")
+                                                   .arg(num,16,16,QChar('0')));
       }
     } else {
-      uint32_t num=this->p_number_widget_line_edit->text().toUInt(&ok);
+      quint32 num=this->p_number_widget_line_edit->text().toUInt(&ok);
       if(ok) {
         // Convert number to hex
-        this->p_number_widget_line_edit->setText(QString().sprintf("%08X",num));
+        this->p_number_widget_line_edit->setText(QString("%1")
+                                                   .arg(num,8,16,QChar('0')));
       }
     }
     if(!ok) {
@@ -363,7 +363,7 @@ QByteArray DlgAddKey::GetValueWidgetData() {
     // Get data
     QString data=this->p_line_widget_line_edit->text();
     // Convert data to UTF16LE buffer
-    uint16_t *p_buf=NULL;
+    quint16 *p_buf=NULL;
     int buf_len=this->ToUtf16LeBuf(&p_buf,data.utf16(),data.size());
     if(p_buf==NULL || buf_len==0) {
       // TODO: Inform user there was an error???
@@ -385,23 +385,23 @@ QByteArray DlgAddKey::GetValueWidgetData() {
   } else if(key_value_type=="REG_DWORD" ||
             key_value_type=="REG_DWORD_BIG_ENDIAN")
   {
-    uint32_t val;
+    quint32 val;
     if(this->p_number_widget_rb_dec->isChecked()) {
       val=this->p_number_widget_line_edit->text().toUInt();
     } else {
       val=this->p_number_widget_line_edit->text().toUInt(0,16);
     }
-    if(key_value_type=="REG_DWORD") val=HTOLE32(val);
-    else val=HTOBE32(val);
+    if(key_value_type=="REG_DWORD") val=qToLittleEndian(val);
+    else val=qToBigEndian(val);
     return QByteArray((char*)&val,4);
   } else if(key_value_type=="REG_QWORD") {
-    uint64_t val;
+    quint64 val;
     if(this->p_number_widget_rb_dec->isChecked()) {
       val=this->p_number_widget_line_edit->text().toULongLong();
     } else {
       val=this->p_number_widget_line_edit->text().toULongLong(0,16);
     }
-    val=HTOLE64(val);
+    val=qToLittleEndian(val);
     return QByteArray((char*)&val,8);
   } else if(key_value_type=="REG_BINARY" ||
             key_value_type=="REG_LINK" ||
@@ -414,8 +414,8 @@ QByteArray DlgAddKey::GetValueWidgetData() {
   return QByteArray();
 }
 
-int DlgAddKey::ToUtf16LeBuf(uint16_t **pp_buf,
-                            const uint16_t *p_data,
+int DlgAddKey::ToUtf16LeBuf(quint16 **pp_buf,
+                            const quint16 *p_data,
                             int ascii_len)
 {
   // Calculate utf16 buffer size
@@ -423,7 +423,7 @@ int DlgAddKey::ToUtf16LeBuf(uint16_t **pp_buf,
   int buf_len=(ascii_len*2)+2;
 
   // Alloc buffer and set to 0x00h
-  *pp_buf=(uint16_t*)malloc(buf_len);
+  *pp_buf=(quint16*)malloc(buf_len);
   if(*pp_buf==NULL) return 0;
   memset(*pp_buf,0,buf_len);
   if(ascii_len==0) {
@@ -434,7 +434,7 @@ int DlgAddKey::ToUtf16LeBuf(uint16_t **pp_buf,
   memcpy(*pp_buf,p_data,buf_len-2);
   // Make sure endianness is LE
   for(int i=0;i<ascii_len;i++) {
-    (*pp_buf)[i]=HTOLE16((*pp_buf)[i]);
+    (*pp_buf)[i]=qToLittleEndian((*pp_buf)[i]);
   }
 
   return buf_len;

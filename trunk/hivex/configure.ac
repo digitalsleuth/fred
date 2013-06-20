@@ -18,11 +18,11 @@
 # major/minor/release must be numbers
 m4_define([hivex_major],   [1])
 m4_define([hivex_minor],   [3])
-m4_define([hivex_release], [1])
+m4_define([hivex_release], [7])
 # extra can be any string
 m4_define([hivex_extra],   [])
 
-AC_INIT([hivex],[hivex_major.hivex_minor.hivex_releasehivex_extra])
+AC_INIT([hivex],hivex_major.hivex_minor.hivex_release[]hivex_extra)
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([foreign])
 
@@ -40,7 +40,15 @@ AC_DEFINE([PACKAGE_VERSION_EXTRA],["hivex_extra"],[Extra version string])
 gl_EARLY
 gl_INIT
 
-LT_INIT
+AM_PROG_LIBTOOL
+
+dnl Define $(SED).
+m4_ifdef([AC_PROG_SED],[
+    AC_PROG_SED
+],[
+    dnl ... else hope for the best
+    AC_SUBST([SED], "sed")
+])
 
 dnl Check for basic C environment.
 AC_PROG_CC_STDC
@@ -89,15 +97,21 @@ if test "$gl_gcc_warnings" = yes; then
   nw="$nw -Wpacked"                 # Allow attribute((packed)) on structs
   nw="$nw -Wlong-long"              # Allow long long since it's required
                                     # by xstrtoll.
+  nw="$nw -Wsuggest-attribute=pure" # Don't suggest pure functions.
+#  nw="$nw -Wsuggest-attribute=const" # Don't suggest const functions.
+#  nw="$nw -Wunsuffixed-float-constants" # Don't care about these.
 
   gl_MANYWARN_ALL_GCC([ws])
   gl_MANYWARN_COMPLEMENT([ws], [$ws], [$nw])
   for w in $ws; do
     gl_WARN_ADD([$w])
   done
-  gl_WARN_ADD([-Wno-unused-parameter]) # stubs.c
-  gl_WARN_ADD([-Wno-jump-misses-init]) # stubs.c
-  gl_WARN_ADD([-Wno-unused-variable]) # FIXME: only temporary, for guestfs_protocol.c, etc
+
+  # Unused parameters are not a bug in C.
+  gl_WARN_ADD([-Wno-unused-parameter])
+
+  # Missing field initializers is not a bug in C.
+  gl_WARN_ADD([-Wno-missing-field-initializers])
 
   # In spite of excluding -Wlogical-op above, it is enabled, as of
   # gcc 4.5.0 20090517, and it provokes warnings in cat.c, dd.c, truncate.c
@@ -131,7 +145,13 @@ dnl Check sizeof long.
 AC_CHECK_SIZEOF([long])
 
 dnl Headers.
-AC_CHECK_HEADERS([endian.h byteswap.h])
+AC_CHECK_HEADERS([byteswap.h endian.h libintl.h])
+
+dnl Check for mmap
+AC_REPLACE_FUNCS([mmap])
+
+dnl Functions.
+AC_CHECK_FUNCS([bindtextdomain])
 
 dnl Check for pod2man and pod2text.
 AC_CHECK_PROG([POD2MAN],[pod2man],[pod2man],[no])
@@ -164,28 +184,38 @@ AS_IF([test "x$with_readline" != xno],
 dnl For i18n.
 AM_GNU_GETTEXT([external])
 AM_GNU_GETTEXT_VERSION([0.17])
+AM_ICONV
 
 dnl libxml2.
 PKG_CHECK_MODULES([LIBXML2], [libxml-2.0])
 AC_SUBST([LIBXML2_CFLAGS])
 AC_SUBST([LIBXML2_LIBS])
 
+dnl hivexsh depends on open_memstream, which is absent on OS X.
+AC_CHECK_FUNC([open_memstream])
+AM_CONDITIONAL([HAVE_HIVEXSH],[test "x$ac_cv_func_open_memstream" = "xyes"])
 
-dnl ////////////////////////////////////////////////////////////////////////////
 dnl Check for OCaml (optional, for OCaml bindings).
-
+OCAMLC=no
+OCAMLFIND=no
 AC_ARG_ENABLE([ocaml],
-       AS_HELP_STRING([--with-ocaml],[build Ocaml binding]))
-
-
-AC_PROG_OCAML
-AC_PROG_FINDLIB
+        AS_HELP_STRING([--disable-ocaml], [Disable OCaml language bindings]),
+        [],
+        [enable_ocaml=yes])
+AS_IF([test "x$enable_ocaml" != "xno"],
+        [dnl OCAMLC and OCAMLFIND have to be unset first, otherwise
+         dnl AC_CHECK_TOOL (inside AC_PROG_OCAML) will not look.
+         OCAMLC=
+         OCAMLFIND=
+         AC_PROG_OCAML
+         AC_PROG_FINDLIB
+        ])
 AM_CONDITIONAL([HAVE_OCAML],
-    [test "x$OCAMLC" != "xno" -a "x$OCAMLFIND" != "xno" -a "x$enable_ocaml" = "xyes"])
+               [test "x$OCAMLC" != "xno" && test "x$OCAMLFIND" != "xno"])
 AM_CONDITIONAL([HAVE_OCAMLOPT],
-    [test "x$OCAMLOPT" != "xno" && test "x$OCAMLFIND" != "xno"])
+               [test "x$OCAMLOPT" != "xno" && test "x$OCAMLFIND" != "xno"])
 
-if test "x$OCAMLC" != "xno"; then
+if test "x$OCAMLC" != "xno" && test "x$OCAMLFIND" != "xno"; then
     dnl Check if we have caml/unixsupport.h header (OCaml bindings only).
     old_CFLAGS="$CFLAGS"
     CFLAGS="$CFLAGS -I$OCAMLLIB"
@@ -202,9 +232,9 @@ if test "x$OCAMLC" != "xno"; then
     echo "char $f (); char foo() { return $f (); }" > conftest.c
     rm -f conftest_ml.ml
     touch conftest_ml.ml
-    if $OCAMLC -c conftest.c 2>/dev/null && \
-       $OCAMLC -c conftest_ml.ml 2>/dev/null && \
-       $OCAMLC conftest.o conftest_ml.cmo -o conftest 2>/dev/null ; then
+    if $OCAMLC -c conftest.c >&AS_MESSAGE_LOG_FD 2>&1 && \
+       $OCAMLC -c conftest_ml.ml >&AS_MESSAGE_LOG_FD 2>&1 && \
+       $OCAMLC -custom conftest.o conftest_ml.cmo -o conftest >&AS_MESSAGE_LOG_FD 2>&1 ; then
         AC_DEFINE([HAVE_CAML_RAISE_WITH_ARGS],[1],
                   [Defined if function caml_raise_with_args exists.])
         AC_MSG_RESULT([found])
@@ -214,96 +244,159 @@ if test "x$OCAMLC" != "xno"; then
     rm -f conftest conftest.* conftest_ml.*
 fi
 
-dnl ///////////////////////////////////////////////////////////////////////////////////////
-
-dnl Check for Perl (optional, for Perl bindings).
-dnl XXX This isn't quite right, we should check for Perl devel library.
+dnl Check for Perl (optional, for Perl bindings and Perl tools).
 AC_CHECK_PROG([PERL],[perl],[perl],[no])
 
-dnl Check for Perl modules that must be present to compile and
-dnl test the Perl bindings.
-missing_perl_modules=no
-
 AC_ARG_ENABLE([perl],
-       AS_HELP_STRING([--with-perl],[build Perl binding]))
-
-
-PERL=
-AS_IF([test "x$enable_perl" != "xno" ],[
-       AC_CHECK_PROG([PERL],[perl],[yes],[no])
-
-    for pm in Test::More ExtUtils::MakeMaker IO::Stringy; do
-        AC_MSG_CHECKING([for $pm])
-        if ! perl -M$pm -e1 >/dev/null 2>&1; then
-            AC_MSG_RESULT([no])
-            missing_perl_modules=yes
-        else
-            AC_MSG_RESULT([yes])
+        AS_HELP_STRING([--disable-perl], [Disable Perl language bindings]),
+        [],
+        [enable_perl=yes])
+AS_IF([test "x$enable_perl" != "xno"],[
+        dnl Check for Perl modules that must be present to compile and
+        dnl test the Perl bindings.
+        missing_perl_modules=no
+        for pm in Test::More ExtUtils::MakeMaker IO::Stringy; do
+            AC_MSG_CHECKING([for $pm])
+            if ! $PERL -M$pm -e1 >/dev/null 2>&1; then
+                AC_MSG_RESULT([no])
+                missing_perl_modules=yes
+            else
+                AC_MSG_RESULT([yes])
+            fi
+        done
+        if test "x$missing_perl_modules" = "xyes"; then
+            AC_MSG_WARN([some Perl modules required to compile or test the Perl bindings are missing])
         fi
-    done
-
-    AS_IF([test "x$missing_perl_modules" = "xyes"],
-        [AC_MSG_FAILURE([some Perl modules required to compile or test the Perl bindings are missing])],
-        )
-])
-
-
+        ])
 AM_CONDITIONAL([HAVE_PERL],
-    [test "x$PERL" != "xno" -a "x$missing_perl_modules" != "xyes" -a "x$enable_perl" = "xyes"])
-
-dnl //////////////////////////////////////////////////////////////////////////////////////////////////
+    [test "x$enable_perl" != "xno" && test "x$PERL" != "xno" && test "x$missing_perl_modules" != "xyes"])
 
 dnl Check for Python (optional, for Python bindings).
-AC_CHECK_PROG([PYTHON],[python],[python],[no])
-
 PYTHON_PREFIX=
 PYTHON_VERSION=
-
-if test "x$PYTHON" != "xno"; then
-    PYTHON_PREFIX=`$PYTHON -c "import sys; print(sys.prefix)"`
-    PYTHON_VERSION=`$PYTHON -c "import sys; print(sys.version[[0:3]])"`
-
-    AC_MSG_CHECKING([for Python include path])
-    if test -z "$PYTHON_INCLUDEDIR"; then
-        python_path=`$PYTHON -c "import distutils.sysconfig; \
-                                 print (distutils.sysconfig.get_python_inc ());"`
-        PYTHON_INCLUDEDIR=$python_path
-    fi
-    AC_MSG_RESULT([$PYTHON_INCLUDEDIR])
-
-    AC_MSG_CHECKING([for Python site-packages path])
-    if test -z "$PYTHON_SITE_PACKAGES"; then
-        PYTHON_SITE_PACKAGES=`$PYTHON -c "import distutils.sysconfig; \
-                print (distutils.sysconfig.get_python_lib(1,0));"`
-    fi
-    AC_MSG_RESULT([$PYTHON_SITE_PACKAGES])
-
-    old_LIBS="$LIBS"
-    LIBS="$LIBS -lpython$PYTHON_VERSION"
-    AC_CHECK_FUNCS([PyCapsule_New])
-    LIBS="$old_LIBS"
-fi
-
-AC_SUBST(PYTHON_PREFIX)
-AC_SUBST(PYTHON_VERSION)
-AC_SUBST(PYTHON_INCLUDEDIR)
-AC_SUBST(PYTHON_SITE_PACKAGES)
+PYTHON_CFLAGS=
+PYTHON_INSTALLDIR=
 
 AC_ARG_ENABLE([python],
-       AS_HELP_STRING([--with-python],[build Python binding]))
+        AS_HELP_STRING([--disable-python], [Disable Python language bindings]),
+        [],
+        [enable_python=yes])
+AS_IF([test "x$enable_python" != "xno"],
+        [
+        AC_CHECK_PROG([PYTHON],[python],[python],[no])
 
+        if test "x$PYTHON" != "xno"; then
+	    AC_MSG_CHECKING([Python prefix])
+            PYTHON_PREFIX=`$PYTHON -c "import sys; print (sys.prefix)"`
+	    AC_MSG_RESULT([$PYTHON_PREFIX])
+
+	    AC_MSG_CHECKING([Python version])
+            PYTHON_VERSION_MAJOR=`$PYTHON -c "import sys; print (sys.version_info@<:@0@:>@)"`
+            PYTHON_VERSION_MINOR=`$PYTHON -c "import sys; print (sys.version_info@<:@1@:>@)"`
+            PYTHON_VERSION="$PYTHON_VERSION_MAJOR.$PYTHON_VERSION_MINOR"
+	    AC_MSG_RESULT([$PYTHON_VERSION])
+
+            AC_MSG_CHECKING([for Python include path])
+            if test -z "$PYTHON_CFLAGS"; then
+                python_path=`$PYTHON -c "import distutils.sysconfig; \
+                                         print (distutils.sysconfig.get_python_inc ());"`
+                python_platpath=`$PYTHON -c "import distutils.sysconfig; \
+                                             print (distutils.sysconfig.get_python_inc (plat_specific=1));"`
+                if test "$python_path" = "$python_platpath"; then
+                    PYTHON_CFLAGS=-I$python_path
+                else
+                    PYTHON_CFLAGS="-I$python_path -I$python_platpath"
+                fi
+            fi
+            AC_MSG_RESULT([$PYTHON_CFLAGS])
+
+            AC_ARG_WITH([python-installdir],
+                        [AS_HELP_STRING([--with-python-installdir],
+			                [directory to install python modules @<:@default=check@:>@])],
+			[PYTHON_INSTALLDIR="$withval"
+			AC_MSG_NOTICE([Python install dir $PYTHON_INSTALLDIR])],
+			[PYTHON_INSTALLDIR=check])
+
+	    if test "x$PYTHON_INSTALLDIR" = "xcheck"; then
+	        PYTHON_INSTALLDIR=
+                AC_MSG_CHECKING([for Python site-packages path])
+                if test -z "$PYTHON_INSTALLDIR"; then
+                    PYTHON_INSTALLDIR=`$PYTHON -c "import distutils.sysconfig; \
+                                                   print (distutils.sysconfig.get_python_lib(1,0));"`
+                fi
+                AC_MSG_RESULT([$PYTHON_INSTALLDIR])
+            fi
+
+            AC_MSG_CHECKING([for Python extension suffix (PEP-3149)])
+            if test -z "$PYTHON_EXT_SUFFIX"; then
+                python_ext_suffix=`$PYTHON -c "import sysconfig; \
+                                             print (sysconfig.get_config_var('EXT_SUFFIX') or sysconfig.get_config_var('SO'))"`
+                PYTHON_EXT_SUFFIX=$python_ext_suffix
+            fi
+            AC_MSG_RESULT([$PYTHON_EXT_SUFFIX])
+
+            dnl Look for some optional symbols in libpython.
+            old_LIBS="$LIBS"
+
+            PYTHON_BLDLIBRARY=`$PYTHON -c "import distutils.sysconfig; \
+                                           print (distutils.sysconfig.get_config_var('BLDLIBRARY'))"`
+            AC_CHECK_LIB([c],[PyCapsule_New],
+                         [AC_DEFINE([HAVE_PYCAPSULE_NEW],1,
+                                    [Found PyCapsule_New in libpython])],
+                         [],[$PYTHON_BLDLIBRARY])
+            AC_CHECK_LIB([c],[PyString_AsString],
+                         [AC_DEFINE([HAVE_PYSTRING_ASSTRING],1,
+                                    [Found PyString_AsString in libpython])],
+                         [],[$PYTHON_BLDLIBRARY])
+
+            LIBS="$old_LIBS"
+        fi
+
+        AC_SUBST(PYTHON_PREFIX)
+        AC_SUBST(PYTHON_VERSION)
+        AC_SUBST(PYTHON_CFLAGS)
+        AC_SUBST(PYTHON_INSTALLDIR)
+        AC_SUBST(PYTHON_EXT_SUFFIX)
+        ])
 AM_CONDITIONAL([HAVE_PYTHON],
-    [test "x$PYTHON_INCLUDEDIR" != "x" -a  "x$PYTHON_SITE_PACKAGES" != "x" -a "x$enable_python" = "xyes"])
+    [test "x$PYTHON" != "xno" && test "x$PYTHON_CFLAGS" != "x" && test "x$PYTHON_INSTALLDIR" != "x"])
 
 dnl Check for Ruby and rake (optional, for Ruby bindings).
-AC_CHECK_LIB([ruby],[ruby_init],[HAVE_LIBRUBY=1],[HAVE_LIBRUBY=0])
-AC_CHECK_PROG([RAKE],[rake],[rake],[no])
-
 AC_ARG_ENABLE([ruby],
-       AS_HELP_STRING([--with-ruby],[build Ruby binding]))
+    AS_HELP_STRING([--disable-ruby], [Disable Ruby language bindings]),
+    [],
+    [enable_ruby=yes])
+AS_IF([test "x$enable_ruby" != "xno"],[
+    AC_CHECK_PROG([RUBY],[ruby],[ruby],[no])
+    AC_CHECK_PROG([RAKE],[rake],[rake],[no])
 
+    AS_IF([test -n "$RUBY" && test -n "$RAKE"],[
+        dnl Find the library.  Note on Debian it's not -lruby.
+        AC_MSG_CHECKING([for C library for Ruby extensions])
+        ruby_cmd='puts RbConfig::CONFIG@<:@"RUBY_SO_NAME"@:>@'
+        echo running: $RUBY -rrbconfig -e \'$ruby_cmd\' >&AS_MESSAGE_LOG_FD
+        $RUBY -rrbconfig -e "$ruby_cmd" >conftest 2>&AS_MESSAGE_LOG_FD
+        libruby="$(cat conftest)"
+        rm conftest
+        AS_IF([test -n "$libruby"],[
+            AC_MSG_RESULT([-l$libruby])
+            AC_CHECK_LIB([$libruby],[ruby_init],
+                         [have_libruby=1],[have_libruby=])
+
+            dnl Symbols that we substitute when missing.
+            AS_IF([test -n "$have_libruby"],[
+                old_LIBS="$LIBS"
+                LIBS="$LIBS -l$libruby"
+                AC_CHECK_FUNCS([rb_hash_lookup])
+                LIBS="$old_LIBS"
+            ])
+        ],[
+            AC_MSG_RESULT([not found])
+        ])
+    ])
+])
 AM_CONDITIONAL([HAVE_RUBY],
-    [test "x$RAKE" != "xno" && test -n "$HAVE_LIBRUBY" -a "x$enable_ruby" = "xyes"])
+    [test -n "$RUBY" && test -n "$RAKE" && test -n "$have_libruby"])
 
 dnl dnl Check for Java.
 dnl AC_ARG_WITH(java_home,

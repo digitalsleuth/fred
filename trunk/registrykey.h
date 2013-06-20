@@ -24,8 +24,6 @@
 #include <QList>
 #include <QVariant>
 
-#include <inttypes.h>
-
 class RegistryKey {
   public:
     RegistryKey(const QList<QVariant> &data);
@@ -33,11 +31,11 @@ class RegistryKey {
 
     void Append(RegistryKey *p_key);
     void SetData(const QList<QVariant> &data);
-    void Remove(uint64_t row);
-    RegistryKey *Key(uint64_t row);
-    uint64_t RowCount();
+    void Remove(quint64 row);
+    RegistryKey *Key(quint64 row);
+    quint64 RowCount();
     QVariant Data(int column) const;
-    uint64_t Row() const;
+    quint64 Row() const;
 
   private:
     QList<RegistryKey*> keys;

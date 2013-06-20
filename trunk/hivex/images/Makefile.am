@@ -15,7 +15,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-EXTRA_DIST = minimal
+# Old RHEL 5 autoconf doesn't have builddir.
+builddir ?= $(top_builddir)/images
+
+EXTRA_DIST = minimal rlenvalue_test_hive
 
 # 'large' is a large hive used for testing purposes.  It is generated
 # by the mklarge C program, to avoid having to distribute this large

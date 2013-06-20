@@ -1,5 +1,5 @@
 # hivex OCaml bindings
-# Copyright (C) 2009-2010 Red Hat Inc.
+# Copyright (C) 2009-2010, 2012 Red Hat Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -59,6 +59,7 @@ TESTS = \
 	t/hivex_020_root \
 	t/hivex_100_errors \
 	t/hivex_110_gc_handle \
+	t/hivex_120_rlenvalue \
 	t/hivex_200_write \
 	t/hivex_300_fold
 noinst_DATA += $(TESTS)
@@ -81,7 +82,12 @@ depend: .depend
 
 .depend: $(wildcard *.mli) $(wildcard *.ml)
 	rm -f $@ $@-t
-	$(OCAMLFIND) ocamldep $^ | sed 's/  *$$//' | sort > $@-t
+	$(OCAMLFIND) ocamldep $^ | \
+	  $(SED) 's/ *$$//' | \
+	  $(SED) -e :a -e '/ *\\$$/N; s/ *\\\n */ /; ta' | \
+	  $(SED) -e 's, :,:,g' | \
+	  $(SED) -e 's,$(abs_srcdir)/,$(builddir)/,g' | \
+	  sort > $@-t
 	mv $@-t $@
 
 include .depend
@@ -96,7 +102,6 @@ install_files += *.cmx *.cmxa
 endif
 
 install-data-hook:
-	mkdir -p $(DESTDIR)$(OCAMLLIB)
 	mkdir -p $(DESTDIR)$(OCAMLLIB)/stublibs
 	$(OCAMLFIND) install \
 	  -ldconf ignore -destdir $(DESTDIR)$(OCAMLLIB) \

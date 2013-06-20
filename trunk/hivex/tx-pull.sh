@@ -1,6 +1,6 @@
 #!/bin/bash -
-# hivex Python bindings
-# Copyright (C) 2009-2011 Red Hat Inc.
+# Pull translations from Transifex.
+# Copyright (C) 2011 Red Hat Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,12 +14,18 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 set -e
-shopt -s nullglob
+set -v
 
-for f in @srcdir@t/*.py; do
-  basename "$f"
-  @PYTHON@ "$f"
+echo tx pull
+tx pull
+
+# Remove PO files that have no translations in them.
+for f in po/*.po; do
+  if ! grep -q '^msgstr "[^"]' $f; then
+    echo rm $f
+    rm $f
+  fi
 done

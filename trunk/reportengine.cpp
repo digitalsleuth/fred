@@ -139,6 +139,9 @@ bool ReportEngine::GenerateReport(RegistryHive *p_hive,
                                   QString &report_result,
                                   bool console_mode)
 {
+  // TODO: Support or remove console_mode
+  Q_UNUSED(console_mode);
+
   // Clear internal buffer
   this->report_content.clear();
 
@@ -488,7 +491,7 @@ QScriptValue ReportEngine::GetRegistryNodeModTime(QScriptContext *context,
 {
   QScriptValue calleeData;
   RegistryHive *p_hive;
-  int64_t mod_time=0;
+  qint64 mod_time=0;
 
   // This function needs one argument, node path
   if(context->argumentCount()!=1) return engine->undefinedValue();

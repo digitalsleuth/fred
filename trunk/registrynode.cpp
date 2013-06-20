@@ -35,7 +35,7 @@ void RegistryNode::AppendChild(RegistryNode *p_child) {
   this->child_nodes.append(p_child);
 }
 
-void RegistryNode::RemoveChild(uint64_t row) {
+void RegistryNode::RemoveChild(quint64 row) {
   if(row>=this->child_nodes.count()) return;
 
   // Remove child from list and delete it (Will also delete all sub-nodes)
@@ -44,11 +44,11 @@ void RegistryNode::RemoveChild(uint64_t row) {
   delete p_child;
 }
 
-RegistryNode* RegistryNode::Child(uint64_t row) {
+RegistryNode* RegistryNode::Child(quint64 row) {
   return this->child_nodes.value(row);
 }
 
-uint64_t RegistryNode::ChildCount() const {
+quint64 RegistryNode::ChildCount() const {
   return this->child_nodes.count();
 }
 
@@ -60,7 +60,7 @@ QVariant RegistryNode::Data(int column) const {
   }
 }
 
-uint64_t RegistryNode::Row() const {
+quint64 RegistryNode::Row() const {
   if(this->p_parent_node) {
     return this->p_parent_node->
       child_nodes.indexOf(const_cast<RegistryNode*>(this));

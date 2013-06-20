@@ -27,6 +27,11 @@
 #include <unistd.h>
 #include <assert.h>
 #include <errno.h>
+#include <locale.h>
+
+#ifdef HAVE_LIBINTL_H
+#include <libintl.h>
+#endif
 
 #ifdef HAVE_LIBREADLINE
 #include <readline/readline.h>
@@ -100,8 +105,10 @@ int
 main (int argc, char *argv[])
 {
   setlocale (LC_ALL, "");
+#ifdef HAVE_BINDTEXTDOMAIN
   bindtextdomain (PACKAGE, LOCALEBASEDIR);
   textdomain (PACKAGE);
+#endif
 
   int c;
   const char *filename = NULL;
@@ -717,14 +724,18 @@ cmd_lsval (char *key)
     case hive_t_full_resource_description:
     case hive_t_resource_requirements_list:
     default: {
-      char *data = hivex_value_value (h, value, &t, &len);
+      size_t r;
+      char *data;
+
+      data = hivex_value_value (h, value, &t, &len);
       if (!data)
         goto error;
 
-      if (fwrite (data, 1, len, stdout) != len)
+      r = fwrite (data, 1, len, stdout);
+      free (data);
+      if (r != len)
         goto error;
 
-      free (data);
       break;
     }
     } /* switch */
@@ -812,6 +823,9 @@ cmd_lsval (char *key)
             putchar (',');
           printf ("%02x", data[j]);
         }
+
+        free (data);
+
         break;
       }
       } /* switch */

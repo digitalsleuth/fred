@@ -105,8 +105,7 @@ HEADERS   += mainwindow.h \
              reportengine.h \
              dlgreportchooser.h \
              dlgpreferences.h \
-             dlgaddkey.h \
-             macros.h
+             dlgaddkey.h
 
 FORMS     += mainwindow.ui \
              dlgabout.ui \

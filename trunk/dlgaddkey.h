@@ -28,8 +28,6 @@
 #include <QPlainTextEdit>
 #include <QRadioButton>
 
-#include <inttypes.h>
-
 #include "hexeditwidget.h"
 
 namespace Ui {
@@ -82,7 +80,7 @@ class DlgAddKey : public QDialog {
     void DestroyValueWidgets();
     void SetValueWidgetData(QByteArray &key_value, QString &key_value_type);
     QByteArray GetValueWidgetData();
-    int ToUtf16LeBuf(uint16_t **pp_buf,const uint16_t *p_data, int ascii_len);
+    int ToUtf16LeBuf(quint16 **pp_buf, const quint16 *p_data, int ascii_len);
     void SetNumberWidgetLineEditInputMask();
 };
 

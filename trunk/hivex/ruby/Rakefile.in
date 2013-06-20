@@ -17,17 +17,32 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 require 'rake/clean'
-require 'rake/rdoctask'
 require 'rake/testtask'
-require 'rake/gempackagetask'
+
+# Used to be rake/rdoctask.  Now it's rdoc/task.
+begin
+  require 'rdoc/task'
+rescue
+  require 'rake/rdoctask'
+end
+
+# Used to be rake/gempackagetask.  Now it's rubygems/package_task.  Also
+# we need to use the appropriate class name below.
+begin
+  require 'rubygems/package_task'
+  gempackagetask='Gem::PackageTask'
+rescue
+  require 'rake/gempackagetask'
+  gempackagetask='Rake::GemPackageTask'
+end
 
 PKG_NAME='@PACKAGE_NAME@'
 PKG_VERSION='@PACKAGE_VERSION@'
 
-EXT_CONF='@srcdir@/ext/hivex/extconf.rb'
+EXT_CONF='@abs_srcdir@/ext/hivex/extconf.rb'
 MAKEFILE='@builddir@/ext/hivex/Makefile'
 HIVEX_MODULE='@builddir@/ext/hivex/_hivex.so'
-HIVEX_SRC='@srcdir@/ext/hivex/_hivex.c'
+HIVEX_SRC='@abs_srcdir@/ext/hivex/_hivex.c'
 
 CLEAN.include [ "@builddir@/ext/**/*.o", HIVEX_MODULE,
                 "@builddir@/ext/**/depend" ]
@@ -38,13 +53,13 @@ CLOBBER.include [ "@builddir@/config.save", "@builddir@/ext/**/mkmf.log",
 # Build locally
 
 file MAKEFILE => EXT_CONF do |t|
-     unless sh "top_srcdir=$(pwd)/@top_srcdir@; top_builddir=$(pwd)/@top_builddir@; export ARCHFLAGS=\"-arch $(uname -m)\"; cd #{File::dirname(EXT_CONF)}; ruby #{File::basename(EXT_CONF)} --with-_hivex-include=$top_srcdir/lib --with-_hivex-lib=$top_builddir/lib/.libs"
+     unless sh "top_srcdir=$(pwd)/@top_srcdir@; top_builddir=$(pwd)/@top_builddir@; export ARCHFLAGS=\"-arch $(uname -m)\"; mkdir -p @builddir@/ext/hivex; cd @builddir@/ext/hivex; @RUBY@ #{EXT_CONF} --with-_hivex-include=$top_srcdir/lib --with-_hivex-lib=$top_builddir/lib/.libs"
          $stderr.puts "Failed to run extconf"
          break
      end
 end
 file HIVEX_MODULE => [ MAKEFILE, HIVEX_SRC ] do |t|
-    Dir::chdir(File::dirname(EXT_CONF)) do
+    Dir::chdir("@builddir@/ext/hivex") do
          unless sh "make"
              $stderr.puts "make failed"
              break
@@ -61,19 +76,19 @@ end
 task :test => :build
 
 RDOC_FILES = FileList[
-    "README.rdoc",
-    "lib/**/*.rb",
-    "ext/**/*.[ch]"
+    "@srcdir@/README.rdoc",
+    "@srcdir@/lib/**/*.rb",
+    "@srcdir@/ext/**/*.[ch]"
 ]
 
 Rake::RDocTask.new do |rd|
-    rd.main = "README.rdoc"
+    rd.main = "@srcdir@/README.rdoc"
     rd.rdoc_dir = "doc/site/api"
     rd.rdoc_files.include(RDOC_FILES)
 end
 
 Rake::RDocTask.new(:ri) do |rd|
-    rd.main = "README.rdoc"
+    rd.main = "@srcdir@/README.rdoc"
     rd.rdoc_dir = "doc/ri"
     rd.options << "--ri-system"
     rd.rdoc_files.include(RDOC_FILES)
@@ -82,7 +97,7 @@ end
 # Package tasks
 
 PKG_FILES = FileList[
-  "Rakefile", "COPYING", "README", "NEWS", "README.rdoc",
+  "Rakefile", "COPYING", "README", "NEWS", "@srcdir@/README.rdoc",
   "lib/**/*.rb",
   "ext/**/*.[ch]", "ext/**/MANIFEST", "ext/**/extconf.rb",
   "tests/**/*",
@@ -108,7 +123,7 @@ Ruby bindings for hivex.
 EOF
 end
 
-Rake::GemPackageTask.new(SPEC) do |pkg|
+eval(gempackagetask).new(SPEC) do |pkg|
     pkg.need_tar = true
     pkg.need_zip = true
 end

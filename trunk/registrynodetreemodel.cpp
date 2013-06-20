@@ -22,8 +22,6 @@
 #include <QVariant>
 #include <QDateTime>
 
-#include <inttypes.h>
-
 #include "registrynodetreemodel.h"
 
 /*******************************************************************************
@@ -173,7 +171,7 @@ QList<QModelIndex> RegistryNodeTreeModel::GetIndexListOf(QString path) {
   ret.clear();
   for(int i=0;i<nodes.count();i++) {
     found=false;
-    for(uint64_t ii=0;ii<p_parent_node->ChildCount();ii++) {
+    for(quint64 ii=0;ii<p_parent_node->ChildCount();ii++) {
       if(p_parent_node->Child(ii)->Data(0)==nodes.at(i)) {
         ret.append(this->createIndex(ii,0,p_parent_node->Child(ii)));
         p_parent_node=p_parent_node->Child(ii);
@@ -214,7 +212,7 @@ QModelIndex RegistryNodeTreeModel::AddNode(RegistryHive *p_hive,
                                            QString new_node_name)
 {
   RegistryNode *p_parent_node;
-  int64_t key_mod_time;
+  qint64 key_mod_time;
   RegistryNode *p_node;
 
   // Make the specified index point to the ColumnContent_NodeName column!
@@ -300,7 +298,7 @@ void RegistryNodeTreeModel::SetupModelData(RegistryHive *p_hive,
 {
   QMap<QString,int> hive_children;
   RegistryNode *p_node;
-  int64_t key_mod_time;
+  qint64 key_mod_time;
 
   // Get all sub nodes of current hive node
   if(hive_node) hive_children=p_hive->GetNodes(hive_node);
