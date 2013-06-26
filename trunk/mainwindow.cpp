@@ -912,6 +912,9 @@ void MainWindow::SlotDeleteKey(QModelIndex index) {
  * OpenHive
  */
 void MainWindow::OpenHive(QString hive_file) {
+  // Make sure hive_file has native directory separators
+  hive_file=QDir::toNativeSeparators(hive_file);
+
   // Update last open location
   this->p_settings->SetLastOpenLocation(
     hive_file.left(hive_file.lastIndexOf(QDir::separator())));

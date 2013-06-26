@@ -839,7 +839,7 @@ QString RegistryHive::KeyValueTypeToString(int value_type) {
       ret="REG_QWORD";
       break;
     default:
-      ret=QString("%1").arg((quint32)value_type,8,16,QChar('0'));
+      ret=QString("0x%1").arg((quint32)value_type,8,16,QChar('0'));
   }
 
   return ret;
