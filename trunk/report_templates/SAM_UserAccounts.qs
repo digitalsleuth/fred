@@ -20,7 +20,7 @@ function print_table_row(cell01,cell02) {
 
 function print_v_info(v_key_value,info_name,str_off) {
   var offset=Number(RegistryKeyValueToVariant(v_key_value,"uint16",str_off))+0x0cc;
-  var len=Number(RegistryKeyValueToVariant(v_key_value,"uint16",str_off+4))/2;
+  var len=Number(RegistryKeyValueToVariant(v_key_value,"uint16",str_off+4));
   if(len>0) print_table_row(info_name,RegistryKeyValueToVariant(v_key_value,"utf16",offset,len));
 }
 
