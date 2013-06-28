@@ -1,0 +1,129 @@
+FRED README FILE
+
+Table of contents
+  0.0 Author and license stuff
+  1.0 What is fred? - A short description
+  2.0 Installation instructions
+    2.1 Prerequisits
+      2.1.1 Linux
+      2.1.2 Windows
+    2.2 Install from a package
+      2.2.1 Linux
+      2.2.2 Windows
+  3.0 Building the source
+    3.1 Shared vs static
+    3.2 Linux
+    3.3 Crosscompiling for Windows
+      3.3.1 Compiler
+      3.3.2 Qt
+      3.3.3 Fred
+      3.3.4 Packaging
+
+0.0 Author and license stuff
+  fred Copyright (c) 2011-2013 by Gillen Daniel <gillen.dan@pinguin.lu>
+
+  This program is free software: you can redistribute it and/or modify it under
+  the terms of the GNU General Public License as published by the Free Software
+  Foundation, either version 3 of the License, or (at your option) any later
+  version.
+
+  This program is distributed in the hope that it will be useful, but WITHOUT
+  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License along with
+  this program. If not, see <http://www.gnu.org/licenses/>.
+
+1.0 What is fred? - A short description
+  TODO
+
+2.0 Installation instructions
+  2.1 Prerequisits
+    2.1.1 Linux
+      Some sort of Linux with a recent kernel (2.6.x or above) and Qt v4.x.
+
+    2.1.2 Windows
+      Windows XP or newer.
+
+  2.2 Install from a package
+    2.2.1 Linux
+      Chances are I provide prebuild binary packages for Debian and Ubuntu. In
+      this case, you only have to fire up your distribution's package manager
+      and install fred. See https://www.pinguin.lu for more information and
+      download links. If you added my repository, simpy execute the following
+      command:
+
+      sudo apt-get install fred fred-reports
+
+    2.2.2 Windows
+      See https://www.pinguin.lu for more information and download links.
+
+3.0 Building the source
+  3.1 Shared vs static
+    TODO
+
+  3.2 Linux
+    Compiling under Linux for Linux should be very simple. Just execute the
+    following commands:
+
+    cd /path/to/fred/source
+    ./autogen.sh linux
+
+  3.3 Windows
+    Until beta5, fred for Windows was build under Windows. But it was a pain in
+    the bud to do so. Therefore I switched to crosscompiling under Linux which
+    works very well. If you want to build fred under Windows, good luck and
+    please, don't contact me if you have any problems! My only answer will be:
+    
+    Crosscompile under Linux!
+
+  3.4 Crosscompiling for Windows
+    The following instructions are for Debian / Ubuntu like distros. If you are
+    using another distro, you will need to get the compiler and qt on your own.
+
+    3.4.1 Compiler
+      You will need the mingw-w64 gcc and g++ compiler. When using Debian/Ubuntu
+      install the following packages:
+
+      sudo apt-get install mingw-w64 mingw-w64-tools g++-mingw-w64 \
+        gcc-mingw-w64 mingw-ocaml
+
+    3.4.2 Qt
+      After you have a compiler, you will need to crosscompile Qt as it is
+      currently not available as package. Start by getting the source:
+
+      cd /some/temp/dir/
+      wget http://download.qt-project.org/official_releases/qt/4.8/4.8.4/qt-everywhere-opensource-src-4.8.4.tar.gz
+      tar xfvz qt-everywhere-opensource-src-4.8.4.tar.gz
+      cd qt-everywhere-opensource-src-4.8.4
+
+      Unfortunately, Qt won't build until you apply two small patches:
+
+      patch -p1 </path/to/fred/qt_patches/mingw32-qt-4.8.0-no-webkit-tests.patch
+      patch -p1 </path/to/fred/qt_patches/qt-4.8.4-fix-sse-suppport-build-regression.patch
+
+      Now configure, compile and install Qt (I compiled it on my dual Xeon
+      machine with 24 cores (using make -j24) which took about 5 minutes. It
+      might take a bit longer on your machine :-p):
+
+      sudo ./configure -prefix /opt/qt-4.8.4-mingw -opensource -no-qt3support -no-multimedia -no-audio-backend -no-phonon -no-phonon-backend -no-javascript-jit -nomake examples -nomake demos -nomake docs -xplatform win32-g++-4.6 -device-option CROSS_COMPILE=i686-w64-mingw32-
+      sudo make
+      sudo make install
+
+      If you are asking you why the heck I used sudo to run configure, well, Qt
+      likes to copy some files to the prefix dir in that step which will fail
+      if you aren't root.
+
+    3.4.3 Fred
+      If all the above worked, you are ready to crosscompile fred:
+
+      cd /path/to/fred/source
+      ./autogen.sh win32
+
+      The build process of hivex will probably complain and might even fail
+      with an error but normally the lib gets build before that without errors,
+      so just ignore it.
+  
+    3.4.4 Packaging
+      TODO
+

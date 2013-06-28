@@ -1,0 +1,3 @@
+[submodule "trunk/hivex"]
+	path = trunk/hivex
+	url = https://github.com/libguestfs/hivex.git
