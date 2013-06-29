@@ -41,6 +41,7 @@
   #define EPOCH_DIFF 0x19DB1DED53E8000LL
 #endif
 
+// Macros to ease UTF16 endianness conversions
 #undef UTF16LETOH
 #define UTF16LETOH(buf,buf_len) {                                                 \
   for(int buf_off=0;buf_off<((buf_len)-1);buf_off+=2) {                           \
@@ -65,6 +66,17 @@
     *((quint16*)((buf)+buf_off))=qToBigEndian(*((quint16*)((buf)+buf_off))); \
   }                                                                          \
 }
+
+// Some errno numbers that hivex uses are not defined under Windows
+#if (defined _WIN32 || defined __WIN32__) && ! defined __CYGWIN__
+  // These are the same values as defined by MSVC 10, for interoperability.
+  #ifndef ENOTSUP
+    #define ENOTSUP 129
+  #endif
+  #ifndef ELOOP
+    #define ELOOP 114
+  #endif
+#endif
 
 /*******************************************************************************
  * Public

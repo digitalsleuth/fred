@@ -25,101 +25,108 @@ system(bash compileinfo.sh > compileinfo.h)
 #QMAKE_EXTRA_TARGETS += compileinfo
 #PRE_TARGETDEPS      += compileinfo.h
 
-# Build fred
+# Check command line args
+!isEmpty(HIVEX_STATIC) {
+  DEFINES       += "HIVEX_STATIC"
+}
 
+# Configure fred
 QMAKE_CXXFLAGS  += -Wall
 
-QT        += core \
-             gui \
-             script \
-             webkit
+QT              += core \
+                   gui \
+                   script \
+                   webkit
 
-CONFIG    += console
+CONFIG          += console
 
-TARGET     = fred
+TARGET           = fred
 
-TEMPLATE   = app
+TEMPLATE         = app
 
-SOURCES   += main.cpp\
-             mainwindow.cpp \
-             registrynode.cpp \
-             registrynodetreemodel.cpp \
-             registrykey.cpp \
-             registrykeytablemodel.cpp \
-             dlgabout.cpp \
-             qhexedit/qhexedit_p.cpp \
-             qhexedit/qhexedit.cpp \
-             reporttemplate.cpp \
-             registryhive.cpp \
-             qtscript_types/bytearray.cpp \
-             qtscript_types/bytearrayprototype.cpp \
-             qtscript_types/bytearrayiterator.cpp \
-             dlgreportviewer.cpp \
-             registrykeytable.cpp \
-             registrynodetree.cpp \
-             dlgsearch.cpp \
-             threadsearch.cpp \
-             searchresultwidget.cpp \
-             tabwidget.cpp \
-             argparser.cpp \
-             datainterpretertable.cpp \
-             datainterpreterwidget.cpp \
-             hexeditwidget.cpp \
-             settings.cpp \
-             searchresulttabledelegate.cpp \
-             registrynodetreemodelproxy.cpp \
-             reports.cpp \
-             reportengine.cpp \
-             dlgreportchooser.cpp \
-             dlgpreferences.cpp \
-             dlgaddkey.cpp
+SOURCES         += main.cpp\
+                   mainwindow.cpp \
+                   registrynode.cpp \
+                   registrynodetreemodel.cpp \
+                   registrykey.cpp \
+                   registrykeytablemodel.cpp \
+                   dlgabout.cpp \
+                   qhexedit/qhexedit_p.cpp \
+                   qhexedit/qhexedit.cpp \
+                   reporttemplate.cpp \
+                   registryhive.cpp \
+                   qtscript_types/bytearray.cpp \
+                   qtscript_types/bytearrayprototype.cpp \
+                   qtscript_types/bytearrayiterator.cpp \
+                   dlgreportviewer.cpp \
+                   registrykeytable.cpp \
+                   registrynodetree.cpp \
+                   dlgsearch.cpp \
+                   threadsearch.cpp \
+                   searchresultwidget.cpp \
+                   tabwidget.cpp \
+                   argparser.cpp \
+                   datainterpretertable.cpp \
+                   datainterpreterwidget.cpp \
+                   hexeditwidget.cpp \
+                   settings.cpp \
+                   searchresulttabledelegate.cpp \
+                   registrynodetreemodelproxy.cpp \
+                   reports.cpp \
+                   reportengine.cpp \
+                   dlgreportchooser.cpp \
+                   dlgpreferences.cpp \
+                   dlgaddkey.cpp
 
-HEADERS   += mainwindow.h \
-             registrynode.h \
-             registrynodetreemodel.h \
-             registrykey.h \
-             registrykeytablemodel.h \
-             dlgabout.h \
-             qhexedit/qhexedit_p.h \
-             qhexedit/qhexedit.h \
-             reporttemplate.h \
-             registryhive.h \
-             qtscript_types/bytearray.h \
-             qtscript_types/bytearrayprototype.h \
-             qtscript_types/bytearrayiterator.h \
-             dlgreportviewer.h \
-             registrykeytable.h \
-             registrynodetree.h \
-             dlgsearch.h \
-             threadsearch.h \
-             searchresultwidget.h \
-             tabwidget.h \
-             argparser.h \
-             datainterpretertable.h \
-             datainterpreterwidget.h \
-             hexeditwidget.h \
-             settings.h \
-             searchresulttabledelegate.h \
-             registrynodetreemodelproxy.h \
-             reports.h \
-             reportengine.h \
-             dlgreportchooser.h \
-             dlgpreferences.h \
-             dlgaddkey.h
+HEADERS         += mainwindow.h \
+                   registrynode.h \
+                   registrynodetreemodel.h \
+                   registrykey.h \
+                   registrykeytablemodel.h \
+                   dlgabout.h \
+                   qhexedit/qhexedit_p.h \
+                   qhexedit/qhexedit.h \
+                   reporttemplate.h \
+                   registryhive.h \
+                   qtscript_types/bytearray.h \
+                   qtscript_types/bytearrayprototype.h \
+                   qtscript_types/bytearrayiterator.h \
+                   dlgreportviewer.h \
+                   registrykeytable.h \
+                   registrynodetree.h \
+                   dlgsearch.h \
+                   threadsearch.h \
+                   searchresultwidget.h \
+                   tabwidget.h \
+                   argparser.h \
+                   datainterpretertable.h \
+                   datainterpreterwidget.h \
+                   hexeditwidget.h \
+                   settings.h \
+                   searchresulttabledelegate.h \
+                   registrynodetreemodelproxy.h \
+                   reports.h \
+                   reportengine.h \
+                   dlgreportchooser.h \
+                   dlgpreferences.h \
+                   dlgaddkey.h
 
-FORMS     += mainwindow.ui \
-             dlgabout.ui \
-             dlgreportviewer.ui \
-             dlgsearch.ui \
-             dlgreportchooser.ui \
-             dlgpreferences.ui \
-             dlgaddkey.ui
+FORMS           += mainwindow.ui \
+                   dlgabout.ui \
+                   dlgreportviewer.ui \
+                   dlgsearch.ui \
+                   dlgreportchooser.ui \
+                   dlgpreferences.ui \
+                   dlgaddkey.ui
 
-#LIBS      += -lhivex
-LIBS      += $$PWD/hivex/lib/.libs/libhivex.a
+!isEmpty(HIVEX_STATIC) {
+  LIBS          += $$PWD/hivex/lib/.libs/libhivex.a
+} else {
+  LIBS          += -lhivex
+}
 
-#DEFINES   += __STDC_FORMAT_MACROS
+win32:LIBS      += -liconv
 
-RESOURCES += fred.qrc
-RC_FILE    = fred.rc
-ICON       = resources/fred.icns
+RESOURCES       += fred.qrc
+RC_FILE          = fred.rc
+ICON             = resources/fred.icns

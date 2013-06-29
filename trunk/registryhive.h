@@ -24,7 +24,11 @@
 #include <QObject>
 #include <QMap>
 
-#include <hivex.h>
+#ifndef HIVEX_STATIC
+  #include <hivex.h>
+#else
+  #include "hivex/lib/hivex.h"
+#endif
 
 class RegistryHive : public QObject {
   Q_OBJECT

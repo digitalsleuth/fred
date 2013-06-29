@@ -27,7 +27,11 @@
 #include <QList>
 #include <QByteArray>
 
-#include <hivex.h>
+#ifndef HIVEX_STATIC
+  #include <hivex.h>
+#else
+  #include "hivex/lib/hivex.h"
+#endif
 
 class ThreadSearch : public QThread {
   Q_OBJECT
