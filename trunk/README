@@ -67,7 +67,7 @@ Table of contents
     following commands:
 
     cd /path/to/fred/source
-    ./autogen.sh linux
+    ./autogen.sh --platform=linux
 
   3.3 Windows
     Until beta5, fred for Windows was build under Windows. But it was a pain in
@@ -100,13 +100,17 @@ Table of contents
       Unfortunately, Qt won't build until you apply two small patches:
 
       patch -p1 </path/to/fred/qt_patches/mingw32-qt-4.8.0-no-webkit-tests.patch
-      patch -p1 </path/to/fred/qt_patches/qt-4.8.4-fix-sse-suppport-build-regression.patch
+      patch -p1 </../qt_patches/qt-4.8.4-fix-sse-suppport-build-regression.patch
 
       Now configure, compile and install Qt (I compiled it on my dual Xeon
       machine with 24 cores (using make -j24) which took about 5 minutes. It
       might take a bit longer on your machine :-p):
 
-      sudo ./configure -prefix /opt/qt-4.8.4-mingw -opensource -no-qt3support -no-multimedia -no-audio-backend -no-phonon -no-phonon-backend -no-javascript-jit -nomake examples -nomake demos -nomake docs -xplatform win32-g++-4.6 -device-option CROSS_COMPILE=i686-w64-mingw32-
+      sudo ./configure -prefix /opt/qt-4.8.4-mingw -opensource -no-qt3support \
+                       -no-multimedia -no-audio-backend -no-phonon \
+                       -no-phonon-backend -no-javascript-jit -nomake examples \
+                       -nomake demos -nomake docs -xplatform win32-g++-4.6 \
+                       -device-option CROSS_COMPILE=i686-w64-mingw32-
       sudo make
       sudo make install
 
@@ -118,7 +122,7 @@ Table of contents
       If all the above worked, you are ready to crosscompile fred:
 
       cd /path/to/fred/source
-      ./autogen.sh win32
+      ./autogen.sh --static-hivex --platform=win32
 
       The build process of hivex will probably complain and might even fail
       with an error but normally the lib gets build before that without errors,
