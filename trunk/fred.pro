@@ -126,6 +126,7 @@ FORMS           += mainwindow.ui \
 }
 
 win32:LIBS      += -liconv
+mac:LIBS        += -liconv
 
 RESOURCES       += fred.qrc
 RC_FILE          = fred.rc

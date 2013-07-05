@@ -225,6 +225,7 @@ SCRIPT_DIR=`dirname "$0"`
     echo "Bootstrapping fred"
     echo "-----------------------------------------------------------------------------"
     (
+      cd ..
       git submodule init
       git submodule update
     )
