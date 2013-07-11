@@ -9,13 +9,20 @@ function fred_report_info() {
   return info;
 }
 
+var table_style = "border-collapse:collapse; margin-left:20px; font-family:arial; font-size:12";
+var cell_style  = "border:1px solid #888888; padding:5; white-space:nowrap;";
+
 function IsValid(val) {
-  if(typeof val !== 'undefined') return true;
-  else return false;
+  return (typeof val!=='undefined');
 }
 
-function print_table_row(cell01,cell02) {
-  println("      <tr><td>",cell01,"</td><td>",cell02,"</td></tr>");
+function PrintTableHeaderCell(str) {
+  println("        <th style=\"",cell_style,"\">",str,"</th>");
+}
+
+function PrintTableDataCell(alignment,str) {
+  var style=cell_style+" text-align:"+alignment+";";
+  println("        <td style=\"",style,"\">",str,"</td>");
 }
 
 function ToUTC(num) {
@@ -49,62 +56,79 @@ function fred_report_html() {
     // control sets are referenced by its decimal representation.
     cur_controlset="ControlSet"+ZeroPad(parseInt(String(cur_controlset).substr(2,8),16),3)
 
-    println("  <p style=\"font-size:12; white-space:nowrap\">");
-    println("    <u>Time zone info</u>");
-    println("    <table style=\"margin-left:20px; font-size:12; white-space:nowrap\">");
-
-    // Active time bias
-    val=GetRegistryKeyValue(cur_controlset+"\\Control\\TimeZoneInformation","ActiveTimeBias");
-    print_table_row("Active time bias:",(IsValid(val)) ? ToUTC(RegistryKeyValueToString(val.value,val.type)) : "n/a");
-
-    // Std. tz name and bias
-    val=GetRegistryKeyValue(cur_controlset+"\\Control\\TimeZoneInformation","StandardName");
-    print_table_row("Std. time zone name:",(IsValid(val)) ? RegistryKeyValueToString(val.value,val.type) : "n/a");
-    val=GetRegistryKeyValue(cur_controlset+"\\Control\\TimeZoneInformation","StandardBias");
-    print_table_row("Std. time bias:",(IsValid(val)) ? ToUTC(RegistryKeyValueToString(val.value,val.type)) : "n/a");
-
-    // Daylight tz name and bias
-    val=GetRegistryKeyValue(cur_controlset+"\\Control\\TimeZoneInformation","DaylightName");
-    print_table_row("Daylight time zone name:",(IsValid(val)) ? RegistryKeyValueToString(val.value,val.type) : "n/a");
-    val=GetRegistryKeyValue(cur_controlset+"\\Control\\TimeZoneInformation","DaylightBias");
-    print_table_row("Daylight time bias:",(IsValid(val)) ? ToUTC(RegistryKeyValueToString(val.value,val.type)) : "n/a");
-
-    println("    </table>");
-    println("    <br />");
-    println("    <u>W32Time service info</u>");
-    println("    <table style=\"margin-left:20px; font-size:12; white-space:nowrap\">");
-
     // Get W32Time service settings
+    var w32time_startup_method="n/a";
+    var w32time_time_servers="n/a";
     val=GetRegistryKeyValue(cur_controlset+"\\Services\\W32Time","Start");
     if(IsValid(val)) {
-      print("      <tr><td>Startup method:</td><td>");
       val=RegistryKeyValueToString(val.value,val.type);
       switch(Number(val)) {
         case 0:
-          print("Boot");
+          w32time_startup_method="Boot";
           break;
         case 1:
-          print("System");
+          w32time_startup_method="System";
           break;
         case 2:
-          print("Automatic");
+          w32time_startup_method="Automatic";
           break;
         case 3:
-          print("Manual");
+          w32time_startup_method="Manual";
           break;
         case 4:
-          print("Disabled");
+          w32time_startup_method="Disabled";
           break;
         default:
-          print("Unknown");
+          w32time_startup_method="Unknown";
       }
-      println("</td></tr>");
       // If service is enabled, get ntp server
       if(Number(val)<4) {
         val=GetRegistryKeyValue(cur_controlset+"\\Services\\W32Time\\Parameters","NtpServer");
-        print_table_row("NTP server(s):",(IsValid(val)) ? RegistryKeyValueToString(val.value,val.type) : "n/a");
+        if(IsValid(val)) w32time_time_servers=RegistryKeyValueToString(val.value,val.type);
       }
-    } else print_table_row("Startup method:","n/a");
+    }
+
+    println("  <p style=\"font-size:12; white-space:nowrap\">");
+    println("    <table style=\""+table_style+"\">");
+    println("      <tr><td>Active control set:</td><td>",cur_controlset,"</td></tr>");
+    println("      <tr><td>W32Time startup method:</td><td>",w32time_startup_method,"</td></tr>");
+    println("      <tr><td>W32Time NTP servers:</td><td>",w32time_time_servers,"</td></tr>");
+    println("    </table>");
+    println("    <br />");
+    println("    <table style=\""+table_style+"\">");
+    println("      <tr>");
+    PrintTableHeaderCell("XXX");
+    PrintTableHeaderCell("Time zone");
+    println("      </tr>");
+
+    // Active time bias
+    val=GetRegistryKeyValue(cur_controlset+"\\Control\\TimeZoneInformation","ActiveTimeBias");
+    var active_bias=(IsValid(val)) ? ToUTC(RegistryKeyValueToString(val.value,val.type)) : "n/a"
+
+    // Std. tz name and bias
+    val=GetRegistryKeyValue(cur_controlset+"\\Control\\TimeZoneInformation","StandardName");
+    var std_name=(IsValid(val)) ? RegistryKeyValueToString(val.value,val.type) : "n/a";
+    val=GetRegistryKeyValue(cur_controlset+"\\Control\\TimeZoneInformation","StandardBias");
+    var std_bias=(IsValid(val)) ? ToUTC(RegistryKeyValueToString(val.value,val.type)) : "n/a";
+
+    // Daylight tz name and bias
+    val=GetRegistryKeyValue(cur_controlset+"\\Control\\TimeZoneInformation","DaylightName");
+    var daylight_name=(IsValid(val)) ? RegistryKeyValueToString(val.value,val.type) : "n/a";
+    val=GetRegistryKeyValue(cur_controlset+"\\Control\\TimeZoneInformation","DaylightBias");
+    var daylight_bias=(IsValid(val)) ? ToUTC(RegistryKeyValueToString(val.value,val.type)) : "n/a";
+
+    println("      <tr>");
+    PrintTableDataCell("left","Active");
+    PrintTableDataCell("left",active_bias);
+    println("      </tr>");
+    println("      <tr>");
+    PrintTableDataCell("left","Standard");
+    PrintTableDataCell("left",std_bias+" ("+std_name+")");
+    println("      </tr>");
+    println("      <tr>");
+    PrintTableDataCell("left","Daylight");
+    PrintTableDataCell("left",daylight_bias+" ("+daylight_name+")");
+    println("      </tr>");
 
     println("    </table>");
     println("  </p>");

@@ -9,13 +9,20 @@ function fred_report_info() {
   return info;
 }
 
+var table_style = "border-collapse:collapse; margin-left:20px; font-family:arial; font-size:12";
+var cell_style  = "border:1px solid #888888; padding:5; white-space:nowrap;";
+
 function IsValid(val) {
-  if(typeof val !== 'undefined') return true;
-  else return false;
+  return (typeof val!=='undefined');
 }
 
-function print_table_row(cell01,cell02) {
-  println("      <tr><td>",cell01,"</td><td>",cell02,"</td></tr>");
+function PrintTableHeaderCell(str) {
+  println("        <th style=\"",cell_style,"\">",str,"</th>");
+}
+
+function PrintTableDataCell(alignment,str) {
+  var style=cell_style+" text-align:"+alignment+";";
+  println("        <td style=\"",style,"\">",str,"</td>");
 }
 
 function ZeroPad(number,padlen) {
@@ -39,16 +46,28 @@ function fred_report_html() {
     // control sets are referenced by its decimal representation.
     cur_controlset="ControlSet"+ZeroPad(parseInt(String(cur_controlset).substr(2,8),16),3)
 
-    println("  <p style=\"font-size:12; white-space:nowrap\">");
-    println("    <table style=\"margin-left:20px; font-size:12; white-space:nowrap\">");
-    print_table_row("Active control set:",cur_controlset);
-
     // Computer name
     val=GetRegistryKeyValue(cur_controlset+"\\Control\\ComputerName\\ComputerName","ComputerName");
-    print_table_row("Computer name:",(IsValid(val)) ? RegistryKeyValueToString(val.value,val.type) : "");
 
+    println("  <p style=\"font-size:12; white-space:nowrap\">");
+    println("    <table style=\""+table_style+"\">");
+    println("      <tr><td>Active control set:</td><td>",cur_controlset,"</td></tr>");
+    println("      <tr><td>Computer name:</td><td>",(IsValid(val)) ? RegistryKeyValueToString(val.value,val.type) : "","</td></tr>");
     println("    </table>");
     println("    <br />");
+    println("    <table style=\""+table_style+"\">");
+    println("      <tr>");
+    PrintTableHeaderCell("Adapter");
+    PrintTableHeaderCell("Configuration");
+    PrintTableHeaderCell("IP address");
+    PrintTableHeaderCell("Subnet mask");
+    PrintTableHeaderCell("Nameserver(s)");
+    PrintTableHeaderCell("Domain");
+    PrintTableHeaderCell("Default gateway");
+    PrintTableHeaderCell("DHCP server");
+    PrintTableHeaderCell("DHCP lease optained");
+    PrintTableHeaderCell("DHCP lease terminates");
+    println("      </tr>");
 
     // Iterate over all available network adapters
     var adapters=GetRegistryNodes(cur_controlset+"\\Services\\Tcpip\\Parameters\\Adapters");
@@ -57,75 +76,89 @@ function fred_report_html() {
       // According to http://technet.microsoft.com/de-de/library/cc780532%28v=ws.10%29.aspx
       // the {4D36E972-E325-11CE-BFC1-08002BE10318} key name might be (and hopefully is) static :)
       val=GetRegistryKeyValue(cur_controlset+"\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\"+adapters[i]+"\\Connection","Name");
-      if(IsValid(val)) {
-        println("    <u>",RegistryKeyValueToString(val.value,val.type),"</u>");
-      } else {
-        println("    <u>",adapters[i],"</u>");
-      }
+      var adapter_name=IsValid(val) ? RegistryKeyValueToString(val.value,val.type) : adapters[i];
 
       // Get settings node
-      var adapter_settings_node=GetRegistryKeyValue(cur_controlset+"\\Services\\Tcpip\\Parameters\\Adapters\\"+adapters[i],"IpConfig");
-      adapter_settings_node=RegistryKeyValueToVariant(adapter_settings_node.value,"utf16",0);
-
-      println("    <table style=\"margin-left:20px; font-size:12; white-space:nowrap\">");
-      //print_table_row("Adapter id:",adapters[i]);
+      val=GetRegistryKeyValue(cur_controlset+"\\Services\\Tcpip\\Parameters\\Adapters\\"+adapters[i],"IpConfig");
+      var adapter_settings_node=RegistryKeyValueToVariant(val.value,"utf16",0);
 
       // Get configuration mode
       val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"EnableDHCP");
-      val=Number(RegistryKeyValueToString(val.value,val.type));
-      if(val) {
-        // DHCP enabled
-        print_table_row("Configuration mode:","DHCP");
+      var dhcp_enabled=Number(RegistryKeyValueToString(val.value,val.type));
+
+      var ip_address="";
+      var subnet_mask="";
+      var nameservers="";
+      var domain="";
+      var default_gateway="";
+      var dhcp_server="";
+      var lease_obtained="";
+      var lease_terminates="";
+
+      if(dhcp_enabled) {
         // DHCP server
         val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"DhcpServer");
-        print_table_row("Last used DHCP server:",(IsValid(val)) ? RegistryKeyValueToString(val.value,val.type) : "");
+        dhcp_server=(IsValid(val)) ? RegistryKeyValueToString(val.value,val.type) : "";
         // IP address
         val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"DhcpIPAddress");
-        print_table_row("IP address:",(IsValid(val)) ? RegistryKeyValueToString(val.value,val.type) : "");
+        ip_address=(IsValid(val)) ? RegistryKeyValueToString(val.value,val.type) : "";
         // Subnet mask
         val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"DhcpSubnetMask");
-        print_table_row("Subnet mask:",(IsValid(val)) ? RegistryKeyValueToString(val.value,val.type) : "");
+        subnet_mask=(IsValid(val)) ? RegistryKeyValueToString(val.value,val.type) : "";
         // Nameserver(s)
         val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"DhcpNameServer");
-        print_table_row("Nameserver(s):",(IsValid(val)) ? RegistryKeyValueToString(val.value,val.type) : "");
+        nameservers=(IsValid(val)) ? RegistryKeyValueToString(val.value,val.type) : "";
         // Domain
         val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"DhcpDomain");
-        print_table_row("Domain:",(IsValid(val)) ? RegistryKeyValueToString(val.value,val.type) : "");
+        domain=(IsValid(val)) ? RegistryKeyValueToString(val.value,val.type) : "";
         // Default gw
         val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"DhcpDefaultGateway");
-        print_table_row("Default gateway:",(IsValid(val)) ? RegistryKeyValueToVariant(val.value,"utf16",0) : "");
+        default_gateway=(IsValid(val)) ? RegistryKeyValueToVariant(val.value,"utf16",0) : "";
         // Lease obtained
         val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"LeaseObtainedTime");
-        print_table_row("Lease obtained:",(IsValid(val)) ? RegistryKeyValueToVariant(val.value,"unixtime",0) : "");
+        lease_obtained=(IsValid(val)) ? RegistryKeyValueToVariant(val.value,"unixtime",0) : "";
         // Lease valid until
         val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"LeaseTerminatesTime");
-        print_table_row("Lease terminates:",(IsValid(val)) ? RegistryKeyValueToVariant(val.value,"unixtime",0) : "");
+        lease_terminates=(IsValid(val)) ? RegistryKeyValueToVariant(val.value,"unixtime",0) : "";
       } else {
-        print_table_row("Configuration mode:","Manual");
         // IP address
         val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"IPAddress");
-        print_table_row("IP address:",(IsValid(val)) ? RegistryKeyValueToVariant(val.value,"utf16",0) : "");
+        ip_address=(IsValid(val)) ? RegistryKeyValueToVariant(val.value,"utf16",0) : "";
         // Subnet mask
         val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"SubnetMask");
-        print_table_row("Subnet mask:",(IsValid(val)) ? RegistryKeyValueToVariant(val.value,"utf16",0) : "");
+        subnet_mask=(IsValid(val)) ? RegistryKeyValueToVariant(val.value,"utf16",0) : "";
         // Nameserver
         val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"NameServer");
-        print_table_row("Nameserver:",(IsValid(val)) ? RegistryKeyValueToVariant(val.value,"utf16",0) : "");
+        nameservers=(IsValid(val)) ? RegistryKeyValueToVariant(val.value,"utf16",0) : "";
         // Domain
         val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"Domain");
-        print_table_row("Domain:",(IsValid(val)) ? RegistryKeyValueToString(val.value,val.type) : "");
+        domain=(IsValid(val)) ? RegistryKeyValueToString(val.value,val.type) : "";
         // Default gw
         val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+adapter_settings_node,"DefaultGateway");
-        print_table_row("Default gateway:",(IsValid(val)) ? RegistryKeyValueToVariant(val.value,"utf16",0) : "");
+        default_gateway=(IsValid(val)) ? RegistryKeyValueToVariant(val.value,"utf16",0) : "";
+        dhcp_server="n/a";
+        lease_obtained="n/a";
+        lease_terminates="n/a";
       }
+
+      println("      <tr>");
+      PrintTableDataCell("left",adapter_name);
+      PrintTableDataCell("left",dhcp_enabled ? "DHCP" : "Static");
+      PrintTableDataCell("left",ip_address);
+      PrintTableDataCell("left",subnet_mask);
+      PrintTableDataCell("left",nameservers);
+      PrintTableDataCell("left",domain);
+      PrintTableDataCell("left",default_gateway);
+      PrintTableDataCell("left",dhcp_server);
+      PrintTableDataCell("left",lease_obtained);
+      PrintTableDataCell("left",lease_terminates);
+      println("      </tr>");
 
       // TODO: Check for EnableSecurityFilters, TCPAllowedPorts and UDPAllowedPorts to get firewall status.
 
-      println("    </table>");
-      println("    <br />");
-
       // TODO: Get persistent routes from \ControlSet001\Services\Tcpip\Parameters\PersistentRoutes
     }
+    println("    </table>");
     println("  </p>");
   } else {
     println("  <p><font color='red'>");

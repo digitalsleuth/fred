@@ -9,9 +9,20 @@ function fred_report_info() {
   return info;
 }
 
+var table_style = "border-collapse:collapse; margin-left:20px; font-family:arial; font-size:12";
+var cell_style  = "border:1px solid #888888; padding:5; white-space:nowrap;";
+
 function IsValid(val) {
-  if(typeof val !== 'undefined') return true;
-  else return false;
+  return (typeof val!=='undefined');
+}
+
+function PrintTableHeaderCell(str) {
+  println("        <th style=\"",cell_style,"\">",str,"</th>");
+}
+
+function PrintTableDataCell(alignment,str) {
+  var style=cell_style+" text-align:"+alignment+";";
+  println("        <td style=\"",style,"\">",str,"</td>");
 }
 
 function ZeroPad(number,padlen) {
@@ -21,7 +32,13 @@ function ZeroPad(number,padlen) {
 }
 
 function PrintTableRow(cell01,cell02,cell03,cell04,cell05) {
-  println("      <tr><td style=\"padding:2px\">",cell01,"</td><td style=\"padding:2px\">",cell02,"</td><td style=\"padding:2px\">",cell03,"</td><td style=\"padding:2px\">",cell04,"</td><td style=\"padding:2px\">",cell05,"</td></tr>");
+  println("      <tr>");
+  PrintTableDataCell("left",cell01);
+  PrintTableDataCell("left",cell02);
+  PrintTableDataCell("left",cell03);
+  PrintTableDataCell("left",cell04);
+  PrintTableDataCell("left",cell05);
+  println("      </tr>");
 }
 
 function ListService(service_node) {
@@ -80,8 +97,15 @@ function fred_report_html() {
     var services=GetRegistryNodes(cur_controlset+"\\Services");
     if(IsValid(services)) {
       println("  <p style=\"font-size:12; white-space:nowrap\">");
-      println("    <table style=\"margin-left:20px; font-size:12; white-space:nowrap\">");
-      println("      <tr><td style=\"padding:2px\"><b>Name</b></td><td style=\"padding:2px\"><b>Group</b></td><td><b>Startup</b></td><td style=\"padding:2px\"><b>Image path</b></td><td style=\"padding:2px\"><b>Description</b></td></tr>");
+      println("    <table style=\""+table_style+"\">");
+      println("      <tr>");
+      PrintTableHeaderCell("Name");
+      PrintTableHeaderCell("Group");
+      PrintTableHeaderCell("Startup");
+      PrintTableHeaderCell("Image path");
+      PrintTableHeaderCell("Description");
+      println("      </tr>");
+
       for(var i=0;i<services.length;i++) {
         // Get service type
         val=GetRegistryKeyValue(cur_controlset+"\\Services\\"+services[i],"Type");
@@ -90,6 +114,7 @@ function fred_report_html() {
         if(Number(val)!=16 && Number(val)!=32) continue;
         ListService(cur_controlset+"\\Services\\"+services[i]);
       }
+
       println("    </table>");
       println("  </p>");
     } else {

@@ -9,39 +9,63 @@ function fred_report_info() {
   return info;
 }
 
+var table_style = "border-collapse:collapse; margin-left:20px; font-family:arial; font-size:12";
+var cell_style  = "border:1px solid #888888; padding:5; white-space:nowrap;";
+
 function IsValid(val) {
-  if(typeof val !== 'undefined') return true;
-  else return false;
+  return (typeof val!=='undefined');
 }
 
-function print_table_row(cell01,cell02) {
-  println("      <tr><td>",cell01,"</td><td>",cell02,"</td></tr>");
+function PrintTableHeaderCell(str) {
+  println("        <th style=\"",cell_style,"\">",str,"</th>");
+}
+
+function PrintTableDataCell(alignment,str) {
+  var style=cell_style+" text-align:"+alignment+";";
+  println("        <td style=\"",style,"\">",str,"</td>");
+}
+
+function PrintTableDataRowSpanCell(alignment,rows,str) {
+  var style=cell_style+" text-align: "+alignment+";";
+  println("        <td rowspan=\"",rows,"\" style=\"",style,"\">",str,"</td>");
+}
+
+function PrintTableDataColSpanCell(alignment,columns,str) {
+  var style=cell_style+" text-align: "+alignment+";";
+  println("        <td colspan=\"",columns,"\" style=\"",style,"\">",str,"</td>");
 }
 
 function ListAutoruns(autorun_path,autorun_key) {
-  println("  <p style=\"font-size:12; white-space:nowrap\">");
-  println("    <u>"+autorun_key+"</u><br />");
   var run_keys=GetRegistryKeys(autorun_path+autorun_key);
   if(IsValid(run_keys) && run_keys.length>0) {
-    println("    <table style=\"margin-left:20px; font-size:12; white-space:nowrap\">");
-    print_table_row("<b>Name</b>","<b>Executable</b>");
-
     for(var i=0;i<run_keys.length;i++) {
       var val=GetRegistryKeyValue(autorun_path+autorun_key,run_keys[i]);
-      print_table_row(run_keys[i],RegistryKeyValueToString(val.value,val.type));
+      println("      <tr>");
+      if(i==0) PrintTableDataRowSpanCell("left",run_keys.length,autorun_key);
+      PrintTableDataCell("left",run_keys[i]);
+      PrintTableDataCell("left",RegistryKeyValueToString(val.value,val.type));
+      println("      </tr>");
     }
-    
-    println("    </table>");
   } else {
-    println("    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;None");
+    println("      <tr>");
+    PrintTableDataCell("left",autorun_key);
+    PrintTableDataColSpanCell("center",2,"None");
+    println("      </tr>");
   }
-  println("  </p>");
 }
 
 function fred_report_html() {
   var val;
 
   println("  <h2>System Autoruns</h2>");
+  println("  <p style=\"font-size:12; white-space:nowrap\">");
+  println("    <table style=\""+table_style+"\">");
+
+  println("      <tr>");
+  PrintTableHeaderCell("Registry key");
+  PrintTableHeaderCell("Name");
+  PrintTableHeaderCell("Executable");
+  println("      </tr>");
 
   // Run
   ListAutoruns("\\Microsoft\\Windows\\CurrentVersion\\","Run");
@@ -53,4 +77,7 @@ function fred_report_html() {
   ListAutoruns("\\Microsoft\\Windows\\CurrentVersion\\","RunOnceEx");
 
   // TODO: There might be a Run under WindowsNT\CurrentVersion\Run too!
+
+  println("    </table>");
+  println("  </p>");
 }
