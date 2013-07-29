@@ -30,9 +30,14 @@
 
 /*
  * Macros for file access
+ *
+ * Will also include MACROS_LOGGING
  */
 #ifdef MACROS_FILE
   #include <stdio.h>
+
+  // These macros rely partly on logging macros, so those are needed too
+  #define MACROS_LOGGING
 
   #undef FOPEN
   #ifndef __APPLE__
