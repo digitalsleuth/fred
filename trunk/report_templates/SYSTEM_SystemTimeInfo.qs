@@ -97,7 +97,7 @@ function fred_report_html() {
     println("    <br />");
     println("    <table style=\""+table_style+"\">");
     println("      <tr>");
-    PrintTableHeaderCell("XXX");
+    PrintTableHeaderCell("Setting name");
     PrintTableHeaderCell("Time zone");
     println("      </tr>");
 
