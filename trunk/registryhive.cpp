@@ -128,13 +128,7 @@ bool RegistryHive::Open(QString file, bool read_only) {
   // Open hive file
   this->p_hive=hivex_open(file.toLocal8Bit().constData(),
                           read_only ? 0 : HIVEX_OPEN_WRITE);
-  if(this->p_hive==NULL) {
-    this->hive_file="";
-    this->is_hive_open=false;
-    this->is_hive_writable=false;
-    this->has_changes_to_commit=false;
-    return false;
-  }
+  if(this->p_hive==NULL) return false;
 
   // Set local vars
   this->hive_file=file;
@@ -163,7 +157,21 @@ bool RegistryHive::Reopen(bool read_only) {
   }
 
   // Reopen same hive
-  return this->Open(this->hive_file,read_only);
+  this->p_hive=hivex_open(this->hive_file.toLocal8Bit().constData(),
+                          read_only ? 0 : HIVEX_OPEN_WRITE);
+  if(this->p_hive==NULL) {
+    this->hive_file="";
+    this->is_hive_open=false;
+    this->is_hive_writable=false;
+    this->has_changes_to_commit=false;
+    return false;
+  }
+
+  // Update local vars
+  this->is_hive_writable=!read_only;
+  this->has_changes_to_commit=false;
+
+  return true;
 }
 
 /*
