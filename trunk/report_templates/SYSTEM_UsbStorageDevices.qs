@@ -108,6 +108,8 @@ function fred_report_html() {
       PrintTableHeaderCell("Mount point(s)");
       PrintTableHeaderCell("Parent ID");
       PrintTableHeaderCell("Device description");
+      PrintTableHeaderCell("First connection<font color=\"red\"><sup>1</sup></font>");
+      PrintTableHeaderCell("Last connection<font color=\"red\"><sup>1</sup></font>");
       println("      </tr>");
 
       for(var i=0;i<storage_roots.length;i++) {
@@ -125,6 +127,8 @@ function fred_report_html() {
           var device_desc=GetKeyVal(device_key,"DeviceDesc");
           var device_friendly_name=GetKeyVal(device_key,"FriendlyName");
           var device_parent_id=GetKeyVal(device_key,"ParentIdPrefix");
+          var device_first_connection=GetRegistryNodeModTime(cur_controlset+"\\Enum\\USBSTOR\\"+storage_roots[i]);
+          var device_last_connection=GetRegistryNodeModTime(cur_controlset+"\\Enum\\USBSTOR\\"+storage_roots[i]+"\\"+storage_subroots[ii]);
 
           var search_string="";
           var device_mount_points=Array();
@@ -151,6 +155,8 @@ function fred_report_html() {
             PrintTableDataCell("left",device_mount_points[0]);
             PrintTableDataRowSpanCell("left",mount_points,device_parent_id);
             PrintTableDataRowSpanCell("left",mount_points,device_desc);
+            PrintTableDataRowSpanCell("left",mount_points,device_first_connection);
+            PrintTableDataRowSpanCell("left",mount_points,device_last_connection);
             println("      </tr>");
             for(var iii=1;iii<device_mount_points.length;iii++) {
               println("      <tr>");
@@ -170,11 +176,14 @@ function fred_report_html() {
             }
             PrintTableDataCell("left",device_parent_id);
             PrintTableDataCell("left",device_desc);
+            PrintTableDataCell("left",device_first_connection);
+            PrintTableDataCell("left",device_last_connection);
             println("      </tr>");
           }
         }
       }
       println("    </table>");
+      println("    &nbsp;&nbsp;&nbsp;&nbsp;<font color=\"red\"><sup>1</sup></font> Might be incorrect");
       println("    <br />");
     } else {
       println("  <font color=\"red\">This registry hive does not contain a list of attached USB storage devices!</font>");
