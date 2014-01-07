@@ -1,4 +1,11 @@
+fred (0.1.0beta6) stable; urgency=low
+
 fred (0.1.0beta5) stable; urgency=low
+
+  * Added write support
+  * New reporting system
+
+ -- Daniel Gillen <gillen.dan@pinguin.lu>  Thu, 18 Jun 2013 15:00:00 +0200
 
 fred (0.1.0beta4) unstable; urgency=low
 
