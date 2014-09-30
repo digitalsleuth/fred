@@ -1,0 +1,17 @@
+Copyright (C) 2011-2012 by Gillen Daniel and licensed under GPLv3.
+
+This program uses Richard W.M. Jones's hivex library
+
+Copyright (C) 2009-2010 Red Hat Inc.
+Derived from code by Petter Nordahl-Hagen under a compatible license:
+Copyright (C) 1997-2007 Petter Nordahl-Hagen.
+Derived from code by Markus Stephany under a compatible license:
+Copyright (C) 2000-2004 Markus Stephany.
+
+This program uses a modified version of the QHexEdit widget by Simon Winfried
+
+Copyright (c) 2010 by Simon Winfried
+
+This program uses Qt
+
+Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).

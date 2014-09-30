@@ -1,9 +1,3 @@
-fred (0.1.1) stable; urgency=low
-
-  * Added "Last added" field to NTUSER_TypedUrls report
-
- -- Daniel Gillen <gillen.dan@pinguin.lu>  Tue, 30 Sep 2014 15:15:00 +0200
-
 fred (0.1.0) stable; urgency=low
 
   * Minor Qt fixes
