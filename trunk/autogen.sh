@@ -21,7 +21,7 @@ DEFOPT_WIN32_QTDLL_PATH="/opt/qt-4.8.4-mingw/bin"
 # ------------------ DO NOT CHANGE ANYTHING BELOW THIS LINE -------------------
 # -----------------------------------------------------------------------------
 
-WIN32_DLLS="libgcc_s_sjlj-1.dll libstdc++-6.dll libiconv-2.dll"
+WIN32_DLLS="libgcc_s_sjlj-1.dll libstdc++-6.dll libiconv-2.dll libwinpthread-1.dll"
 WIN32_QTDLLS="QtCore4.dll QtGui4.dll QtScript4.dll QtWebKit4.dll QtNetwork4.dll QtWebKit4.dll"
 
 # Try to make somehow sure we are running in bash and not some other shell
@@ -239,7 +239,7 @@ SCRIPT_DIR=`dirname "$0"`
         ./autogen.sh --disable-ocaml --disable-perl --disable-python --disable-ruby --disable-shared || exit 1
       fi
       if [ "$OPT_PLATFORM" = "win32" ]; then
-        ./autogen.sh --host=$OPT_WIN32_COMPILER_SUFFIX --disable-ocaml --disable-perl --disable-python --disable-ruby --disable-shared || exit 1
+        PKG_CONFIG_PATH=/usr/i686-w64-mingw32/lib/pkgconfig ./autogen.sh --host=$OPT_WIN32_COMPILER_SUFFIX --disable-ocaml --disable-perl --disable-python --disable-ruby --disable-shared || exit 1
       fi
     )
     [ $? -ne 0 ] && exit 1
@@ -250,7 +250,7 @@ SCRIPT_DIR=`dirname "$0"`
     (
       cd hivex
       make clean &>/dev/null
-      make -j$OPT_JOBS || exit 1
+      make CFLAGS="-O2 -mno-ms-bitfields" -j$OPT_JOBS || exit 1
     )
     [ $? -ne 0 ] && [ "$OPT_PLATFORM" != "win32" ] && exit 1
   fi

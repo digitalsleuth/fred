@@ -163,28 +163,29 @@ Table of contents
           install the following packages:
 
           $ sudo apt-get install mingw-w64 mingw-w64-tools g++-mingw-w64 \
-            gcc-mingw-w64 mingw-ocaml
+            gcc-mingw-w64 mingw-ocaml autopoint
 
         2.3.5.1.2 Qt
           After you have a compiler, you will need to crosscompile Qt as it is
           currently not available as package. Start by getting the source:
 
           $ cd /some/temp/dir/
-          $ QTU="http://download.qt-project.org/official_releases/qt/4.8/4.8.4"
+          $ QTU="http://download.qt-project.org/archive/qt/4.8/4.8.4"
           $ QTP="qt-everywhere-opensource-src-4.8.4"
           $ wget $QTU/$QTP.tar.gz
           $ tar xfvz $QTP.tar.gz
           $ cd $QTP
 
-          Unfortunately, Qt won't build until you apply two small patches:
+          Unfortunately, Qt won't build until you apply three small patches:
 
           $ SRC="/path/to/fred/source/qt_patches"
           $ patch -p1 <"$SRC/mingw32-qt-4.8.0-no-webkit-tests.patch"
           $ patch -p1 <"$SRC/qt-4.8.4-fix-sse-suppport-build-regression.patch"
+          $ patch -p1 <"$SRC/qt-4.8.0-fix-include-windows-h.patch"
 
           Now configure, compile and install Qt (I compiled it on my dual Xeon
-          machine with 24 cores (using make -j24) which took about 5 minutes. It
-          might take a bit longer on your machine :-p):
+          machine with 40 cores (using make -j40) in 09:27 minutes. It might
+          take a bit longer on your machine :-p):
 
           $ sudo ./configure -prefix /opt/qt-4.8.4-mingw -opensource \
                              -no-qt3support -no-multimedia -no-audio-backend \
@@ -199,10 +200,21 @@ Table of contents
           Qt likes to copy some files to the prefix dir in that step which will
           fail if you aren't root.
 
+      2.3.5.3 LIBXML2
+        $ wget ftp://xmlsoft.org/libxml2/libxml2-2.9.1.tar.gz
+        $ tar xfvz libxml2-2.9.1.tar.gz
+        $ cd libxml2-2.9.1/
+        $ ./configure --prefix /opt/libxml2-2.9.1-mingw --host i686-w64-mingw32 --without-python
+        $ make
+        $ sudo make install
+
+        TODO
+
       2.3.5.3 Compiling
         If all the above worked, you are ready to crosscompile fred:
 
         $ cd /path/to/fred/source/
+        $ cd hivex/gnulib; patch -p1 <../../hivex_patches/gnulib.patch; cd -
         $ ./autogen.sh --static-hivex --platform=win32
 
         The build process of hivex will probably complain and might even fail
