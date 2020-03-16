@@ -1,0 +1,74 @@
+fred (0.2.0) stable; urgency=low
+
+  * Ported to Qt5. Thanks to Wincent Balin for doing all the work and providing me
+    the patches.
+
+ -- Gillen Daniel <Gillen.Dan@pinguin.lu>  Mon, 16 Mar 2020 13:00:00 +0100
+
+fred (0.1.1) stable; urgency=low
+
+  * Added "Last added" field to NTUSER_TypedUrls report
+
+ -- Daniel Gillen <gillen.dan@pinguin.lu>  Tue, 30 Sep 2014 15:15:00 +0200
+
+fred (0.1.0) stable; urgency=low
+
+  * Minor Qt fixes
+
+ -- Daniel Gillen <gillen.dan@pinguin.lu>  Tue, 30 Sep 2014 14:00:00 +0200
+
+fred (0.1.0beta5) stable; urgency=low
+
+  * Added write support
+  * New reporting system
+
+ -- Daniel Gillen <gillen.dan@pinguin.lu>  Thu, 18 Jun 2013 15:00:00 +0200
+
+fred (0.1.0beta4) unstable; urgency=low
+
+  * Fixed some minor UI bugs
+  * Massive code cleanup in mainwindow.cpp
+  * Added ability to switch data interpreter's endianness
+  * Added ability in hex editor to select and copy selected bytes / text
+
+ -- Daniel Gillen <gillen.dan@pinguin.lu>  Mon, 25 Jun 2012 00:00:00 +0200
+
+fred (0.1.0beta3) unstable; urgency=low
+
+  * Added search functionality
+  * Added various context menus to copy values to clipboard
+  * Now linking statically against libhivex to support older Debian / Ubuntu distros
+  * Some small fixes to ease portability
+
+ -- Daniel Gillen <gillen.dan@pinguin.lu>  Sun, 04 Sep 2011 00:15:00 +0200
+
+fred (0.1.0beta2) unstable; urgency=low
+
+  * Fixed some more bugs and subclassed QTreeView and QTableView
+
+ -- Daniel Gillen <gillen.dan@pinguin.lu>  Tue, 23 Aug 2011 17:00:00 +0200
+
+fred (0.1.0beta1) unstable; urgency=low
+
+  * Fixed some minor bugs and added more report templates
+
+ -- Daniel Gillen <gillen.dan@pinguin.lu>  Mon, 22 Aug 2011 08:00:00 +0200
+
+fred (0.1.0alpha3) unstable; urgency=low
+
+  * Added data report engine and 2 basic report templates
+
+ -- Daniel Gillen <gillen.dan@pinguin.lu>  Wed, 17 Aug 2011 11:30:00 +0200
+
+fred (0.1.0alpha2) unstable; urgency=low
+
+  * Integrated hexeditor into main window.
+  * Added data interpreters
+
+ -- Daniel Gillen <gillen.dan@pinguin.lu>  Tue, 09 Aug 2011 17:00:00 +0200
+
+fred (0.1.0alpha1) unstable; urgency=low
+
+  * First public release
+
+ -- Daniel Gillen <gillen.dan@pinguin.lu>  Sat, 06 Aug 2011 22:00:00 +0200
