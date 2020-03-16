@@ -361,7 +361,7 @@ QScriptValue ReportEngine::GetRegistryKeyValue(QScriptContext *context,
   if(p_hive->Error()) {
     // Get error message to clear error state
     p_hive->GetErrorMsg();
-//    printf("\nError: %s\n",p_hive->GetErrorMsg().toAscii().constData());
+//    printf("\nError: %s\n",p_hive->GetErrorMsg().toLatin1().constData());
     return engine->undefinedValue();
   }
 

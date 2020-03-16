@@ -90,7 +90,7 @@ void DlgReportViewer::on_action_Print_triggered() {
   QPrinter printer;
   QPrintDialog *p_dlg_print=new QPrintDialog(&printer);
   if(p_dlg_print->exec()==QDialog::Accepted) {
-    this->ui->WebView->print(&printer);
+    this->ui->WebView->page()->print(&printer, [=](bool){});
   }
   delete p_dlg_print;
 }

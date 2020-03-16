@@ -20,8 +20,10 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#include <QtGui>
+#include <QApplication>
 #include <QClipboard>
+#include <QKeyEvent>
+#include <QPainter>
 
 #include "qhexedit_p.h"
 
@@ -234,7 +236,7 @@ void QHexEditPrivate::keyPressEvent(QKeyEvent *event)
     int posX = (charX / 3) * 2 + (charX % 3);
     int posBa = (_cursorY / _charHeight) * BYTES_PER_LINE + posX / 2;
 
-    int key = int(event->text()[0].toAscii());
+    int key = int(event->text()[0].toLatin1());
     if (!this->_readOnly &&
         ((key>='0' && key<='9') || (key>='a' && key <= 'f')))
     {

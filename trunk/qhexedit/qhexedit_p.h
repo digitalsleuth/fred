@@ -25,8 +25,11 @@
 
 /** \cond docNever */
 
-#include <QtGui>
 #include <QPoint>
+#include <QTimer>
+#include <QWidget>
+#include <QScrollArea>
+#include <QMenu>
 
 class QHexEditPrivate : public QWidget {
   Q_OBJECT

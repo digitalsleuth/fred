@@ -99,7 +99,7 @@ void DlgSearch::on_BtnSearch_clicked() {
   // Save settings
   QString keyword=this->ui->EdtValue->text();
   this->keywords.clear();
-  if(this->ui->CbAscii->isChecked()) this->keywords.append(QByteArray(keyword.toAscii()));
+  if(this->ui->CbAscii->isChecked()) this->keywords.append(QByteArray(keyword.toLatin1()));
   if(this->ui->CbUtf16->isChecked()) {
     // TODO: .size()*2 will definetly fail sometimes!!!!
     this->keywords.append(QByteArray((char*)(keyword.utf16()),keyword.size()*2));

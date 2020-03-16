@@ -684,7 +684,7 @@ void MainWindow::SlotAddNode(QModelIndex index) {
         this->p_reg_node_tree_model->AddNode(this->p_hive,
                                              index,
                                              new_node_id,
-                                             node_name.toAscii());
+                                             node_name.toLatin1());
       // Now that node has been added, expand parent and select new node
       this->p_node_tree->expand(
         this->p_reg_node_tree_model_proxy->mapFromSource(index));

@@ -365,7 +365,7 @@ QByteArray RegistryHive::GetKeyValue(QString path,
 
   // Get key handle
   hive_key=hivex_node_get_value(this->p_hive,
-                                parent_node,key.toAscii().constData());
+                                parent_node,key.toLatin1().constData());
   if(hive_key==0) {
     this->SetError(tr("Unable to get key handle!"));
     *p_value_len=-1;
@@ -451,10 +451,10 @@ QString RegistryHive::KeyValueToString(QByteArray value, int value_type) {
         // TODO: What if it is UTF16-BE?? Thx Billy!
         QByteArray buf=value;
         UTF16LETOH(buf.data(),buf.size());
-        ret=QString().fromUtf16((ushort*)(buf.constData()));
+        ret=QString().fromUtf16((ushort*)(buf.constData())).toHtmlEscaped();
       } else if(value.endsWith(QByteArray("\x00",1))) {
         // Seems to be an ansi string
-        ret=QString().fromAscii((char*)value.constData());
+        ret=QString().fromLatin1((char*)value.constData()).toHtmlEscaped();
       } else {
         // If we can't detect encoding, return string as hex
         ToHexStr();
@@ -607,16 +607,16 @@ QString RegistryHive::KeyValueToString(QByteArray key_value,
   } else if(format=="ascii") {
     if(length!=-1) {
       // User specified how many bytes to convert
-      ret=QString().fromAscii((char*)p_data,length);
+      ret=QString().fromLatin1((char*)p_data,length).toHtmlEscaped();
     } else {
       // User did not specify how many bytes to convert, make sure data is 0
       // terminated
       if(key_value.indexOf("\x00",offset)!=-1) {
         // Data is 0 terminated
-        ret=QString().fromAscii((char*)p_data);
+        ret=QString().fromLatin1((char*)p_data).toHtmlEscaped();
       } else {
         // Data is not 0 terminated, convert all remaining_data_len bytes
-        ret=QString().fromAscii((char*)p_data,remaining_data_len);
+        ret=QString().fromLatin1((char*)p_data,remaining_data_len).toHtmlEscaped();
       }
     }
   } else if(format=="utf16" && remaining_data_len>=2) {
@@ -646,7 +646,7 @@ QString RegistryHive::KeyValueToString(QByteArray key_value,
     } else {
       UTF16BETOH(buf.data(),buf.size());
     }
-    ret=QString().fromUtf16((ushort*)buf.constData());
+    ret=QString().fromUtf16((ushort*)buf.constData()).toHtmlEscaped();
   } else {
     // Unknown variant type or another error
     // TODO: Maybe return an error
@@ -677,7 +677,7 @@ QStringList RegistryHive::KeyValueToStringList(QByteArray value,
     // Only 3 chars, this can only be an ansi string consisting of 1 char and 2
     // \0 to terminate it
     return QStringList()
-      <<QString(QChar((char)*((quint8*)(value.constData()))));
+      <<QString(QChar((char)*((quint8*)(value.constData())))).toHtmlEscaped();
   } else if(value.size()==4) {
     if((quint32)*((quint32*)(value.constData()))==0) {
       // http://blogs.msdn.com/b/oldnewthing/archive/2009/10/08/9904646.aspx
@@ -723,7 +723,7 @@ QStringList RegistryHive::KeyValueToStringList(QByteArray value,
         // Convert from BE to host
         UTF16BETOH(buf.data(),buf.size());
       }
-      result.append(QString().fromUtf16((ushort*)buf.constData()));
+      result.append(QString().fromUtf16((ushort*)buf.constData()).toHtmlEscaped());
       last_pos=cur_pos+2;
     }
   } else {
@@ -734,7 +734,7 @@ QStringList RegistryHive::KeyValueToStringList(QByteArray value,
       if(cur_pos==last_pos) break;
       result.append(QString().fromLocal8Bit(value.mid(last_pos,
                                                       (cur_pos-last_pos)+1)
-                                            .constData()));
+                                            .constData()).toHtmlEscaped());
       last_pos=cur_pos+1;
     }
   }
@@ -765,7 +765,7 @@ QByteArray RegistryHive::StringListToKeyValue(QStringList strings,
     cur_string=strings_it.next();
     if(ansi_encoded) {
       // Ansi encoding, simply append char string and terminating \0
-      result.append(cur_string.toAscii().constData(),cur_string.size());
+      result.append(cur_string.toLatin1().constData(),cur_string.size());
       result.append("\x00",1);
     } else {
       // Unicode encoding
@@ -912,7 +912,7 @@ int RegistryHive::AddNode(QString parent_node_path, QString node_name) {
 
   // Make sure there is no other node with same name
   QMap<QString,int> child_nodes=this->GetNodes(parent_node);
-  if(child_nodes.contains(node_name.toAscii())) {
+  if(child_nodes.contains(node_name.toLatin1())) {
     this->SetError(tr("The node '%1\\%2' already exists!")
                      .arg(parent_node_path,node_name));
     return 0;
@@ -921,7 +921,7 @@ int RegistryHive::AddNode(QString parent_node_path, QString node_name) {
   // Add new node
   hive_node_h new_node=hivex_node_add_child(this->p_hive,
                                             parent_node,
-                                            node_name.toAscii().constData());
+                                            node_name.toLatin1().constData());
   if(new_node==0) {
     this->SetError(tr("Unable to create new node '%1\\%2'!")
                      .arg(parent_node_path,node_name));
@@ -1176,7 +1176,7 @@ bool RegistryHive::GetNodeHandle(QString &path, hive_node_h *p_node) {
     for(i=0;i<nodes.count();i++) {
       *p_node=hivex_node_get_child(this->p_hive,
                                    *p_node,
-                                   nodes.value(i).toAscii().constData());
+                                   nodes.value(i).toLatin1().constData());
       if(*p_node==0) {
         this->SetError(tr("Unable to find node '%1'!").arg(nodes.value(i)));
         return false;
@@ -1203,7 +1203,7 @@ bool RegistryHive::GetKeyHandle(QString &parent_node_path,
   // Get handle to key
   *p_key=hivex_node_get_value(this->p_hive,
                               parent_node,
-                              key_name.toAscii().constData());
+                              key_name.toLatin1().constData());
   if(*p_key==0) {
     this->SetError(tr("Unable to get handle to key '%1\\%2'!")
                      .arg(parent_node_path,key_name));
@@ -1346,7 +1346,7 @@ int RegistryHive::SetKey(QString &parent_node_path,
   if(!create_key) {
     hive_value_h temp_key=hivex_node_get_value(this->p_hive,
                                                parent_node,
-                                               key_name.toAscii().constData());
+                                               key_name.toLatin1().constData());
     if(temp_key==0) {
       this->SetError(tr("Inexisting key '%1\\%2' can't be updated!")
                        .arg(parent_node_path,key_name));
@@ -1356,13 +1356,13 @@ int RegistryHive::SetKey(QString &parent_node_path,
 
   // Create and populate hive_set_value structure
   hive_set_value key_val;
-  key_val.key=(char*)malloc((sizeof(char)*key_name.toAscii().count())+1);
+  key_val.key=(char*)malloc((sizeof(char)*key_name.toLatin1().count())+1);
   key_val.value=(char*)malloc(sizeof(char)*key_value.size());
   if(key_val.key==NULL || key_val.value==NULL) {
     this->SetError(tr("Unable to alloc memory for hive_set_value struct!"));
     return 0;
   }
-  strcpy(key_val.key,key_name.toAscii().constData());
+  strcpy(key_val.key,key_name.toLatin1().constData());
   key_val.t=(hive_type)this->StringToKeyValueType(key_value_type);
   key_val.len=key_value.size();
   memcpy(key_val.value,key_value.constData(),key_value.size());

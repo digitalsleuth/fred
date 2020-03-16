@@ -21,7 +21,7 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#include <QtScript/QScriptEngine>
+#include <QScriptEngine>
 
 #include <stdlib.h>
 

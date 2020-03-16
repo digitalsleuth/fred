@@ -18,7 +18,7 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#include <QtGui/QApplication>
+#include <QApplication>
 #include <QStringList>
 
 #include <stdio.h>
@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
   ArgParser args(a.arguments());
   if(!args.ParseArgs()) {
     PRINT_HEADER;
-    printf("ERROR: %s\n\n",args.GetErrorMsg().toAscii().constData());
+    printf("ERROR: %s\n\n",args.GetErrorMsg().toLatin1().constData());
     PrintUsage();
     exit(1);
   }
@@ -116,7 +116,7 @@ int main(int argc, char *argv[]) {
 void PrintUsage() {
   printf("Usage:\n");
   printf("  %s [opts] [hive]\n\n",
-         qApp->arguments().at(0).toAscii().constData());
+         qApp->arguments().at(0).toLatin1().constData());
   printf("Options:\n");
   printf("  opts:\n");
   printf("    --dump-report=FILE : Dump the specified report to stdout.\n");
@@ -137,7 +137,7 @@ void DumpReport(QString report_template, QString hive_file) {
   // Open hive
   if(!p_hive->Open(hive_file,true)) {
     printf("ERROR: Unable to open hive file '%s'!\n",
-           hive_file.toAscii().constData());
+           hive_file.toLatin1().constData());
     exit(1);
   }
 
@@ -154,5 +154,5 @@ void DumpReport(QString report_template, QString hive_file) {
   delete p_hive;
 
   // Print result to stdout
-  printf("%s",result.toAscii().constData());
+  printf("%s",result.toLatin1().constData());
 }

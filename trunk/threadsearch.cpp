@@ -52,7 +52,7 @@ bool ThreadSearch::Search(QString registry_hive,
   this->root_path=search_path=="\\" ? "" : search_path;
 
   // Try to open hive
-  this->h_hive=hivex_open(this->hive_file.toAscii().constData(),0);
+  this->h_hive=hivex_open(this->hive_file.toLatin1().constData(),0);
   if(this->h_hive==NULL) return false;
 
   // Get root node
@@ -69,7 +69,7 @@ bool ThreadSearch::Search(QString registry_hive,
     for(i=0;i<path_nodes.count();i++) {
       this->root_node=hivex_node_get_child(this->h_hive,
                                            this->root_node,
-                                           path_nodes.at(i).toAscii().constData());
+                                           path_nodes.at(i).toLatin1().constData());
       if(this->root_node==0) {
         hivex_close(this->h_hive);
         return false;

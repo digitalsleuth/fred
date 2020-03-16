@@ -20,10 +20,8 @@
 * this program. If not, see <http://www.gnu.org/licenses/>.                    *
 *******************************************************************************/
 
-#include <QtGui>
-
+#include <QScrollArea>
 #include "qhexedit.h"
-
 
 QHexEdit::QHexEdit(QWidget *parent) : QScrollArea(parent)
 {

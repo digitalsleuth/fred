@@ -34,9 +34,10 @@ system(bash compileinfo.sh > compileinfo.h)
 QMAKE_CXXFLAGS  += -Wall
 
 QT              += core \
-                   gui \
+                   widgets \
+                   printsupport \
                    script \
-                   webkit
+                   webenginewidgets
 
 CONFIG          += console
 

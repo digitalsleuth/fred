@@ -27,10 +27,13 @@
 #define BYTEARRAY_H
 
 #include <QObject>
-#include <QtScript/QScriptClass>
-#include <QtScript/QScriptString>
+#include <QScriptClass>
+#include <QScriptString>
+
+class QScriptContext;
 
 class ByteArray : public QObject, public QScriptClass {
+    Q_OBJECT
   public:
     ByteArray(QScriptEngine *engine);
     ~ByteArray();

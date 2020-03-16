@@ -23,8 +23,6 @@
 #ifndef QHEXEDIT_H
 #define QHEXEDIT_H
 
-#include <QtGui>
-
 #include "qhexedit_p.h"
 
 /** \mainpage
@@ -34,6 +32,8 @@ QHexEdit is a binary editor widget for Qt.
 \image html hexedit.png
 */
 
+
+class QHBoxLayout;
 
 /*! QHexEdit is a hex editor widget written in C++ for the Qt (Qt4) framework.
 It is a simple editor for binary data, just like QPlainTextEdit is for text data.

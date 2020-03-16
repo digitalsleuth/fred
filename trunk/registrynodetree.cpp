@@ -84,7 +84,7 @@ void RegistryNodeTree::setModel(QAbstractItemModel *p_model, bool writable) {
   // Assign model to view
   QTreeView::setModel(p_model);
 
-  this->header()->setResizeMode(0,QHeaderView::ResizeToContents);
+  this->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
   this->header()->setStretchLastSection(true);
   if(p_model!=NULL && p_model->index(0,0).isValid()) {
     // Select first tree item
