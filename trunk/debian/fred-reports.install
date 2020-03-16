@@ -1,4 +1,5 @@
 report_templates/NTUSER_Autoruns.qs usr/share/fred/report_templates/
+report_templates/NTUSER_InternetDownloadManager.qs usr/share/fred/report_templates/
 report_templates/NTUSER_LaunchedApplications.qs usr/share/fred/report_templates/
 report_templates/NTUSER_RecentDocs.qs usr/share/fred/report_templates/
 report_templates/NTUSER_TypedUrls.qs usr/share/fred/report_templates/
