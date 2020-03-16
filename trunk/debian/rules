@@ -13,7 +13,7 @@ configure: configure-stamp
 configure-stamp:
 	dh_testdir
 	# Add here commands to configure the package.
-	qmake-qt5 DEFINES+="SYSTEM_REPORT_TEMPLATE_DIR=\'\\\"/usr/share/fred/report_templates\\\"\'"
+	qmake -qt=qt5 DEFINES+="SYSTEM_REPORT_TEMPLATE_DIR=\'\\\"/usr/share/fred/report_templates\\\"\'"
 
 	touch configure-stamp
 
@@ -26,7 +26,7 @@ build-stamp: configure-stamp
 	# Add here commands to compile the package.
 	# Optimised make for fast compilation on multi-core machines
 	$(MAKE) -j$(shell cat /proc/cpuinfo  | grep ^processor | wc -l)
-	lrelease fred.pro
+	lrelease -qt=qt5 fred.pro
 
 	touch $@
 
@@ -35,7 +35,7 @@ clean:
 	dh_testroot
 	rm -f build-stamp configure-stamp
 	# dpkg-buildpackage starts with cleaning, so we have to be sure that there's a Makefile (and thus call qmake-qt4)
-	qmake-qt5
+	qmake -qt=qt5
 
 	# Add here commands to clean up after the build process.
 	$(MAKE) clean

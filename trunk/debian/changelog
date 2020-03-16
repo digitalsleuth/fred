@@ -3,7 +3,7 @@ fred (0.2.0) stable; urgency=low
   * Ported to Qt5. Thanks to Wincent Balin for doing all the work and providing me
     the patches.
 
- -- Daniel Gillen <gillen.dan@pinguin.lu>  Mon, 16 Mar 2020 13:00:00 +0100
+ -- Gillen Daniel <Gillen.Dan@pinguin.lu>  Mon, 16 Mar 2020 13:00:00 +0100
 
 fred (0.1.1) stable; urgency=low
 

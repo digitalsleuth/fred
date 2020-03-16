@@ -519,7 +519,7 @@ QString RegistryHive::KeyValueToString(QByteArray key_value,
 
   // Calculate how many bytes are remainig after specified offset
   remaining_data_len=key_value.size()-offset;
-  if(!remaining_data_len>0) {
+  if(!(remaining_data_len>0)) {
     // Nothing to show
     return QString();
   }
