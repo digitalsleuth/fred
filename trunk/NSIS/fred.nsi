@@ -56,7 +56,7 @@ InstallDir "${PROJECT_DEF_INSTDIR}"
 
 ; Version Information
 VIAddVersionKey  "CompanyName"     ""
-VIAddVersionKey  "LegalCopyright"  "Copyright (c) 2011-2012 by Gillen Daniel"
+VIAddVersionKey  "LegalCopyright"  "Copyright (c) 2011-2020 by Gillen Daniel"
 VIAddVersionKey  "ProductName"     "${PROJECT_LONG_NAME}"
 VIAddVersionKey  "ProductVersion"  "${PROJECT_VERSION}"
 VIAddVersionKey  "FileDescription" "${PROJECT_SHORT_NAME} ${PROJECT_VERSION}"

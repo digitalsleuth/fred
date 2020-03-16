@@ -1,4 +1,4 @@
-Copyright (C) 2011-2012 by Gillen Daniel and licensed under GPLv3.
+Copyright (C) 2011-2020 by Gillen Daniel and licensed under GPLv3.
 
 This program uses Richard W.M. Jones's hivex library
 

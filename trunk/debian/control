@@ -3,7 +3,7 @@ Section: x11
 Priority: optional
 Maintainer: Gillen Daniel <gillen.dan@pinguin.lu>
 Uploaders: Gillen Daniel <gillen.dan@pinguin.lu>
-Build-Depends: debhelper (>= 5), libqt4-dev
+Build-Depends: debhelper (>= 5), libqt5-dev
 Standards-Version: 3.8.2
 Homepage: https://www.pinguin.lu
 

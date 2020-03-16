@@ -266,9 +266,9 @@ SCRIPT_DIR=`dirname "$0"`
     make distclean &>/dev/null
     if [ "$OPT_PLATFORM" = "linux" ]; then
       if [ $OPT_STATIC_HIVEX -eq 0 ]; then
-        $OPT_LINUX_QMAKE -qt=qt4 || exit 1
+        $OPT_LINUX_QMAKE -qt=qt5 || exit 1
       else
-        $OPT_LINUX_QMAKE -qt=qt4 HIVEX_STATIC=1 || exit 1
+        $OPT_LINUX_QMAKE -qt=qt5 HIVEX_STATIC=1 || exit 1
       fi
       make clean &>/dev/null
       make -j$OPT_JOBS release || exit 1

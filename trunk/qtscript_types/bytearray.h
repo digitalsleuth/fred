@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2011-2014 by Gillen Daniel <gillen.dan@pinguin.lu>             *
+* Copyright (c) 2011-2020 by Gillen Daniel <gillen.dan@pinguin.lu>             *
 *                                                                              *
 * Derived from code by Nokia Corporation and/or its subsidiary(-ies) under a   *
 * compatible license:                                                          *
